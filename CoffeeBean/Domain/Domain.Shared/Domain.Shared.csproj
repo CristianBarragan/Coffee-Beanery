@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Domain.Shared</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AutoMapper" Version="15.0.1" />
+        <PackageReference Include="AWSSDK.Core" Version="4.0.0.19" />
+        <PackageReference Include="AWSSDK.RDS" Version="4.0.4.4" />
+        <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.1.7" />
+        <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
+        <PackageReference Include="FasterKv.Cache.Core" Version="1.0.2" />
+        <PackageReference Include="HotChocolate" Version="13.9.6" />
+        <PackageReference Include="HotChocolate.AspNetCore" Version="13.9.6" />
+        <PackageReference Include="HotChocolate.Data" Version="13.9.6" />
+        <PackageReference Include="HotChocolate.Types" Version="13.9.6" />
+        <PackageReference Include="HotChocolate.Types.Analyzers" Version="13.9.6" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="9.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+        <PackageReference Include="Z.Dapper.Plus" Version="8.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Infrastructure\Database\Database.Banking\Database.Banking.csproj" />
+      <ProjectReference Include="..\Domain.Model\Domain.Model.csproj" />
+      <ProjectReference Include="..\Domain.Util\Domain.Util.csproj" />
+    </ItemGroup>
+
+</Project>

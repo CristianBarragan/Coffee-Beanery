@@ -1,0 +1,18 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    command: postgres -c 'max_connections=10000'
+    restart: unless-stopped
+    volumes:
+      - /var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: "sa"
+      POSTGRES_PASSWORD: "123456"
+    ports:
+      - "5432:5432"
+    networks:
+      - sample
+
+networks:
+  sample:
