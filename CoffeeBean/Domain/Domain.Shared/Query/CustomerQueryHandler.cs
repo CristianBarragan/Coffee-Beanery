@@ -9,13 +9,13 @@ using DatabaseEntity = Database.Entity;
 
 namespace Domain.Shared.Query;
 
-public class HandleCustomerQuery<M,D,S> : ProcessQuery<M,D,S>,  IQuery<SqlStructure, 
+public class CustomerQueryHandler<M,D,S> : ProcessQuery<M,D,S>,  IQuery<SqlStructure, 
         (List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)> 
     where M : class, new() where D : class, new() where S : class, new()
 {
     private readonly IMapper _mapper;
     
-    public HandleCustomerQuery(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection, ITreeMap<D,S> treeMap, 
+    public CustomerQueryHandler(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection, ITreeMap<D,S> treeMap, 
         IMapper mapper) : base(loggerFactory, dbConnection, treeMap)
     {
         _mapper =  mapper;

@@ -33,7 +33,7 @@ public static class ModelServiceCollectionRegistration
         
         services.AddScoped<IQuery<SqlStructure,
                 (List<Customer> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>,
-            HandleCustomerQuery<Customer, dynamic, dynamic>>();
+            CustomerQueryHandler<Customer, dynamic, dynamic>>();
         
         return services;
     }
