@@ -13,6 +13,8 @@ env-temp/
 .idea
 #output/
 
+cpr-checkpoints/
+
 # Created by https://www.toptal.com/developers/gitignore/api/intellij,webstorm,ruby,rails,node,visualstudio
 # Edit at https://www.toptal.com/developers/gitignore?templates=intellij,webstorm,ruby,rails,node,visualstudio
 

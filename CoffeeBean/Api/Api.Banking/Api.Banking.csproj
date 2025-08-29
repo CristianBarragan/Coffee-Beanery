@@ -29,8 +29,4 @@
       <ProjectReference Include="..\..\Domain\Domain.Shared\Domain.Shared.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Mapping\" />
-    </ItemGroup>
-
 </Project>
