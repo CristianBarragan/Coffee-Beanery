@@ -14,12 +14,13 @@ Coffee bean library is a dynamic parser from graphQL queries into SQL queries; t
 
 - Configuration based and faster development
 - No N+1 problem since the entire query/mutation is batched and materialized by the database engine
+- Framework agnostic
 - Allows business service logic within the GraphQL API project
 - Allows custom mapping between Entity models and Data models
 - Supports subgraph mutations and queries
 - Data annotation based configuration (Data models and Entity models)
 - Leverage to a mapping framework the mapping between Data models and Entity models
-- Leverage generics to generate the column names based on the ef core data entities
+- Leverage generics to generate the column names based on the data entities
 - Supports any GraphQL framework or vanilla .NET API, since it is not tightly couple to a vendor
 - Nodes (Left joins between entities)
 - Edges (Joins between entities)
@@ -52,14 +53,14 @@ Contains the custom model and attributes which will be exposed through the API.
 - JoinKey data annotation is required for foreign keys and join keys
 - Uses a wrapper entity model to allow multiple root entity upserts
 
-###Domain.Shared
+### Domain.Shared
 
 - Contains main root entity query handler where customer logic and mapping can be applied after SQL statement execution
 - Requires a basic mapping structure framework agnostic to translate column mappings between Entity models and Data models during the SQL query generation
 - Further custom mapping can be added for root entity query handler
 - Service Collection extension for adding the root entity query handler
 
-###Api
+### Api
 
 - Contains basic setup for graphQL API
 - Supports any framework since it is not tightly couple to a vendor

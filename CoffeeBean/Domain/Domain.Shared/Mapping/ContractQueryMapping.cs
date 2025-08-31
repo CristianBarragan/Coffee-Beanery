@@ -12,8 +12,8 @@ public static class ContractQueryMapping
         if (mappedObject is DatabaseEntity.Contract)
         {
             var contractModel = mappedObject as DatabaseEntity.Contract;
-                
-            var index = models.FindIndex(c => c.CustomerBankingRelationship.Any(cbr => cbr.ContractKey
+            
+            var index = models.Where(c => c.CustomerBankingRelationship != null).ToList().FindIndex(c => c.CustomerBankingRelationship.Any(cbr => cbr.ContractKey
                 .ToString().Matches(contractModel.ContractKey.ToString())));
                 
             if (index >= 0)

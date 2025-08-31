@@ -2,7 +2,7 @@ namespace Domain.Util.GraphQL.Extension;
 
 public static class StringExtensions
 {
-    public static bool Matches(this string input, string comparison)
+    public static bool Matches(this string? input, string comparison)
     {
         if (string.IsNullOrEmpty(input)) { return false; }
 
@@ -53,13 +53,13 @@ public static class StringExtensions
     {
         if (string.IsNullOrEmpty(field)) { return field; }
 
-        return field.Substring(0, 1).ToUpper() + field.ToLower().Substring(1, field.Length - 1);
+        return field.Substring(0, 1).ToUpper() + field.Substring(1, field.Length - 1);
     }
 
     public static string ToLowerCamelCase(this string field)
     {
         if (string.IsNullOrEmpty(field)) { return field; }
-        return field.Substring(0, 1).ToLower() + field.ToLower().Substring(1, field.Length - 1);
+        return field.Substring(0, 1).ToLower() + field.Substring(1, field.Length - 1);
     }
     
     public static string Sanitize(this string field)

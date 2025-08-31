@@ -14,21 +14,19 @@ public static class SqlNodeResolverHelper
         string rootEntityName, List<string> entityNames, IFasterKV<string, string> cache,
         Dictionary<string, List<string>> permissions = null)
     {
-        var sqlWhereStatement = new Dictionary<string, string>();
+        var entityMap = new Dictionary<string, List<GraphElement>>(StringComparer.OrdinalIgnoreCase);
+        var sqlWhereStatement = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var sqlOrderStatement = string.Empty;
         var upsertSqlNodes = new List<SqlNode>();
         var parameters = new DynamicParameters();
         var sqlUpsert = new StringBuilder();
-        var sqlNodes = new List<SqlNode>();
-        var childrenColumns = new List<string>();
-        var generatedEntities = new List<string>();
         var sqlQuery = new StringBuilder();
         var whereFields = new List<string>();
         var pagination = new Pagination();
 
         //Where conditions
         GetFieldsWhere(trees, whereFields, sqlWhereStatement, graphQlSelection.SyntaxNode.Arguments
-                .Where(a => a.Name.Value.Matches("where")).First(), trees.Last().Value.Name, rootEntityName, Entity.ClauseTypes,
+                .FirstOrDefault(a => a.Name.Value.Matches("where")), trees.Last().Value.Name, rootEntityName, Entity.ClauseTypes,
             permissions);
 
         //Arguments
@@ -77,38 +75,47 @@ public static class SqlNodeResolverHelper
 
         // Query Select
         var sqlStament = string.Empty;
+        var level = 1;
+        var rootNodeTree = new NodeTree();
 
         //Read cache
         // using var cacheReadSession = cache.NewSession(new SimpleFunctions<string, string>());
         // var cacheKey = graphQlSelection.SelectionSet.Selections.ToString();
         // make where statement as parameters so it can be cached
         // cacheReadSession.Read(ref cacheKey, ref sqlStament);
-
+        
         if (string.IsNullOrEmpty(sqlStament))
         {
             if (graphQlSelection.SelectionSet?.Selections!
                     .FirstOrDefault(s => s.ToString().StartsWith("edges")) != null)
             {
                 GetFields(trees, graphQlSelection.SelectionSet?.Selections!
-                        .FirstOrDefault(s => s.ToString().StartsWith("edges")).GetNodes().Skip(1).First(), sqlQuery,
-                    sqlNodes,
-                    childrenColumns, trees.Last().Value, new NodeTree(), entityNames, "Edges", generatedEntities,
-                    sqlWhereStatement);
+                        .FirstOrDefault(s => s.ToString().StartsWith("edges")).GetNodes().Skip(1).First(), trees.Last().Value, 
+                    new NodeTree(), entityNames, entityMap, true);
             }
 
             if (graphQlSelection.SelectionSet?.Selections!
                     .FirstOrDefault(s => s.ToString().StartsWith("nodes")) != null)
             {
                 GetFields(trees, graphQlSelection.SelectionSet?.Selections!
-                        .FirstOrDefault(s => s.ToString().StartsWith("nodes")), sqlQuery, sqlNodes,
-                    childrenColumns, trees.Last().Value, new NodeTree(), entityNames, "Nodes", generatedEntities,
-                    sqlWhereStatement);
+                        .FirstOrDefault(s => s.ToString().StartsWith("nodes")), trees.Last().Value, 
+                    new NodeTree(), entityNames, entityMap, false);
             }
-
-            sqlStament = sqlQuery.ToString();
+            
+            rootNodeTree = trees.Last().Value;
+            
+            var setQuery = GenerateQuery(trees, entityMap, [], sqlWhereStatement, rootNodeTree, 1);
+            
+            sqlStament = setQuery.sqlStatement;
+            rootNodeTree = setQuery.rootNodeTree;
 
             //Update cache
             // var status = cacheReadSession.Upsert(ref cacheKey, ref sqlStament);
+        }
+
+        if (string.IsNullOrEmpty(sqlStament))
+        {
+            return default;
         }
         else
         {
@@ -121,22 +128,7 @@ public static class SqlNodeResolverHelper
 
         var hasTotalCount = false;
         // Query Where, Sort, and Pagination
-
-        var rootTree = new NodeTree();
-        if (sqlNodes.Count == 0)
-        {
-            var rootTreeDotInt = sqlStament.IndexOf('.');
-            var rootTreeSpaceInt = sqlStament.TrimStart(' ').IndexOf(' ');
-            var rootTreeString = sqlStament.TrimStart(' ')
-                .Substring(rootTreeSpaceInt + 1, rootTreeDotInt - rootTreeSpaceInt - 2);
-            rootTree = trees[rootTreeString];
-        }
-        else
-        {
-            rootTree = sqlNodes.Last().NodeTree;
-        }
-
-        HandleQueryClause(rootTree, sqlQuery,
+        HandleQueryClause(rootNodeTree, sqlQuery,
             sqlOrderStatement, pagination, hasTotalCount);
 
         var sqlStructure = new SqlStructure()
@@ -150,6 +142,172 @@ public static class SqlNodeResolverHelper
         };
 
         return sqlStructure;
+    }
+
+    private static (string sqlStatement, NodeTree rootNodeTree) GenerateQuery(Dictionary<string, NodeTree> trees, Dictionary<string, List<GraphElement>> entityMap,
+        List<string> childrenFields, Dictionary<string, string> sqlWhereStatement, NodeTree currentTree, int isRootEntity)
+    {
+        var childrenSqlStatement = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var childrenOrder = new List<string>();
+        
+        foreach (var child in currentTree.Children)
+        {
+            if (entityMap.Any(k => k.Key.Matches(child.Name)))
+            {
+                childrenSqlStatement.Add(child.Name, GenerateQuery(trees, entityMap, childrenFields, sqlWhereStatement, child, isRootEntity + 1).sqlStatement);
+            }
+            childrenOrder.Add(child.Name);
+        }
+        
+        var tableFields = entityMap[currentTree.Name];
+        
+        return GenerateEntityQuery(trees, currentTree, tableFields, childrenFields, sqlWhereStatement, childrenSqlStatement, isRootEntity, childrenOrder);
+    }
+
+    private static (string sqlStatement, NodeTree rootNode) GenerateEntityQuery(Dictionary<string, NodeTree> trees, NodeTree currentTree, List<GraphElement> tableFields, List<string> childrenFields, 
+        Dictionary<string, string> sqlWhereStatement, Dictionary<string,string> childrenSqlStatement, int isRootEntity, List<string> childrenOrder)
+    {
+        var sqlChildren = string.Empty;
+        var sqlQueryStatement = $" {(isRootEntity == 1 ? "" : tableFields.Any(f => f.GraphElementType == GraphElementType.Edge) ? " JOIN ( " : " LEFT JOIN  ( ")} SELECT ";
+        var childrenFieldAux = new List<string>();
+        
+        foreach (var tableField in childrenFields)
+        {
+            var nodeTreeName = tableField.Split('.')[0];
+            if (nodeTreeName.Matches(currentTree.Name) || currentTree.Children.Any(c => c.Name.Matches(nodeTreeName)))
+            {
+                var fieldName = $"{currentTree.Name}.\"{tableField.Split(".")[1].Sanitize().Split("AS")[0]
+                    .Sanitize()}\" AS \"{tableField.Split(".")[1].Sanitize().Split("AS")[0].Sanitize()}\"";
+                childrenFieldAux.Add(fieldName);
+            }
+        }
+
+        var joinKeyToAdd = tableFields.Any(f => f.FieldName.Matches(currentTree.JoinKey));
+
+        if (tableFields.Count <= 2 && !tableFields.Any(f => !f.Field.Contains("Id")))
+        {
+            var newRootNodeTree = trees[childrenSqlStatement.First().Key];
+            sqlWhereStatement.TryGetValue(newRootNodeTree.Name, out var currentSqlWhereStatementNewRoot);
+            var oldWhereStatement = currentSqlWhereStatementNewRoot;
+            
+            if (!string.IsNullOrEmpty(oldWhereStatement))
+            {
+                oldWhereStatement = oldWhereStatement.Replace("~", newRootNodeTree.Name);
+
+                foreach (var field in oldWhereStatement.Split("\""))
+                {
+                    if (newRootNodeTree.Mappings.ContainsKey(field))
+                    {
+                        oldWhereStatement =
+                            oldWhereStatement.Replace(field, $"{field.ToSnakeCase(newRootNodeTree.Id)}");
+                    }
+                }
+                oldWhereStatement = $" WHERE {oldWhereStatement} ";
+            }
+            else
+            {
+                oldWhereStatement = string.Empty;
+            }
+            
+            if (childrenSqlStatement.Count > 0 && childrenSqlStatement.Count > 0)
+            {
+                var cutoff = childrenSqlStatement.First().Value.IndexOf('(') + 1;
+                var sqlStatement =
+                    $"{childrenSqlStatement.First().Value.Substring(cutoff, childrenSqlStatement.First()
+                        .Value.Length - cutoff)}";
+                sqlStatement =  sqlStatement.Replace(oldWhereStatement, $" WHERE {currentSqlWhereStatementNewRoot.Replace("~", newRootNodeTree.Name)}");
+                
+                return (sqlStatement, newRootNodeTree);
+            }
+            return (string.Empty, currentTree);
+        }
+        
+        if (!joinKeyToAdd && !string.IsNullOrEmpty(currentTree.JoinKey))
+        {
+            tableFields.Add(
+                new GraphElement()
+                {
+                    EntityId = currentTree.Id,
+                    GraphElementType = tableFields.Any(f => f.TableName.Matches(currentTree.Name) &&
+                        f.GraphElementType == GraphElementType.Edge) ? GraphElementType.Edge : GraphElementType.Node,
+                    TableName = currentTree.Name,
+                    FieldName = currentTree.JoinKey,
+                    Field = $"{currentTree.Name}.\"{currentTree.JoinKey.ToUpperCamelCase()}\" AS \"{currentTree.JoinKey.ToUpperCamelCase().ToSnakeCase(currentTree.Id)}\""
+                });
+        }
+        
+        var idToAdd = tableFields.Any(f => f.FieldName.Matches("Id"));
+        
+        if (!idToAdd)
+        {
+            tableFields.Add(
+                new GraphElement()
+                {
+                    EntityId = currentTree.Id,
+                    GraphElementType = tableFields.Any(f => f.TableName.Matches(currentTree.Name) &&
+                                                            f.GraphElementType == GraphElementType.Edge) ? GraphElementType.Edge : GraphElementType.Node,
+                    TableName = currentTree.Name,
+                    FieldName = "Id",
+                    Field = $"{currentTree.Name}.\"Id\" AS \"{"Id".ToSnakeCase(currentTree.Id)}\""
+                });
+        }
+        
+        foreach (var tableField in tableFields)
+        {
+            var nodeTreeName = tableField.Field.Split('.')[0];
+            
+            if (nodeTreeName.Matches(currentTree.Name) || currentTree.Children.Any(c => c.Name.Matches(nodeTreeName)))
+            {
+                var tableFieldParts = tableField.Field.Split(".");
+                var childField = tableFieldParts[1].Sanitize().Split(" AS ")[1];
+                var fieldName = $"{currentTree.Name}.\"{childField}\" AS \"{childField}\"";
+                childrenFieldAux.Add(fieldName);
+            }
+        }
+        
+        var childrenColumns = string.Join(",", childrenFields.Where(c=> currentTree.Children.Any(cc => cc.Name
+            .Matches(c.Split('.')[0].Sanitize()))));
+        
+        sqlQueryStatement += string.Join(",", tableFields.Select(s => s.Field)) + $"{(!string.IsNullOrEmpty(childrenColumns) ? "," : "")}" + childrenColumns;
+        sqlQueryStatement += $" FROM \"{currentTree.Schema}\".\"{currentTree.Name}\" {currentTree.Name}";
+
+        childrenFields.AddRange(childrenFieldAux);
+        
+        for (var i = 0; i < childrenSqlStatement.Count; i++)
+        {
+            var childTree = trees[childrenOrder[i]];
+            if (childrenSqlStatement.TryGetValue(childTree.Name, out var childStatement))
+            {
+                sqlChildren +=
+                    $" {childStatement} ) {childTree.Name} ON {currentTree.Name}.\"{"Id"}\" = {childTree.Name}.\"{childTree.JoinKey.ToSnakeCase(childTree.Id)}\"";
+            }
+        }
+        sqlQueryStatement += $" {sqlChildren}";
+        
+        sqlWhereStatement.TryGetValue(currentTree.Name, out var currentSqlWhereStatement);
+        
+        if (!string.IsNullOrEmpty(currentSqlWhereStatement))
+        {
+            currentSqlWhereStatement = currentSqlWhereStatement.Replace("~", currentTree.Name);
+
+            foreach (var field in currentSqlWhereStatement.Split("\""))
+            {
+                if (currentTree.Mappings.ContainsKey(field))
+                {
+                    currentSqlWhereStatement =
+                        currentSqlWhereStatement.Replace(field, $"{(isRootEntity == 1 ? field : field.ToSnakeCase(currentTree.Id))}");
+                }
+            }
+            currentSqlWhereStatement = $" WHERE {currentSqlWhereStatement} ";
+        }
+        else
+        {
+            currentSqlWhereStatement = string.Empty;
+        }
+        
+        sqlQueryStatement += $" {currentSqlWhereStatement}";
+        
+        return (sqlQueryStatement, currentTree);
     }
 
     public static void HandleQueryClause(NodeTree rootTree, StringBuilder sqlQuery, string sqlOrderStatement,
@@ -389,186 +547,102 @@ public static class SqlNodeResolverHelper
         }
     }
 
-    public static void GetFields(Dictionary<string, NodeTree> trees, ISyntaxNode node, StringBuilder sql,
-        List<SqlNode> sqlNodes, List<string> childrenColumns, NodeTree currentTree, NodeTree parentTree,
-        List<string> entityNames, string queryType,
-        List<string> generatedEntities, Dictionary<string, string> sqlWhereStatement)
+    public static void GetFields(Dictionary<string, NodeTree> trees, ISyntaxNode node, NodeTree currentTree, NodeTree parentTree,
+        List<string> entityNames, Dictionary<string, List<GraphElement>> entityMap, bool isEdge)
     {
-        var treeKey = node.ToString().Split(':')[0].Trim();
-
-        if (trees.ContainsKey(treeKey))
+        if (node.GetNodes().Count() == 0)
         {
-            parentTree = currentTree;
-            currentTree = trees[treeKey];
-        }
-
-        treeKey = node.ToString().Split('{')[0].Trim();
-        if (trees.ContainsKey(treeKey))
-        {
-            currentTree = trees[treeKey];
-        }
-
-        if (node.ToString().Split('{')[1].Trim().Matches("node") ||
-            node.ToString().Split('{')[1].Trim().Matches("nodes"))
-        {
-            currentTree = trees.Last().Value;
-        }
-
-        foreach (var uNode in node.GetNodes())
-        {
-            if (uNode.ToString().Split('{').Length > 1)
+            if (string.IsNullOrEmpty(currentTree.Name))
             {
-                GetFields(trees, uNode, sql, sqlNodes, childrenColumns, currentTree, parentTree, entityNames, queryType,
-                    generatedEntities, sqlWhereStatement);
+                currentTree = trees.Last().Value;    
+            }
+
+            var dbField = string.Empty;
+            
+            if (node.ToString().Matches("nodes") || node.ToString().Matches("node"))
+            {
+                dbField = node.ToString();
+            }
+            else if (entityNames.Any(e => e.Matches(node.ToString())))
+            {
+                dbField = currentTree.Name;
             }
             else
             {
-                if (!uNode.ToString().Matches("node") &&
-                    uNode.ToString().Split('~').Length == 1 &&
-                    currentTree.Mappings.ContainsKey(uNode.ToString()) &&
-                    !entityNames.Any(e => e.Matches(uNode.ToString())))
+                dbField = currentTree.Mappings[node.ToString()];    
+            }
+            
+            var element = new GraphElement
+            {
+                EntityId = currentTree.Id,
+                GraphElementType = isEdge ? GraphElementType.Edge : GraphElementType.Node,
+                TableName = currentTree.Name
+            };
+            
+            if (currentTree.Name.Matches(dbField))
+            {
+                element.FieldName = dbField;
+                element.Field = $"{currentTree.Name}.\"Id\" AS \"{dbField.ToUpperCamelCase()}_{"Id".ToSnakeCase(currentTree.Id)}\"";
+            }
+            else if (string.IsNullOrEmpty(currentTree.Name) || dbField.Matches("nodes") || dbField.Matches("node"))
+            {
+                element.FieldName = currentTree.Name;
+                element.Field = $"{currentTree.Name}.\"Id\" AS \"{currentTree.Name.ToUpperCamelCase()}_{"Id".ToSnakeCase(currentTree.Id)}\"";
+            }
+            else
+            {
+                if (!dbField.Matches(currentTree.Name))
                 {
-                    var field = $"{currentTree.Name}.\"{currentTree.Mappings[uNode.ToString()]}\"";
-                    if (!string.IsNullOrEmpty(field))
-                    {
-                        var sqlNode = sqlNodes.FirstOrDefault(s => s.NodeTree.Name.Matches(currentTree.Name));
-
-                        if (sqlNode != null)
-                        {
-                            if (sqlNode.SqlNodeType != SqlNodeType.Edge &&
-                                queryType.Matches("Edges"))
-                            {
-                                sqlNode.SqlNodeType = SqlNodeType.Edge;
-                            }
-
-                            if (!sqlNode.SelectColumns.ToList()
-                                    .Any(column => sqlNode.SelectColumns.Contains(field)))
-                            {
-                                sqlNode.SelectColumns.Add(field);
-                            }
-                        }
-                        else
-                        {
-                            sqlNode = new SqlNode();
-                            sqlNode.SqlNodeType = queryType.Matches("Edges") ? SqlNodeType.Edge : SqlNodeType.Node;
-                            sqlNode.SelectColumns = new List<string>();
-                            sqlNode.SelectColumns.Add(field);
-
-                            if (!currentTree.JoinKey.Matches(currentTree.Mappings[uNode.ToString()]) &&
-                                !string.IsNullOrEmpty(currentTree.JoinKey))
-                            {
-                                sqlNode.SelectColumns.Add($"{currentTree.Name}.\"{currentTree.JoinKey}\"");
-                                sqlNode.SelectColumns.Insert(0, $"{currentTree.Name}.\"Id\"");
-                            }
-
-                            sqlNode.NodeTree = currentTree;
-                            sqlNodes.Add(sqlNode);
-                        }
-                    }
+                    element.FieldName = dbField;
+                    element.Field = $"{currentTree.Name}.\"{dbField.ToUpperCamelCase()}\" AS \"{dbField.ToUpperCamelCase().ToSnakeCase(currentTree.Id)}\"";
                 }
             }
+            
+            AddToGraphElementDictionary(entityMap, currentTree.Name, element); 
+            
+            return;
         }
-
-        if (queryType.Matches("Edges"))
+        
+        foreach (var childNode in node.GetNodes())
         {
-            //Generate query statement
-            var index = sqlNodes.FindIndex(s => s.NodeTree.Name.Matches(currentTree.Name));
-
-            if (index < 0)
+            if (entityNames.Any(e => e.Matches(childNode.ToString().Split('{')[0])))
             {
-                return;
+                currentTree = trees[childNode.ToString().Split('{')[0]];
+                if (!string.IsNullOrWhiteSpace(currentTree.ParentName))
+                {
+                    parentTree = trees[currentTree.ParentName];    
+                }
+                else
+                {
+                    parentTree = currentTree;
+                }
             }
-
-            if (sqlNodes[index] != null && sqlNodes[index].SelectColumns.Count > 0 &&
-                !generatedEntities.Any(e => e.Matches(currentTree.Name)))
+            
+            GetFields(trees, childNode, currentTree, parentTree, entityNames, entityMap, isEdge);
+        }
+    }
+    
+    private static void AddToGraphElementDictionary(Dictionary<string, List<GraphElement>> dictionary, string key, GraphElement value)
+    {
+        if (!dictionary.TryGetValue(key, out var currentList))
+        {
+            var newGraphList = new List<GraphElement>()
             {
-                var currentSqlWhereStatement = sqlWhereStatement.GetValueOrDefault(currentTree.Name);
+                value
+            };
+            dictionary.Add(key, newGraphList);
+        }
+        else
+        {
+            var currentFieldIndex = currentList.FindIndex(f => f.Field.Matches(value.Field));
 
-                if (!string.IsNullOrEmpty(currentSqlWhereStatement))
-                {
-                    currentSqlWhereStatement = currentSqlWhereStatement.Replace("~", currentTree.Name);
-
-                    foreach (var field in currentSqlWhereStatement.Split("\""))
-                    {
-                        if (currentTree.Mappings.ContainsKey(field))
-                        {
-                            currentSqlWhereStatement =
-                                currentSqlWhereStatement.Replace(field, $"{field.ToSnakeCase(currentTree.Id)}");
-                        }
-                    }
-
-                    currentSqlWhereStatement = $" WHERE {currentSqlWhereStatement} ";
-                }
-                else
-                {
-                    currentSqlWhereStatement = string.Empty;
-                }
-
-                if (index > 0 && index - 1 < sqlNodes.Count)
-                {
-                    sql.Insert(0, $" {(sqlNodes[index].SqlNodeType == SqlNodeType.Edge ? " JOIN " : " LEFT JOIN ")} " +
-                                  $"( SELECT {currentTree.Name}.\"Id\" AS \"{currentTree.Name}_{"Id".ToSnakeCase(currentTree.Id)}\", " +
-                                  $" {string.Join(",", sqlNodes[index].SelectColumns.Where(c => !c.Split('.')[1]
-                                          .Matches("\"Id\""))
-                                      .Select(s => $"{currentTree.Name}.\"{s.Split('.')[1].Sanitize()}\" AS " +
-                                                   $"\"{s.Split('.')[1].Sanitize().ToSnakeCase(currentTree.Id)}\""))}" +
-                                  $"{(generatedEntities.Count(s => currentTree.Children.Any(c =>
-                                      c.Name.Matches(s))) > 0 ? "," : "")} " +
-                                  $"FROM \"{currentTree.Schema}\".\"{currentTree.Name}\" {currentTree.Name} ) " +
-                                  $" {currentTree.Name} " +
-                                  $" ON {trees[currentTree.ParentName].Name}.\"Id\" = " +
-                                  $"{currentTree.Name}.\"{currentTree.JoinKey.ToSnakeCase(currentTree.Id)}\" {currentSqlWhereStatement} ");
-                }
-                else
-                {
-                    var auxChildrenColumns = new List<string>();
-                    var auxCurrentColumns = new List<string>();
-
-                    foreach (var sqlNodeSelectColumn in sqlNodes)
-                    {
-                        foreach (var column in sqlNodeSelectColumn.SelectColumns)
-                        {
-                            foreach (var child in currentTree.Children)
-                            {
-                                var childName = column.Split('.');
-                                if (childName[0].Matches(child.Name))
-                                {
-                                    if (childName[1].StartsWith("\"Id"))
-                                    {
-                                        auxChildrenColumns.Add(
-                                            $"{childName[0]}.\"{childName[0]}_{childName[1].Sanitize().ToSnakeCase(trees[childName[0]].Id)}\" AS \"{childName[0]}_{childName[1].Sanitize().ToSnakeCase(trees[childName[0]].Id)}\"");
-                                        auxChildrenColumns.Add(
-                                            $"{childName[0]}.\"{childName[0]}_{childName[1].Sanitize().ToSnakeCase(trees[childName[0]].Id)}\" AS \"_{childName[1].Sanitize().ToSnakeCase(trees[childName[0]].Id)}\"");
-                                    }
-                                    else
-                                    {
-                                        auxChildrenColumns.Add(
-                                            $"{childName[0]}.\"{childName[1].Sanitize().ToSnakeCase(trees[childName[0]].Id)}\" AS \"{childName[1].Sanitize().ToSnakeCase(trees[childName[0]].Id)}\"");
-                                    }
-                                }
-                                else if (childName[0].Matches(currentTree.Name) &&
-                                         !auxCurrentColumns.Contains($"{currentTree.Name}.{childName[1]}"))
-                                {
-                                    auxCurrentColumns.Add($"{currentTree.Name}.{childName[1]}");
-                                }
-                            }
-                        }
-                    }
-
-
-                    sql.Insert(0,
-                        $" SELECT {currentTree.Name}.\"{"Id"}\" AS \"{currentTree.Name}_{"Id".ToSnakeCase(currentTree.Id)}\", " +
-                        $"{currentTree.Name}.\"{"Id"}\" AS \"_{"Id".ToSnakeCase(currentTree.Id)}\", " +
-                        $"{string.Join(",", auxCurrentColumns
-                            .Select(s => $"{s.Split('.')[0].Sanitize()}.\"{s.Split('.')[1].Sanitize()}\" AS " +
-                                         $"\"{s.Split('.')[1].Sanitize()}\""))}" +
-                        $", {string.Join(",", auxChildrenColumns
-                            .Select(s => s))}" +
-                        $" FROM \"{currentTree.Schema}\".\"{currentTree.Name}\" {currentTree.Name} ");
-                }
-
-                generatedEntities.Add(currentTree.Name);
-                childrenColumns.AddRange(sqlNodes[index].SelectColumns);
+            if (currentFieldIndex < 0)
+            {
+                currentList.Add(value);
+            }
+            else
+            {
+                currentList[currentFieldIndex] = value;
             }
         }
     }
@@ -621,6 +695,11 @@ public static class SqlNodeResolverHelper
         ISyntaxNode whereNode, string entityName, string rootEntityName, List<string> clauseType,
         Dictionary<string, List<string>> permission = null)
     {
+        if (whereNode == null)
+        {
+            return;
+        }
+        
         foreach (var wNode in whereNode.GetNodes())
         {
             var currentEntity = entityName;

@@ -15,7 +15,7 @@ public interface IProcessService<M,N,S>
     where M : class where N : class where S : class 
 {
     Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)> QueryProcessAsync<M>(
-        ISelection graphQlSelection, CancellationToken cancellationToken)
+        string cacheKey, ISelection graphQlSelection, string rootName, CancellationToken cancellationToken)
         where M : class;
 
     Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)> UpsertProcessAsync<M>(
@@ -45,17 +45,14 @@ public class ProcessService<M,D,S>
 
     public virtual async Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)> 
         QueryProcessAsync<M>(
-            ISelection graphQlSelection, CancellationToken cancellationToken)
+            string cacheKey, ISelection graphQlSelection, string rootName, CancellationToken cancellationToken)
         where M : class
     {
-        return await _queryDispatcher
-            .DispatchAsync<ProcessQueryParameters, (List<M> process, int? startCursor, int? endCursor, int?
-                totalCount, int? totalPageRecords)>(default, cancellationToken);
+        return await ExecuteStatementAsync<M>(cacheKey, graphQlSelection, rootName, cancellationToken);
     }
-    
-    public virtual async Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)> 
-        UpsertProcessAsync<M>(string cacheKey, ISelection graphQlSelection, string rootName, CancellationToken cancellationToken)
-        where M : class
+
+    private async Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>
+        ExecuteStatementAsync<M>(string cacheKey, ISelection graphQlSelection, string rootName, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(graphQlSelection.ToString()))
         {
@@ -64,12 +61,19 @@ public class ProcessService<M,D,S>
 
         var sqlStructure = new SqlStructure();
         sqlStructure = SqlNodeResolverHelper.HandleGraphQL(graphQlSelection, _treeMap.DictionaryTree, rootName,
-                _treeMap.EntityNames, _cache);
-                //Permissions )
+            _treeMap.EntityNames, _cache);
+        //Permissions )
         
         return await _queryDispatcher
             .DispatchAsync<SqlStructure, (List<M> Process, int? startCursor, int? endCursor, int?
                 totalCount, int? totalPageRecords)>(sqlStructure, cancellationToken);
+    }
+    
+    public virtual async Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)> 
+        UpsertProcessAsync<M>(string cacheKey, ISelection graphQlSelection, string rootName, CancellationToken cancellationToken)
+        where M : class
+    {
+        return await ExecuteStatementAsync<M>(cacheKey, graphQlSelection, rootName, cancellationToken);
     }
     
     public async Task<ProcessQueryParameters> HandleQuery<M>(SqlStructure sqlStructure, CancellationToken cancellationToken)

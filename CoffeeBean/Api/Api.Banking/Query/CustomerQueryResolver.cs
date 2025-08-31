@@ -27,8 +27,11 @@ public class CustomerQueryResolver : IOutputType
     {
         try
         {
+            //might be sent by client
+            var cacheKey = string.Empty;
+            
             var set = await service.
-                QueryProcessAsync<Customer>(resolverContext.Selection, CancellationToken.None);
+                QueryProcessAsync<Customer>(cacheKey, resolverContext.Selection, nameof(Wrapper), CancellationToken.None);
             var recordCount = set.totalCount ?? 0;
             var pageRecords = set.totalPageRecords ?? 0;
             
