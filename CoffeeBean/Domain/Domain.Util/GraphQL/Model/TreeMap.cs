@@ -1,6 +1,5 @@
-﻿using Domain.Util.GraphQL.Model;
-
-namespace Domain.Shared;
+﻿
+namespace Domain.Util.GraphQL.Model;
 
 public interface ITreeMap<T,M> where T : class where M : class
 {
