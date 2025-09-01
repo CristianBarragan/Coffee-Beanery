@@ -2,7 +2,7 @@
 
 <img src="https://github.com/CristianBarragan/CoffeeBean/blob/main/CoffeeBean/CoffeeBeanLogo.jpg" alt="100% Colombian Coffee" height="80" width="52">
 
-Coffee beaner library is a dynamic parser from GraphQL queries into raw SQL queries; this library will not be shipped in a nuget package since optimization and changes are case by case; this example is using:
+Coffee beaner library is a dynamic parser from GraphQL queries into raw SQL queries; this library will not be shipped as a nuget package since optimization and changes are case by case; this example is using:
 
 - Dapper
 - Hot Chocolate
