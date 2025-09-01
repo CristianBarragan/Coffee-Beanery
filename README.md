@@ -1,14 +1,17 @@
-### Coffee bean
+### Coffee beaner
 
 <img src="https://github.com/CristianBarragan/CoffeeBean/blob/main/CoffeeBean/CoffeeBeanLogo.jpg" alt="100% Colombian Coffee" height="80" width="52">
 
-Coffee bean library is a dynamic parser from graphQL queries into SQL queries; this library example is using:
+Coffee beaner library is a dynamic parser from GraphQL queries into raw SQL queries; this library will not be shipped in a nuget package since optimization and changes are case by case; this example is using:
 
 - Dapper
 - Hot Chocolate
 - Automapper
 - Entity Framework
 - PostgreSQL
+- FasterKV
+
+Coffee Beaner provides the following features and can be fully customized
 
 ## Current Features
 
@@ -24,18 +27,38 @@ Coffee bean library is a dynamic parser from graphQL queries into SQL queries; t
 - Supports any GraphQL framework or vanilla .NET API, since it is not tightly couple to a vendor
 - Nodes (Left joins between entities)
 - Edges (Joins between entities)
-- Manages mutations for any generic objects
 - Paging
 - Filtering
-- Sorting * Currently sorting has a limitation on advance sorting due to missing out of the box Hot Chocolate implementation
+- Sorting
 
+
+## Customizable Features
+
+- Granular access by table/columns based on token-claims
+- Data and column validations
+- Query cache can be customized in multiple layers
+- Query result handling can be fully customized
+	
+### Queries
+
+Even though the query cannot be directly converted and translated during the tree processing, the library supports multiple caching and techniques; since queries need to be processed as a single statement for the entire tree
+
+ Support of multiple cache levels
+
+	1. key: main node string
+	   Value: Calculated query
+	2. Where and Pagination are decoupled of the query, allowing a better cache plans
+	3. Query Result data: based on the requirements, the returning data result can be upserted and save into the cache
+
+### Mutations
+
+Mutations are not cached as they are directly converted and translated during the tree processing, since the upserts do not require to be combined within a single statement. Also, mutations are tightly couple with data so, there is not to much gain to cache the queries with specific values
+	
+	1. Returning query cache techniques can be used in mutation result
 
 ## Future Features
 
-- Granular access by table/columns based on token-claims
 - Add support to other database providers
-- Query cache
-- Data and column validations
 
 ## Setup
 
@@ -62,7 +85,7 @@ Contains the custom model and attributes which will be exposed through the API.
 
 ### Api
 
-- Contains basic setup for graphQL API
+- Contains basic setup for GraphQL API
 - Supports any framework since it is not tightly couple to a vendor
 
   
