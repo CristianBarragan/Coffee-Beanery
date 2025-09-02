@@ -2,6 +2,12 @@ namespace Domain.Util.GraphQL.Extension;
 
 public static class StringExtensions
 {
+    /// <summary>
+    /// Extension method for comparing two strings
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="comparison"></param>
+    /// <returns></returns>
     public static bool Matches(this string? input, string comparison)
     {
         if (string.IsNullOrEmpty(input)) { return false; }
@@ -9,6 +15,12 @@ public static class StringExtensions
         return string.Compare(input, comparison, StringComparison.InvariantCultureIgnoreCase) == 0;
     }
     
+    /// <summary>
+    /// Extension method to convert a string (column) adding underscore for uniqueness
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="numberOfSnakeChar"></param>
+    /// <returns></returns>
     public static string ToSnakeCase(this string input, int numberOfSnakeChar = 1)
     {
         if (string.IsNullOrEmpty(input)) { return input; }
@@ -20,11 +32,14 @@ public static class StringExtensions
         }
         
         return input + underscored;
-
-        // var startUnderscores = Regex.Match(input, @"^_+");
-        // return startUnderscores + Regex.Replace(input, @"([a-z0-9])([A-Z])", "$1_$2");
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="field"></param>
+    /// <param name="separator"></param>
+    /// <returns></returns>
     public static string ToFieldName(this string field, char separator = '~')
     {
         if (string.IsNullOrEmpty(field)) { return field; }
