@@ -6,6 +6,13 @@ namespace Domain.Util.GraphQL.Helper;
 
 public static class ContextResolverHelper
 {
+    /// <summary>
+    /// Generate connection result based on entity node list and pagination
+    /// </summary>
+    /// <param name="entityNodes"></param>
+    /// <param name="pagination"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
     public static Connection<T> GenerateConnection<T>(IEnumerable<EntityNode<T>> entityNodes, Pagination pagination) where T : class
     {
         var index = 0; 

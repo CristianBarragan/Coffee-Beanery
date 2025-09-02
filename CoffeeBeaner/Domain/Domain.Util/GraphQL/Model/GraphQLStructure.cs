@@ -22,4 +22,15 @@ public class GraphQLStructure
     public Dictionary<string, string> Mutations { get; set; } = new Dictionary<string, string>();
 }
 
+public class Entity
+{
+    public static List<string> ClauseTypes = new List<string>()
+    {
+        "eq",
+        "neq",
+        "in",
+        "any"
+    };
+}
+
 
