@@ -63,6 +63,9 @@ Mutations are not cached as they are directly converted and translated during th
 ### Database.Entity 
 Contains plain ef core entity models where a property schema and id are required for joining purposes.
 
+### CoffeeBeanery
+Contains all util helpers and core implementations
+
 ### Domain.Model 
 Contains the custom model and attributes which will be exposed through the API. 
 
