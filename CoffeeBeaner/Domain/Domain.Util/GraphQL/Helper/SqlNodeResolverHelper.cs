@@ -10,6 +10,16 @@ namespace Domain.Util.GraphQL.Helper;
 
 public static class SqlNodeResolverHelper
 {
+    /// <summary>
+    /// Method to handle three Selection using recursion to visit each argument and nodes
+    /// </summary>
+    /// <param name="graphQlSelection"></param>
+    /// <param name="trees"></param>
+    /// <param name="rootEntityName"></param>
+    /// <param name="entityNames"></param>
+    /// <param name="cache"></param>
+    /// <param name="permissions"></param>
+    /// <returns></returns>
     public static SqlStructure HandleGraphQL(ISelection graphQlSelection, Dictionary<string, NodeTree> trees,
         string rootEntityName, List<string> entityNames, IFasterKV<string, string> cache,
         Dictionary<string, List<string>> permissions = null)
@@ -68,7 +78,7 @@ public static class SqlNodeResolverHelper
             {
                 var nodeTreeRoot = new NodeTree();
                 nodeTreeRoot.Name = string.Empty;
-                GetMutations(ref parameters, trees, sqlUpsert, argument.Value.GetNodes().ToList()[0], nodeTreeRoot,
+                GetMutations(trees, sqlUpsert, argument.Value.GetNodes().ToList()[0], nodeTreeRoot,
                     nodeTreeRoot, upsertSqlNodes, 1, sqlWhereStatement);
             }
         }
@@ -144,7 +154,18 @@ public static class SqlNodeResolverHelper
         return sqlStructure;
     }
 
-    private static (string sqlStatement, NodeTree rootNodeTree) GenerateQuery(Dictionary<string, NodeTree> trees, Dictionary<string, List<GraphElement>> entityMap,
+    /// <summary>
+    /// Recursive method to visit every entity that needs to be added into the SQL query statement
+    /// </summary>
+    /// <param name="trees"></param>
+    /// <param name="entityMap"></param>
+    /// <param name="childrenFields"></param>
+    /// <param name="sqlWhereStatement"></param>
+    /// <param name="currentTree"></param>
+    /// <param name="isRootEntity"></param>
+    /// <returns></returns>
+    private static (string sqlStatement, NodeTree rootNodeTree) GenerateQuery(Dictionary<string, NodeTree> trees, Dictionary<string, 
+            List<GraphElement>> entityMap,
         List<string> childrenFields, Dictionary<string, string> sqlWhereStatement, NodeTree currentTree, int isRootEntity)
     {
         var childrenSqlStatement = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -164,6 +185,18 @@ public static class SqlNodeResolverHelper
         return GenerateEntityQuery(trees, currentTree, tableFields, childrenFields, sqlWhereStatement, childrenSqlStatement, isRootEntity, childrenOrder);
     }
 
+    /// <summary>
+    /// Map each entity node into raw query SQL statement
+    /// </summary>
+    /// <param name="trees"></param>
+    /// <param name="currentTree"></param>
+    /// <param name="tableFields"></param>
+    /// <param name="childrenFields"></param>
+    /// <param name="sqlWhereStatement"></param>
+    /// <param name="childrenSqlStatement"></param>
+    /// <param name="isRootEntity"></param>
+    /// <param name="childrenOrder"></param>
+    /// <returns></returns>
     private static (string sqlStatement, NodeTree rootNode) GenerateEntityQuery(Dictionary<string, NodeTree> trees, NodeTree currentTree, List<GraphElement> tableFields, List<string> childrenFields, 
         Dictionary<string, string> sqlWhereStatement, Dictionary<string,string> childrenSqlStatement, int isRootEntity, List<string> childrenOrder)
     {
@@ -310,6 +343,14 @@ public static class SqlNodeResolverHelper
         return (sqlQueryStatement, currentTree);
     }
 
+    /// <summary>
+    /// Method for adding pagination into the query SQL statement 
+    /// </summary>
+    /// <param name="rootTree"></param>
+    /// <param name="sqlQuery"></param>
+    /// <param name="sqlOrderStatement"></param>
+    /// <param name="pagination"></param>
+    /// <param name="hasTotalCount"></param>
     public static void HandleQueryClause(NodeTree rootTree, StringBuilder sqlQuery, string sqlOrderStatement,
         Pagination pagination, bool hasTotalCount = false)
     {
@@ -378,13 +419,24 @@ public static class SqlNodeResolverHelper
                         $"{totalCount} * FROM {rootTree.Schema}s) a {sqlWhereStatement.Replace('~', 'a')}");
     }
 
-    public static void GetMutations(in DynamicParameters parameters, Dictionary<string, NodeTree> trees,
+    /// <summary>
+    /// Generates upsert SQL statement while recursively iteration the tree nodes
+    /// </summary>
+    /// <param name="trees"></param>
+    /// <param name="sqlUpsert"></param>
+    /// <param name="upsertNode"></param>
+    /// <param name="currentTree"></param>
+    /// <param name="parentTree"></param>
+    /// <param name="sqlNodes"></param>
+    /// <param name="child"></param>
+    /// <param name="sqlWhereStatement"></param>
+    /// <param name="permissions"></param>
+    public static void GetMutations(Dictionary<string, NodeTree> trees,
         StringBuilder sqlUpsert, ISyntaxNode upsertNode, NodeTree currentTree,
         NodeTree parentTree, List<SqlNode> sqlNodes, int child, Dictionary<string, string> sqlWhereStatement,
         Dictionary<string, List<string>> permissions = null)
     {
         var insert = new List<string>();
-        var select = new List<string>();
         var exclude = new List<string>();
 
         if (!upsertNode.ToString().Split(':')[0].Replace("{", "").Trim().Matches(currentTree.Name) &&
@@ -398,14 +450,14 @@ public static class SqlNodeResolverHelper
         {
             if (uNode.ToString().Split('{').Length > 1)
             {
-                GetMutations(parameters, trees, sqlUpsert, uNode, currentTree, parentTree, sqlNodes,
+                GetMutations(trees, sqlUpsert, uNode, currentTree, parentTree, sqlNodes,
                     child, sqlWhereStatement, permissions);
             }
             else
             {
                 if (uNode.ToString().Split(':').Length == 2)
                 {
-                    SqlGraphQLHelper.HandleUpsertField(insert, select, exclude, currentTree, sqlNodes,
+                    SqlGraphQLHelper.HandleUpsertField(insert, exclude, currentTree, sqlNodes,
                         uNode.ToString().Split(':')[0].Trim(),
                         uNode.ToString().Split(':')[1].Sanitize(), false, child++);
                     continue;
@@ -414,7 +466,7 @@ public static class SqlNodeResolverHelper
                 if (uNode.ToString().Split(':').Length == 4 && uNode.ToString().Split('.')[1].Length == 5 &&
                     uNode.ToString().Split('.')[1][3] == 'Z')
                 {
-                    SqlGraphQLHelper.HandleUpsertField(insert, select, exclude, currentTree, sqlNodes,
+                    SqlGraphQLHelper.HandleUpsertField(insert, exclude, currentTree, sqlNodes,
                         uNode.ToString().Split(':')[0].Trim(),
                         string.Join('`', uNode.ToString().Split(':').Skip(1).ToList()).Replace('"', '\''), true,
                         child++);
@@ -547,6 +599,16 @@ public static class SqlNodeResolverHelper
         }
     }
 
+    /// <summary>
+    /// Method for getting upsert field information used for the SQL Statement
+    /// </summary>
+    /// <param name="trees"></param>
+    /// <param name="node"></param>
+    /// <param name="currentTree"></param>
+    /// <param name="parentTree"></param>
+    /// <param name="entityNames"></param>
+    /// <param name="entityMap"></param>
+    /// <param name="isEdge"></param>
     public static void GetFields(Dictionary<string, NodeTree> trees, ISyntaxNode node, NodeTree currentTree, NodeTree parentTree,
         List<string> entityNames, Dictionary<string, List<GraphElement>> entityMap, bool isEdge)
     {
@@ -622,6 +684,12 @@ public static class SqlNodeResolverHelper
         }
     }
     
+    /// <summary>
+    /// Method for adding a graph element into a dictionary
+    /// </summary>
+    /// <param name="dictionary"></param>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
     private static void AddToGraphElementDictionary(Dictionary<string, List<GraphElement>> dictionary, string key, GraphElement value)
     {
         if (!dictionary.TryGetValue(key, out var currentList))
@@ -647,6 +715,12 @@ public static class SqlNodeResolverHelper
         }
     }
 
+    /// <summary>
+    /// Method for adding a value into a dictionary
+    /// </summary>
+    /// <param name="dictionary"></param>
+    /// <param name="key"></param>
+    /// <param name="values"></param>
     private static void AddToDictionary(Dictionary<string, string> dictionary, string key, List<string> values)
     {
         foreach (var value in values)
@@ -662,6 +736,13 @@ public static class SqlNodeResolverHelper
         }
     }
 
+    /// <summary>
+    /// Method for creating order clause based on fields
+    /// </summary>
+    /// <param name="trees"></param>
+    /// <param name="orderNode"></param>
+    /// <param name="entity"></param>
+    /// <returns></returns>
     public static string GetFieldsOrdering(Dictionary<string, NodeTree> trees, ISyntaxNode orderNode, string entity)
     {
         var orderString = string.Empty;
@@ -690,6 +771,17 @@ public static class SqlNodeResolverHelper
         return orderString;
     }
 
+    /// <summary>
+    /// Method for creating where clause based on fields
+    /// </summary>
+    /// <param name="trees"></param>
+    /// <param name="whereFields"></param>
+    /// <param name="sqlWhereStatement"></param>
+    /// <param name="whereNode"></param>
+    /// <param name="entityName"></param>
+    /// <param name="rootEntityName"></param>
+    /// <param name="clauseType"></param>
+    /// <param name="permission"></param>
     public static void GetFieldsWhere(Dictionary<string, NodeTree> trees, List<string> whereFields,
         Dictionary<string, string> sqlWhereStatement,
         ISyntaxNode whereNode, string entityName, string rootEntityName, List<string> clauseType,

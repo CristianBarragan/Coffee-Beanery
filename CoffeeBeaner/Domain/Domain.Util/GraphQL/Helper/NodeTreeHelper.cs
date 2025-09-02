@@ -11,6 +11,22 @@ namespace Domain.Util.GraphQL.Helper;
 
     public static class NodeTreeHelper
     {
+        /// <summary>
+        /// Method that creates a tree for each entity
+        /// </summary>
+        /// <param name="nodeTrees"></param>
+        /// <param name="entities"></param>
+        /// <param name="databaseTypes"></param>
+        /// <param name="nodeDatabaseClass"></param>
+        /// <param name="domainTypes"></param>
+        /// <param name="nodeDomainClass"></param>
+        /// <param name="name"></param>
+        /// <param name="mapperConfiguration"></param>
+        /// <param name="ignoreNotMapped"></param>
+        /// <param name="nodeId"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="M"></typeparam>
+        /// <returns></returns>
         public static NodeTree GenerateTree<T, M>(Dictionary<string, NodeTree> nodeTrees, List<string> entities, List<T> databaseTypes, T nodeDatabaseClass,
             List<M> domainTypes,
             M nodeDomainClass, string name, MapperConfiguration mapperConfiguration, bool ignoreNotMapped, List<KeyValuePair<string, string>> nodeId)
@@ -29,6 +45,25 @@ namespace Domain.Util.GraphQL.Helper;
                 1, 0, mapperConfiguration, ignoreNotMapped, nodeId);
         }
 
+        /// <summary>
+        /// Recursive method to visit every node and creates the tree node based on property names and enums using generics
+        /// </summary>
+        /// <param name="nodeTrees"></param>
+        /// <param name="entities"></param>
+        /// <param name="databaseTypes"></param>
+        /// <param name="nodeDatabaseClass"></param>
+        /// <param name="domainTypes"></param>
+        /// <param name="nodeDomainClass"></param>
+        /// <param name="name"></param>
+        /// <param name="parentName"></param>
+        /// <param name="id"></param>
+        /// <param name="parentId"></param>
+        /// <param name="mapperConfiguration"></param>
+        /// <param name="ignoreNotMapped"></param>
+        /// <param name="nodeId"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="M"></typeparam>
+        /// <returns></returns>
         private static NodeTree? IterateTree<T, M>(Dictionary<string, NodeTree> nodeTrees, List<string> entities, List<T> databaseTypes, T? nodeDatabaseClass,
             List<M> domainTypes,
             M? nodeDomainClass, string name, string parentName, int id, int parentId,
@@ -206,6 +241,11 @@ namespace Domain.Util.GraphQL.Helper;
             return node;
         }
 
+        /// <summary>
+        /// Check if a visited property is a primitive type
+        /// </summary>
+        /// <param name="m"></param>
+        /// <returns></returns>
         private static bool IsPrimitiveType(Type m)
         {
             return m == typeof(string) || m == typeof(bool) ||
@@ -213,6 +253,16 @@ namespace Domain.Util.GraphQL.Helper;
                    m == typeof(decimal) || m == typeof(int);
         }
 
+        /// <summary>
+        /// Add util entity objects
+        /// </summary>
+        /// <param name="entities"></param>
+        /// <param name="databaseTypes"></param>
+        /// <param name="domainTypes"></param>
+        /// <param name="varDatabase"></param>
+        /// <param name="varDomain"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="M"></typeparam>
         private static void AddEntity<T, M>(List<string> entities,
             List<T> databaseTypes, List<M> domainTypes, T varDatabase, M varDomain)
             where T : class

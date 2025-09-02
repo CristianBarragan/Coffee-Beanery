@@ -1,14 +1,23 @@
-﻿using System.Data;
-using Dapper;
-using Domain.Util.GraphQL.Extension;
+﻿using Domain.Util.GraphQL.Extension;
 using Domain.Util.GraphQL.Model;
 
 namespace Domain.Util.GraphQL.Helper;
 
 public static class SqlGraphQLHelper
 {
+    /// <summary>
+    /// Handles upserted fields to be used for generating the SQL Statement  
+    /// </summary>
+    /// <param name="insert"></param>
+    /// <param name="exclude"></param>
+    /// <param name="nodeTree"></param>
+    /// <param name="sqlNodes"></param>
+    /// <param name="field"></param>
+    /// <param name="value"></param>
+    /// <param name="isDatetime"></param>
+    /// <param name="child"></param>
     public static void 
-        HandleUpsertField(List<string> insert, List<string> select, List<string> exclude, NodeTree nodeTree, List<SqlNode> sqlNodes, 
+        HandleUpsertField(List<string> insert, List<string> exclude, NodeTree nodeTree, List<SqlNode> sqlNodes, 
             string field, string value, bool isDatetime, int child)
     {
         string fieldUpsertParameter;
@@ -82,6 +91,11 @@ public static class SqlGraphQLHelper
         }
     }
 
+    /// <summary>
+    /// Inserts an element, if it does not exist
+    /// </summary>
+    /// <param name="list"></param>
+    /// <param name="value"></param>
     private static void InsertIfDoesNotExist(List<string> list, string value)
     {
         if (!string.IsNullOrEmpty(value) && !list.Contains(value))
@@ -90,6 +104,14 @@ public static class SqlGraphQLHelper
         }
     }
 
+    /// <summary>
+    /// Handle the three dynamic properties required by the SQL statement
+    /// </summary>
+    /// <param name="nodeTree"></param>
+    /// <param name="field"></param>
+    /// <param name="value"></param>
+    /// <param name="id"></param>
+    /// <returns></returns>
     private static SqlNode HandleUpsertFieldStatement(NodeTree nodeTree, string field, string value, int id)
     {
         var sqlNode = new SqlNode();
@@ -109,6 +131,15 @@ public static class SqlGraphQLHelper
         return sqlNode;
     }
 
+    /// <summary>
+    /// Method to translate filter from entity model fields into data model columns 
+    /// </summary>
+    /// <param name="nodeTree"></param>
+    /// <param name="field"></param>
+    /// <param name="filterType"></param>
+    /// <param name="value"></param>
+    /// <param name="filterCondition"></param>
+    /// <returns></returns>
     public static List<string> ProcessFilter(NodeTree nodeTree, string field, string filterType, string value, string filterCondition)
     {
         var enumeration = string.Empty;
@@ -168,6 +199,13 @@ public static class SqlGraphQLHelper
         return conditions;
     }
     
+    /// <summary>
+    /// Method to translate sort clause from entity model fields into data model clause 
+    /// </summary>
+    /// <param name="nodeTree"></param>
+    /// <param name="field"></param>
+    /// <param name="sortClause"></param>
+    /// <returns></returns>
     public static string HandleSort(NodeTree nodeTree, string field, string sortClause)
     {
         

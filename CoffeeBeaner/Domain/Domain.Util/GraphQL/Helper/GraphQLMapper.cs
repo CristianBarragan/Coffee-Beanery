@@ -6,6 +6,12 @@ using AutoMapper.Internal;
 
 public static class GraphQLMapper
 {
+    /// <summary>
+    /// Method to get all mappings registered by automapper 
+    /// </summary>
+    /// <param name="mapper"></param>
+    /// <param name="entity"></param>
+    /// <returns></returns>
     public static Dictionary<string, string> GetMappings(MapperConfiguration mapper, string entity)
     {
         var configurationProvider = mapper.Internal().GetAllTypeMaps();
