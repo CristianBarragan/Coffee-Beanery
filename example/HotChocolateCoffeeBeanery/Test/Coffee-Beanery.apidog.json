@@ -1,0 +1,369 @@
+{
+  "apidogProject": "1.0.0",
+  "$schema": {
+    "app": "apidog",
+    "type": "project",
+    "version": "1.2.0"
+  },
+  "info": {
+    "name": "Coffee Beanery",
+    "description": "",
+    "mockRule": {
+      "rules": [],
+      "enableSystemRule": true
+    }
+  },
+  "apiCollection": [],
+  "socketCollection": [],
+  "docCollection": [],
+  "webSocketCollection": [],
+  "socketIOCollection": [],
+  "responseCollection": [
+    {
+      "_databaseId": 1105407,
+      "updatedAt": "2025-09-01T20:31:33.000Z",
+      "name": "Root",
+      "type": "root",
+      "children": [],
+      "moduleId": 875728,
+      "parentId": 0,
+      "id": 1105407,
+      "ordering": [],
+      "items": []
+    }
+  ],
+  "schemaCollection": [
+    {
+      "id": 2509640,
+      "name": "Root",
+      "visibility": "SHARED",
+      "moduleId": 875728,
+      "items": [],
+      "ordering": []
+    }
+  ],
+  "securitySchemeCollection": [
+    {
+      "id": 725019,
+      "moduleId": 875728,
+      "name": "Root",
+      "items": [],
+      "ordering": []
+    }
+  ],
+  "requestCollection": [
+    {
+      "name": "Root",
+      "children": [],
+      "ordering": [
+        "requestFolder.7969975"
+      ],
+      "items": []
+    }
+  ],
+  "apiTestCaseCollection": [
+    {
+      "name": "Root",
+      "children": [],
+      "items": [
+        {
+          "steps": [
+            {
+              "id": "e2934224-34c5-4769-a86b-61ae070e932b",
+              "type": "loop",
+              "disable": false,
+              "parameters": {
+                "infinity": false,
+                "count": "100",
+                "disableOnError": false
+              },
+              "children": [
+                {
+                  "id": "70160823-ef67-4a92-93e0-a5e7ba20154a",
+                  "type": "customHttp",
+                  "disable": false,
+                  "parameters": {},
+                  "number": 1,
+                  "relatedId": 544345,
+                  "customHttpRequest": {
+                    "name": "http://localhost:4300/graphql/",
+                    "method": "post",
+                    "path": "http://localhost:4300/graphql/",
+                    "requestBody": {
+                      "type": "graphql",
+                      "parameters": [],
+                      "graphql": {
+                        "query": "mutation m {\r\n    wrapper(\r\n        first: 1\r\n        last: 10\r\n        wrapper: {\r\n            customer: [\r\n                {\r\n                    customerBankingRelationship: {\r\n                        contractKey: \"{{ContractKey}}\"\r\n                        customerBankingRelationshipKey: \"{{CustomerBankingRelationshipKey}}\"\r\n                        customerKey: \"{{CustomerKey}}\"\r\n                        contract: {\r\n                            amount: 31\r\n                            contractKey: \"{{ContractKey}}\"\r\n                            customerBankingRelationshipKey: \"{{CustomerBankingRelationshipKey}}\"\r\n                        }\r\n                    }\r\n                }\r\n                {\r\n                    customerBankingRelationship: {\r\n                        contractKey: \"{{ContractKey2}}\"\r\n                        customerBankingRelationshipKey: \"{{CustomerBankingRelationshipKey2}}\"\r\n                        customerKey: \"{{CustomerKey2}}\"\r\n                        contract: {\r\n                            amount: 32\r\n                            contractKey: \"{{ContractKey2}}\"\r\n                            customerBankingRelationshipKey: \"{{CustomerBankingRelationshipKey2}}\"\r\n                        }\r\n                    }\r\n                }\r\n                {\r\n                    customerBankingRelationship: {\r\n                        contractKey: \"{{ContractKey3}}\"\r\n                        customerBankingRelationshipKey: \"{{CustomerBankingRelationshipKey3}}\"\r\n                        customerKey: \"{{CustomerKey3}}\"\r\n                        contract: {\r\n                            amount: 33\r\n                            contractKey: \"{{ContractKey3}}\"\r\n                            customerBankingRelationshipKey: \"{{CustomerBankingRelationshipKey3}}\"\r\n                        }\r\n                    }\r\n                }\r\n                {\r\n                    customerBankingRelationship: {\r\n                        contractKey: \"{{ContractKey4}}\"\r\n                        customerBankingRelationshipKey: \"{{CustomerBankingRelationshipKey4}}\"\r\n                        customerKey: \"{{CustomerKey4}}\"\r\n                        contract: {\r\n                            amount: 34\r\n                            contractKey: \"{{ContractKey4}}\"\r\n                            customerBankingRelationshipKey: \"{{CustomerBankingRelationshipKey4}}\"\r\n                        }\r\n                    }\r\n                }\r\n            ]\r\n        }\r\n        where: {\r\n            customerBankingRelationship: {\r\n                some: {\r\n                    customerBankingRelationshipKey: {\r\n                        in: [\r\n                            \"{{CustomerBankingRelationshipKey}}\"\r\n                            \"{{CustomerBankingRelationshipKey2}}\"\r\n                            \"{{CustomerBankingRelationshipKey3}}\"\r\n                            \"{{CustomerBankingRelationshipKey4}}\"\r\n                        ]\r\n                    }\r\n                }\r\n            }\r\n        }        \r\n        order: { customerType: DESC, firstNaming: DESC }\r\n    ) {\r\n        totalCount\r\n        edges {\r\n            node {\r\n                customerBankingRelationship {\r\n                    contractKey\r\n                    customerBankingRelationshipKey\r\n                    customerId\r\n                    customerKey\r\n                    contract {\r\n                        amount\r\n                        contractKey\r\n                        accountKey\r\n                        customerBankingRelationshipId\r\n                        contractType\r\n                    }\r\n                }\r\n            }\r\n        }\r\n    }\r\n}\r\n",
+                        "variables": ""
+                      }
+                    },
+                    "parameters": {},
+                    "commonParameters": {
+                      "query": [],
+                      "body": [],
+                      "header": [],
+                      "cookie": []
+                    },
+                    "preProcessors": [
+                      {
+                        "id": "dynamicValueDivider",
+                        "type": "placeholder",
+                        "renderType": "dynamicValueDivider",
+                        "defaultEnable": false,
+                        "enable": false
+                      }
+                    ],
+                    "postProcessors": [],
+                    "auth": {},
+                    "advancedSettings": {
+                      "isDefaultUrlEncoding": 3,
+                      "disableUrlEncoding": false
+                    },
+                    "id": 544345
+                  }
+                }
+              ],
+              "isOpen": true,
+              "number": 2
+            }
+          ],
+          "id": 1403504,
+          "name": "CustomerBankingRelationship",
+          "tags": [],
+          "options": {
+            "environmentId": 4750489,
+            "useDataSetId": 3563273,
+            "iterationCount": 1,
+            "threadCount": 4,
+            "runnerId": 0,
+            "onError": "ignore",
+            "delayItem": 0,
+            "saveReportDetail": "all",
+            "saveVariables": true,
+            "readGlobalCookie": false,
+            "saveGlobalCookie": false
+          },
+          "priority": 0,
+          "ordering": 10,
+          "description": "",
+          "preProcessors": [],
+          "postProcessors": [],
+          "children": [],
+          "performanceTestOptions": {},
+          "apiTestDataSets": [
+            {
+              "id": 3563273,
+              "name": "ValueSetCustomerBankingRelationshipTest",
+              "relatedId": 1403504,
+              "apiTestDataList": [
+                {
+                  "id": 444345,
+                  "data": "Dataset Name,CustomerKey,CustomerKey2,CustomerKey3,CustomerKey4,CustomerBankingRelationshipKey,CustomerBankingRelationshipKey2,CustomerBankingRelationshipKey3,CustomerBankingRelationshipKey4,ContractKey,ContractKey2,ContractKey3,ContractKey4\nUpsertCustomerBankingRelationship,{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}}\n",
+                  "dataSetId": 3563273,
+                  "relatedId": 1403504,
+                  "relatedType": 0,
+                  "environmentId": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "id": "34ef1371-23cf-4893-ad40-3174bd0576f0",
+              "type": "loop",
+              "disable": false,
+              "parameters": {
+                "infinity": false,
+                "count": "100",
+                "disableOnError": false
+              },
+              "children": [
+                {
+                  "id": "66301d62-f5e5-47d7-b535-e50b7f4d06a7",
+                  "type": "customHttp",
+                  "disable": false,
+                  "parameters": {},
+                  "number": 1,
+                  "relatedId": 544956,
+                  "customHttpRequest": {
+                    "name": "http://localhost:4300/graphql/",
+                    "method": "post",
+                    "path": "http://localhost:4300/graphql/",
+                    "requestBody": {
+                      "type": "graphql",
+                      "parameters": [],
+                      "graphql": {
+                        "query": "mutation m {\r\n  wrapper(\r\n    first: 1\r\n    last: 10\r\n    wrapper: {\r\n      customer: [\r\n        {\r\n          customerKey: \"{{CustomerKey}}\"\r\n          contactPoint: [\r\n            {\r\n              contactPointKey: \"{{ContactPointKey_a}}\"\r\n              customerKey: \"{{CustomerKey}}\"\r\n            }\r\n            {\r\n              contactPointKey: \"{{ContactPointKey_b}}\"\r\n              customerKey: \"{{CustomerKey}}\"\r\n            }\r\n          ]\r\n          firstNaming: \"{{FirstName}}\"\r\n          lastNaming: \"{{LastNaming}}\"\r\n          customerType: PERSON\r\n          customerBankingRelationship: {\r\n            contractKey: \"{{ContractKey}}\"\r\n            customerBankingRelationshipKey: \"{{CustomerBankingRelationshipKey}}\"\r\n            customerKey: \"{{CustomerKey}}\"\r\n          }\r\n        }\r\n        {\r\n          customerKey: \"{{CustomerKey2}}\"\r\n          contactPoint: [\r\n            {\r\n              contactPointKey: \"{{ContactPointKey2_a}}\"\r\n              customerKey: \"{{CustomerKey2}}\"\r\n            }\r\n            {\r\n              contactPointKey: \"{{ContactPointKey2_b}}\"\r\n              customerKey: \"{{CustomerKey2}}\"\r\n            }\r\n          ]\r\n          firstNaming: \"{{FirstName2}}\"\r\n          lastNaming: \"{{LastNaming2}}\"\r\n          customerType: ORGANISATION\r\n          customerBankingRelationship: {\r\n            contractKey: \"{{ContractKey2}}\"\r\n            customerBankingRelationshipKey: \"{{CustomerBankingRelationshipKey2}}\"\r\n            customerKey: \"{{CustomerKey2}}\"\r\n          }\r\n        }\r\n        {\r\n          customerKey: \"{{CustomerKey3}}\"\r\n          contactPoint: [\r\n            {\r\n              contactPointKey: \"{{ContactPointKey3_a}}\"\r\n              customerKey: \"{{CustomerKey3}}\"\r\n            }\r\n            {\r\n              contactPointKey: \"{{ContactPointKey3_b}}\"\r\n              customerKey: \"{{CustomerKey3}}\"\r\n            }\r\n          ]\r\n          firstNaming: \"{{FirstName3}}\"\r\n          lastNaming: \"{{LastNaming3}}\"\r\n          customerType: PERSON\r\n          customerBankingRelationship: {\r\n            contractKey: \"{{ContractKey3}}\"\r\n            customerBankingRelationshipKey: \"{{CustomerBankingRelationshipKey3}}\"\r\n            customerKey: \"{{CustomerKey3}}\"\r\n          }\r\n        }\r\n        {\r\n          customerKey: \"{{CustomerKey4}}\"\r\n          contactPoint: [\r\n            {\r\n              contactPointKey: \"{{ContactPointKey4_a}}\"\r\n              customerKey: \"{{CustomerKey4}}\"\r\n            }\r\n            {\r\n              contactPointKey: \"{{ContactPointKey4_b}}\"\r\n              customerKey: \"{{CustomerKey4}}\"\r\n            }\r\n          ]\r\n          firstNaming: \"{{FirstName4}}\"\r\n          lastNaming: \"{{LastNaming4}}\"\r\n          customerType: ORGANISATION\r\n          customerBankingRelationship: {\r\n            contractKey: \"{{ContractKey4}}\"\r\n            customerBankingRelationshipKey: \"{{CustomerBankingRelationshipKey4}}\"\r\n            customerKey: \"{{CustomerKey4}}\"\r\n          }\r\n        }\r\n      ]\r\n    }\r\n    order: { customerType: DESC }\r\n    where: {\r\n      customerKey: {\r\n        in: [\r\n          \"{{CustomerKey}}\"\r\n          \"{{CustomerKey2}}\"\r\n          \"{{CustomerKey3}}\"\r\n          \"{{CustomerKey4}}\"\r\n        ]\r\n      }\r\n    }\r\n  ) {\r\n    edges {\r\n      node {\r\n        fullNaming\r\n        lastNaming\r\n        customerBankingRelationship {\r\n          contractKey\r\n          customerBankingRelationshipKey\r\n          customerKey\r\n        }\r\n        contactPoint {\r\n          contactPointKey\r\n          contactPointValue\r\n          contactPointType\r\n        }\r\n        customerType\r\n        customerKey\r\n        firstNaming\r\n      }\r\n    }\r\n    totalCount\r\n  }\r\n}\r\n",
+                        "variables": ""
+                      }
+                    },
+                    "parameters": {},
+                    "commonParameters": {
+                      "query": [],
+                      "body": [],
+                      "header": [],
+                      "cookie": []
+                    },
+                    "preProcessors": [
+                      {
+                        "id": "dynamicValueDivider",
+                        "type": "placeholder",
+                        "renderType": "dynamicValueDivider",
+                        "defaultEnable": false,
+                        "enable": false
+                      }
+                    ],
+                    "postProcessors": [],
+                    "auth": {},
+                    "advancedSettings": {
+                      "isDefaultUrlEncoding": 3,
+                      "disableUrlEncoding": false
+                    },
+                    "id": 544956
+                  }
+                }
+              ],
+              "isOpen": true,
+              "number": 2
+            }
+          ],
+          "id": 1423249,
+          "name": "Customer",
+          "tags": [],
+          "options": {
+            "environmentId": 4750489,
+            "useDataSetId": 3563311,
+            "iterationCount": 1,
+            "threadCount": 4,
+            "runnerId": 0,
+            "onError": "ignore",
+            "delayItem": 0,
+            "saveReportDetail": "all",
+            "saveVariables": true,
+            "readGlobalCookie": false,
+            "saveGlobalCookie": false
+          },
+          "priority": 0,
+          "ordering": 21,
+          "description": "",
+          "preProcessors": [],
+          "postProcessors": [],
+          "children": [],
+          "performanceTestOptions": {},
+          "apiTestDataSets": [
+            {
+              "id": 3563311,
+              "name": "ValueSetCustomerTest",
+              "relatedId": 1423249,
+              "apiTestDataList": [
+                {
+                  "id": 444383,
+                  "data": "Dataset Name,CustomerKey,ContactPointKey_a,ContactPointKey_b,FirstName,LastNaming,ContractKey,CustomerBankingRelationshipKey,CustomerKey2,ContactPointKey2_a,ContactPointKey2_b,FirstName2,LastNaming2,ContractKey2,CustomerBankingRelationshipKey2,CustomerKey3,ContactPointKey3_a,ContactPointKey3_b,FirstName3,LastNaming3,ContractKey3,CustomerBankingRelationshipKey3,CustomerKey4,ContactPointKey4_a,ContactPointKey4_b,FirstName4,LastNaming4,ContractKey4,CustomerBankingRelationshipKey4\nUpsertCustomer,{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$person.firstName}},{{$person.lastName}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$person.firstName}},{{$person.lastName}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$person.firstName}},{{$person.lastName}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$string.uuid}},{{$person.firstName}},{{$person.lastName}},{{$string.uuid}},{{$string.uuid}}\n",
+                  "dataSetId": 3563311,
+                  "relatedId": 1423249,
+                  "relatedType": 0,
+                  "environmentId": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "testCaseReferences": [],
+  "environments": [
+    {
+      "name": "Develop Env",
+      "requestProxyAgentSettings": {},
+      "variables": [],
+      "parameters": {},
+      "type": "normal",
+      "visibility": "protected",
+      "ordering": 0,
+      "tags": [],
+      "id": "4750489",
+      "baseUrl": "https://dev.your-api-server.com",
+      "baseUrls": {
+        "default": "https://dev.your-api-server.com"
+      }
+    }
+  ],
+  "commonScripts": [],
+  "databaseConnections": [],
+  "globalVariables": [],
+  "commonParameters": null,
+  "projectSetting": {
+    "id": "1057834",
+    "auth": {},
+    "securityScheme": {},
+    "gateway": [],
+    "language": "en-US",
+    "apiStatuses": [
+      "developing",
+      "testing",
+      "released",
+      "deprecated"
+    ],
+    "mockSettings": {},
+    "preProcessors": [],
+    "postProcessors": [],
+    "advancedSettings": {
+      "enableJsonc": false,
+      "enableBigint": false,
+      "responseValidate": true,
+      "enableTestScenarioSetting": false,
+      "enableYAPICompatScript": false,
+      "isDefaultUrlEncoding": 3,
+      "publishedDocUrlRules": {
+        "defaultRule": "SLUGIFY_WITH_RESOURCE_KEY",
+        "resourceKeyStandard": "NEW"
+      }
+    },
+    "initialDisabledMockIds": [],
+    "servers": [
+      {
+        "id": "default",
+        "name": "Default Server"
+      }
+    ],
+    "cloudMock": {
+      "security": "free",
+      "enable": false,
+      "tokenKey": "apidogToken"
+    }
+  },
+  "customFunctions": [],
+  "projectTestCaseCategories": [
+    {
+      "id": 151236,
+      "name": "Positive"
+    },
+    {
+      "id": 151237,
+      "name": "Negative"
+    },
+    {
+      "id": 151238,
+      "name": "Boundary Value"
+    },
+    {
+      "id": 151239,
+      "name": "Security"
+    },
+    {
+      "id": 151240,
+      "name": "Other"
+    }
+  ],
+  "projectAssociations": [],
+  "moduleSettings": [
+    {
+      "id": "875728",
+      "name": "Default module",
+      "moduleVariables": []
+    }
+  ]
+}

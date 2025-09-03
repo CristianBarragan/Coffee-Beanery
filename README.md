@@ -89,5 +89,25 @@ Contains the custom model and attributes which will be exposed through the API.
 - Contains basic setup for GraphQL API
 - Supports any framework since it is not tightly couple to a vendor
 
-  
-[Buy me a Coffee ☕]([https://www.buymeacoffee.com/cristianbarragan]
+## Tests - WIP
+
+
+No cache, 4 parallel threads, and 100 iterations
+
+ - Customer 1st Test - 4 random Customers, each of them with 2 Contact Points and 1 CustomerBankingRelationship
+
+<img src="example/HotChocolateCoffeeBeanery/Test/CustomerResult_4_Threads_100_Calls_2025-09-03.png" alt="Customer_4_2_" height="60%" width="100%">
+
+No cache, 4 parallel threads, and 100 iterations
+
+ - Customer Banking Relationship 1st Test - 4 random Customers Banking Relationships, each of them 1 Contract
+
+<img src="example/HotChocolateCoffeeBeanery/Test/CustomerBankingRelationship_4_Threads_100_Calls_2025-09-03.png" alt="Buy Me A Coffee" height="60%" width="100%">
+
+
+### [Buy me a Coffee ☕]
+*I would love a 100% colombian coffee!*
+
+<a href="https://www.buymeacoffee.com/cristianbarragan" target="_blank">
+<img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174">
+</a>
