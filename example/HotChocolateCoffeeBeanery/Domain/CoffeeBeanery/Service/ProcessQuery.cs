@@ -72,6 +72,8 @@ public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
             {
                 return ([], 0, 0, 0, 0);
             }
+            
+            await dbTransaction.CommitAsync(cancellationToken);
 
             return (_models,
                 parameters.Pagination.StartCursor > 0
