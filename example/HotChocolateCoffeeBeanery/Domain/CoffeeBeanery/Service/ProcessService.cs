@@ -60,7 +60,7 @@ public class ProcessService<M, D, S>
 
         var sqlStructure = new SqlStructure();
         sqlStructure = SqlNodeResolverHelper.HandleGraphQL(graphQlSelection, _treeMap.DictionaryTree, rootName,
-            _treeMap.EntityNames, _cache);
+            _treeMap.EntityNames, _treeMap.ModelNames, _cache, cacheKey);
         //Permissions )
 
         return await _queryDispatcher

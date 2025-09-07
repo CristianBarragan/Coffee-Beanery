@@ -44,6 +44,10 @@ public class CustomerQueryHandler<M, D, S> : ProcessQuery<M, D, S>, IQuery<SqlSt
             {
                 CustomerQueryMapping.MapCustomer(customers, map[i], _mapper);
             }
+            else if (map[i] is DatabaseEntity.ContactPoint)
+            {
+                ContactPointQueryMapping.MapFromCustomer(customers, map[i], _mapper);
+            }
             else if (map[i] is DatabaseEntity.CustomerBankingRelationship)
             {
                 CustomerBankingRelationshipQueryMapping.MapFromCustomer(customers, map[i], _mapper);
@@ -52,9 +56,13 @@ public class CustomerQueryHandler<M, D, S> : ProcessQuery<M, D, S>, IQuery<SqlSt
             {
                 ContractQueryMapping.MapFromCustomer(customers, map[i], _mapper);
             }
-            else if (map[i] is DatabaseEntity.ContactPoint)
+            else if (map[i] is DatabaseEntity.Transaction)
             {
-                ContactPointQueryMapping.MapFromCustomer(customers, map[i], _mapper);
+                TransactionQueryMapping.MapFromCustomer(customers, map[i], _mapper);
+            }
+            else if (map[i] is DatabaseEntity.Account)
+            {
+                AccountQueryMapping.MapFromCustomer(customers, map[i], _mapper);
             }
         }
 

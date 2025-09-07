@@ -1,25 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using CoffeeBeanery.GraphQL.Configuration;
-using HotChocolate;
+﻿using CoffeeBeanery.GraphQL.Configuration;
 
 namespace Domain.Model;
 
-public class ContactPoint : Process
+public class ContactPoint
 {
-    [BusinessKey] public Guid ContactPointKey { get; set; }
+    [UpsertKey("ContactPoint","Banking")]
+    public Guid ContactPointKey { get; set; }
 
     public ContactPointType? ContactPointType { get; set; }
 
     public string? ContactPointValue { get; set; }
 
+    [JoinKey("Customer")]
     public Guid? CustomerKey { get; set; }
-
-    [JoinKey] public int? CustomerId { get; set; }
-
-    [GraphQLIgnore] public Customer? Customer { get; set; }
-
-    [NotMapped, BusinessSchema, GraphQLIgnore]
-    public Schema Schema { get; set; } = Schema.Banking;
 }
 
 public enum ContactPointType

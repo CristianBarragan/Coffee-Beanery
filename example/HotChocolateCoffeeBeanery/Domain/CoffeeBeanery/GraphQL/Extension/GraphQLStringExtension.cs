@@ -1,6 +1,6 @@
 namespace CoffeeBeanery.GraphQL.Extension;
 
-public static class StringExtensions
+public static class GraphQLStringExtension
 {
     /// <summary>
     /// Extension method for comparing two strings

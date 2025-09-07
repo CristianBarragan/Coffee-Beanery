@@ -4,31 +4,31 @@ using DatabaseEntity = Database.Entity;
 
 namespace Domain.Shared.Mapping;
 
-public static class ContractQueryMapping
+public static class AccountQueryMapping
 {
     public static void MapFromCustomer(List<Customer> models, object mappedObject, IMapper mapper)
     {
-        if (mappedObject is DatabaseEntity.Contract)
+        if (mappedObject is DatabaseEntity.Account)
         {
-            var contractEntity = mappedObject as DatabaseEntity.Contract;
+            var accountEntity = mappedObject as DatabaseEntity.Account;
 
             var index = models.Where(c => c.Product != null).ToList().FindIndex(c =>
-                c.Product.Any(cbr => cbr.ContractKey == contractEntity.ContractKey));
+                c.Product.Any(cbr => cbr.AccountKey == accountEntity.AccountKey));
             
             if (index >= 0)
             {
                 models[index].Product = models[index].Product ?? [];
-                var indexContract = models[index].Product
-                    .FindIndex(x => x.ContractKey == contractEntity.ContractKey);
+                var indexAccount = models[index].Product
+                    .FindIndex(x => x.AccountKey == accountEntity.AccountKey);
 
-                if (indexContract >= 0)
+                if (indexAccount >= 0)
                 {
-                    mapper.Map(contractEntity, models[indexContract]);
+                    mapper.Map(accountEntity, models[indexAccount]);
                 }
                 else
                 {
                     var product = new Product();
-                    product = mapper.Map(contractEntity,
+                    product = mapper.Map(accountEntity,
                         product);
                     models[index].Product.Add(product);
                 }
@@ -38,7 +38,7 @@ public static class ContractQueryMapping
                 var customer = new Customer();
                 customer.Product = new List<Product>();
                 var product = new Product();
-                product = mapper.Map(contractEntity,
+                product = mapper.Map(accountEntity,
                     product);
                 customer.Product.Add(product);
                 models.Add(customer);
@@ -49,23 +49,23 @@ public static class ContractQueryMapping
     public static void MapProduct(List<Product> models, object mappedObject, IMapper mapper)
     {
         Product model = null!;
-        if (mappedObject is DatabaseEntity.Contract)
+        if (mappedObject is DatabaseEntity.Account)
         {
-            var contractModel = mappedObject as DatabaseEntity.Contract;
+            var accountModel = mappedObject as DatabaseEntity.Account;
 
-            var index = models.FindIndex(x => x.ContractKey == contractModel.ContractKey);
+            var index = models.FindIndex(x => x.AccountKey == accountModel.AccountKey);
 
             if (index >= 0)
             {
                 if (index >= 0)
                 {
-                    models[index] = mapper.Map(contractModel,
+                    models[index] = mapper.Map(accountModel,
                         models[index]);
                 }
                 else
                 {
                     var product = new Product();
-                    product = mapper.Map(contractModel,
+                    product = mapper.Map(accountModel,
                         product);
                     models[index] = product;
                 }

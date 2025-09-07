@@ -16,10 +16,9 @@ namespace Domain.Shared.Extension;
 
 public static class ModelServiceCollectionRegistration
 {
-    public static IServiceCollection AddBankingDomainModelServiceCollection(this IServiceCollection services,
-        bool ignoreOtherDomainRelationships)
+    public static IServiceCollection AddBankingDomainModelServiceCollection(this IServiceCollection services)
     {
-        services = AddProcessServiceCollection(services, ignoreOtherDomainRelationships);
+        services = AddProcessServiceCollection(services);
 
         services = AddCache(services);
 
@@ -53,8 +52,7 @@ public static class ModelServiceCollectionRegistration
         return services;
     }
 
-    private static IServiceCollection AddProcessServiceCollection(this IServiceCollection services,
-        bool ignoreOtherDomainRelationships)
+    private static IServiceCollection AddProcessServiceCollection(this IServiceCollection services)
     {
         var mappingProfile = new MappingProfile();
 
@@ -72,24 +70,26 @@ public static class ModelServiceCollectionRegistration
         }, new LoggerFactory());
         mapperConfiguration.AssertConfigurationIsValid();
 
-        var domainEntityTypes = new List<dynamic>();
-        var databaseEntityTypes = new List<dynamic>();
+        var modelTypes = new List<dynamic>();
+        var entityTypes = new List<dynamic>();
         var entities = new List<string>();
-        var nodeId = new List<KeyValuePair<string, string>>();
+        var models = new List<string>();
+        var nodeId = new List<KeyValuePair<string, int>>();
         var dictionaryTree = new Dictionary<string, NodeTree>(StringComparer.OrdinalIgnoreCase);
 
-        var nodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(dictionaryTree, entities, databaseEntityTypes,
-            (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Customer)),
-            domainEntityTypes, (dynamic)Activator.CreateInstance(typeof(Customer)),
+        var nodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(dictionaryTree, entities, models, entityTypes,
+            (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Customer))!,
+            modelTypes, (dynamic)Activator.CreateInstance(typeof(Customer))!,
             nameof(DatabaseCommon.Customer),
-            mapperConfiguration, ignoreOtherDomainRelationships, nodeId);
+            mapperConfiguration, nodeId);
 
         var treeMap = new TreeMap<dynamic, dynamic>()
         {
             NodeId = nodeId,
             EntityNames = entities,
-            ModelTypes = domainEntityTypes,
-            EntityTypes = databaseEntityTypes,
+            ModelNames = models,
+            ModelTypes = modelTypes,
+            EntityTypes = entityTypes,
             NodeTree = nodeTree,
             DictionaryTree = dictionaryTree
         };

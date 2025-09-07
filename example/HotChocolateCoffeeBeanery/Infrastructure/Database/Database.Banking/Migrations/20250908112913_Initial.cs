@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Database.Banking.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,7 +31,6 @@ namespace Database.Banking.Migrations
                     AccountKey = table.Column<Guid>(type: "uuid", nullable: false),
                     AccountNumber = table.Column<string>(type: "text", nullable: true),
                     AccountName = table.Column<string>(type: "text", nullable: true),
-                    Processed = table.Column<bool>(type: "boolean", nullable: true),
                     ProcessedDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "(now() at time zone 'utc')")
                 },
                 constraints: table =>
@@ -51,7 +50,6 @@ namespace Database.Banking.Migrations
                     LastName = table.Column<string>(type: "text", nullable: true),
                     FullName = table.Column<string>(type: "text", nullable: true),
                     CustomerType = table.Column<int>(type: "integer", nullable: true),
-                    Processed = table.Column<bool>(type: "boolean", nullable: true),
                     ProcessedDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "(now() at time zone 'utc')")
                 },
                 constraints: table =>
@@ -71,7 +69,6 @@ namespace Database.Banking.Migrations
                     ContactPointValue = table.Column<string>(type: "text", nullable: true),
                     CustomerKey = table.Column<Guid>(type: "uuid", nullable: true),
                     CustomerId = table.Column<int>(type: "integer", nullable: true),
-                    Processed = table.Column<bool>(type: "boolean", nullable: true),
                     ProcessedDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "(now() at time zone 'utc')")
                 },
                 constraints: table =>
@@ -94,9 +91,7 @@ namespace Database.Banking.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CustomerBankingRelationshipKey = table.Column<Guid>(type: "uuid", nullable: false),
                     CustomerKey = table.Column<Guid>(type: "uuid", nullable: true),
-                    ContractKey = table.Column<Guid>(type: "uuid", nullable: true),
                     CustomerId = table.Column<int>(type: "integer", nullable: true),
-                    Processed = table.Column<bool>(type: "boolean", nullable: true),
                     ProcessedDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "(now() at time zone 'utc')")
                 },
                 constraints: table =>
@@ -120,15 +115,20 @@ namespace Database.Banking.Migrations
                     ContractKey = table.Column<Guid>(type: "uuid", nullable: false),
                     ContractType = table.Column<int>(type: "integer", nullable: true),
                     Amount = table.Column<decimal>(type: "numeric", nullable: true),
-                    AccountKey = table.Column<Guid>(type: "uuid", nullable: true),
+                    AccountId = table.Column<int>(type: "integer", nullable: true),
                     CustomerBankingRelationshipKey = table.Column<Guid>(type: "uuid", nullable: true),
                     CustomerBankingRelationshipId = table.Column<int>(type: "integer", nullable: true),
-                    Processed = table.Column<bool>(type: "boolean", nullable: true),
                     ProcessedDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "(now() at time zone 'utc')")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Contract", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Contract_Account_AccountId",
+                        column: x => x.AccountId,
+                        principalSchema: "Account",
+                        principalTable: "Account",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Contract_CustomerBankingRelationship_CustomerBankingRelatio~",
                         column: x => x.CustomerBankingRelationshipId,
@@ -145,23 +145,29 @@ namespace Database.Banking.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     TransactionKey = table.Column<Guid>(type: "uuid", nullable: false),
-                    Amount = table.Column<decimal>(type: "numeric", nullable: false),
-                    Balance = table.Column<decimal>(type: "numeric", nullable: false),
-                    ContractId = table.Column<int>(type: "integer", nullable: false),
-                    AccountId = table.Column<int>(type: "integer", nullable: false),
-                    Processed = table.Column<bool>(type: "boolean", nullable: true),
+                    Amount = table.Column<decimal>(type: "numeric", nullable: true),
+                    Balance = table.Column<decimal>(type: "numeric", nullable: true),
+                    ContractKey = table.Column<Guid>(type: "uuid", nullable: true),
+                    ContractId = table.Column<int>(type: "integer", nullable: true),
+                    AccountKey = table.Column<Guid>(type: "uuid", nullable: true),
+                    AccountId = table.Column<int>(type: "integer", nullable: true),
                     ProcessedDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "(now() at time zone 'utc')")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Transaction", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_Transaction_Account_AccountId",
+                        column: x => x.AccountId,
+                        principalSchema: "Account",
+                        principalTable: "Account",
+                        principalColumn: "Id");
+                    table.ForeignKey(
                         name: "FK_Transaction_Contract_ContractId",
                         column: x => x.ContractId,
                         principalSchema: "Lending",
                         principalTable: "Contract",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -183,6 +189,13 @@ namespace Database.Banking.Migrations
                 schema: "Banking",
                 table: "ContactPoint",
                 column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Contract_AccountId",
+                schema: "Lending",
+                table: "Contract",
+                column: "AccountId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Contract_ContractKey",
@@ -218,6 +231,12 @@ namespace Database.Banking.Migrations
                 column: "CustomerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Transaction_AccountId",
+                schema: "Lending",
+                table: "Transaction",
+                column: "AccountId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Transaction_ContractId",
                 schema: "Lending",
                 table: "Transaction",
@@ -235,10 +254,6 @@ namespace Database.Banking.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Account",
-                schema: "Account");
-
-            migrationBuilder.DropTable(
                 name: "ContactPoint",
                 schema: "Banking");
 
@@ -249,6 +264,10 @@ namespace Database.Banking.Migrations
             migrationBuilder.DropTable(
                 name: "Contract",
                 schema: "Lending");
+
+            migrationBuilder.DropTable(
+                name: "Account",
+                schema: "Account");
 
             migrationBuilder.DropTable(
                 name: "CustomerBankingRelationship",

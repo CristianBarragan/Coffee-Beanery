@@ -1,11 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Database.Entity;
 
 public class ContactPoint : Process
 {
+    public ContactPoint()
+    {
+        Schema = Entity.Schema.Banking;
+    }
+    
     public Guid ContactPointKey { get; set; }
 
     public ContactPointType? ContactPointType { get; set; }
@@ -17,8 +21,6 @@ public class ContactPoint : Process
     public int? CustomerId { get; set; }
 
     public Customer? Customer { get; set; }
-
-    [NotMapped] public Schema Schema { get; set; } = Schema.Banking;
 }
 
 public enum ContactPointType

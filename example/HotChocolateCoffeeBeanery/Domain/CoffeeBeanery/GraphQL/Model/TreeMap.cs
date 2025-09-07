@@ -2,9 +2,11 @@
 
 public interface ITreeMap<T, M> where T : class where M : class
 {
-    public List<KeyValuePair<string, string>> NodeId { get; set; }
+    public List<KeyValuePair<string, int>> NodeId { get; set; }
 
     public List<string> EntityNames { get; set; }
+
+    public List<string> ModelNames { get; set; }
 
     public List<M> ModelTypes { get; set; }
 
@@ -18,9 +20,11 @@ public interface ITreeMap<T, M> where T : class where M : class
 public class TreeMap<T, M> : ITreeMap<T, M>
     where T : class where M : class
 {
-    public List<KeyValuePair<string, string>> NodeId { get; set; }
+    public List<KeyValuePair<string, int>> NodeId { get; set; }
 
     public List<string> EntityNames { get; set; }
+
+    public List<string> ModelNames { get; set; }
 
     public List<M> ModelTypes { get; set; }
 

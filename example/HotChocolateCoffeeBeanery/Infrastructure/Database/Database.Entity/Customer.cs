@@ -1,11 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Database.Entity;
 
 public class Customer : Process
 {
+    public Customer()
+    {
+        Schema = Entity.Schema.Banking;
+    }
+    
     public Guid CustomerKey { get; set; }
 
     public string? FirstName { get; set; }
@@ -18,9 +22,7 @@ public class Customer : Process
 
     public List<ContactPoint>? ContactPoint { get; set; }
 
-    public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
-
-    [NotMapped] public Schema Schema { get; set; } = Schema.Banking;
+    public List<CustomerBankingRelationship>? Product { get; set; }
 }
 
 public enum CustomerType
@@ -48,7 +50,7 @@ public class CustomerEntityConfiguration : IEntityTypeConfiguration<Customer>
 
         builder.HasMany(c => c.ContactPoint).WithOne(c => c.Customer).HasForeignKey(c => c.CustomerId);
 
-        builder.HasMany(c => c.CustomerBankingRelationship).WithOne(c => c.Customer).HasForeignKey(c => c.CustomerId);
+        builder.HasMany(c => c.Product).WithOne(c => c.Customer).HasForeignKey(c => c.CustomerId);
 
         builder.Property(c => c.ProcessedDateTime).HasDefaultValueSql("(now() at time zone 'utc')");
     }

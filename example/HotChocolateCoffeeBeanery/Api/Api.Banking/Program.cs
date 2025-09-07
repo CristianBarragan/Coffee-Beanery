@@ -57,7 +57,7 @@ public class Program
             builder.Services.AddNpgsqlDataSource(connectionString!);
         }
 
-        builder.Services.AddBankingServiceCollection(true);
+        builder.Services.AddBankingServiceCollection();
 
         builder.Services.AddControllers().AddNewtonsoftJson();
 
@@ -76,7 +76,6 @@ public class Program
                     .Argument("wrapper", d => d.Type<CustomerInputType>())
                     .ResolveWith<CustomerMutationResolver>(r => r.UpsertCustomer(default, default, default));
             })
-            .AddProjections()
             .SetPagingOptions(new PagingOptions() { DefaultPageSize = 10, IncludeTotalCount = true })
             .AddFiltering()
             .AddSorting()

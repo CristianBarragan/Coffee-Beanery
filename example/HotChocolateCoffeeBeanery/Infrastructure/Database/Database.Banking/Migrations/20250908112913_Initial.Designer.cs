@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Database.Banking.Migrations
 {
     [DbContext(typeof(BankingDbContext))]
-    [Migration("20250829111746_initial")]
-    partial class initial
+    [Migration("20250908112913_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -41,9 +41,6 @@ namespace Database.Banking.Migrations
 
                     b.Property<string>("AccountNumber")
                         .HasColumnType("text");
-
-                    b.Property<bool?>("Processed")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("ProcessedDateTime")
                         .ValueGeneratedOnAdd()
@@ -81,9 +78,6 @@ namespace Database.Banking.Migrations
                     b.Property<Guid?>("CustomerKey")
                         .HasColumnType("uuid");
 
-                    b.Property<bool?>("Processed")
-                        .HasColumnType("boolean");
-
                     b.Property<DateTime>("ProcessedDateTime")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -107,8 +101,8 @@ namespace Database.Banking.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid?>("AccountKey")
-                        .HasColumnType("uuid");
+                    b.Property<int?>("AccountId")
+                        .HasColumnType("integer");
 
                     b.Property<decimal?>("Amount")
                         .HasColumnType("numeric");
@@ -125,15 +119,15 @@ namespace Database.Banking.Migrations
                     b.Property<Guid?>("CustomerBankingRelationshipKey")
                         .HasColumnType("uuid");
 
-                    b.Property<bool?>("Processed")
-                        .HasColumnType("boolean");
-
                     b.Property<DateTime>("ProcessedDateTime")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("(now() at time zone 'utc')");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AccountId")
+                        .IsUnique();
 
                     b.HasIndex("ContractKey")
                         .IsUnique();
@@ -166,9 +160,6 @@ namespace Database.Banking.Migrations
                     b.Property<string>("LastName")
                         .HasColumnType("text");
 
-                    b.Property<bool?>("Processed")
-                        .HasColumnType("boolean");
-
                     b.Property<DateTime>("ProcessedDateTime")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -190,9 +181,6 @@ namespace Database.Banking.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid?>("ContractKey")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("CustomerBankingRelationshipKey")
                         .HasColumnType("uuid");
 
@@ -201,9 +189,6 @@ namespace Database.Banking.Migrations
 
                     b.Property<Guid?>("CustomerKey")
                         .HasColumnType("uuid");
-
-                    b.Property<bool?>("Processed")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("ProcessedDateTime")
                         .ValueGeneratedOnAdd()
@@ -228,20 +213,23 @@ namespace Database.Banking.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AccountId")
+                    b.Property<int?>("AccountId")
                         .HasColumnType("integer");
 
-                    b.Property<decimal>("Amount")
+                    b.Property<Guid?>("AccountKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Amount")
                         .HasColumnType("numeric");
 
-                    b.Property<decimal>("Balance")
+                    b.Property<decimal?>("Balance")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("ContractId")
+                    b.Property<int?>("ContractId")
                         .HasColumnType("integer");
 
-                    b.Property<bool?>("Processed")
-                        .HasColumnType("boolean");
+                    b.Property<Guid?>("ContractKey")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("ProcessedDateTime")
                         .ValueGeneratedOnAdd()
@@ -252,6 +240,8 @@ namespace Database.Banking.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
 
                     b.HasIndex("ContractId");
 
@@ -272,15 +262,23 @@ namespace Database.Banking.Migrations
 
             modelBuilder.Entity("Database.Entity.Contract", b =>
                 {
-                    b.HasOne("Database.Entity.CustomerBankingRelationship", null)
+                    b.HasOne("Database.Entity.Account", "Account")
+                        .WithOne("Contract")
+                        .HasForeignKey("Database.Entity.Contract", "AccountId");
+
+                    b.HasOne("Database.Entity.CustomerBankingRelationship", "CustomerBankingRelationship")
                         .WithMany("Contract")
                         .HasForeignKey("CustomerBankingRelationshipId");
+
+                    b.Navigation("Account");
+
+                    b.Navigation("CustomerBankingRelationship");
                 });
 
             modelBuilder.Entity("Database.Entity.CustomerBankingRelationship", b =>
                 {
                     b.HasOne("Database.Entity.Customer", "Customer")
-                        .WithMany("CustomerBankingRelationship")
+                        .WithMany("Product")
                         .HasForeignKey("CustomerId");
 
                     b.Navigation("Customer");
@@ -288,20 +286,36 @@ namespace Database.Banking.Migrations
 
             modelBuilder.Entity("Database.Entity.Transaction", b =>
                 {
+                    b.HasOne("Database.Entity.Account", "Account")
+                        .WithMany("Transaction")
+                        .HasForeignKey("AccountId");
+
                     b.HasOne("Database.Entity.Contract", "Contract")
-                        .WithMany()
-                        .HasForeignKey("ContractId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany("Transaction")
+                        .HasForeignKey("ContractId");
+
+                    b.Navigation("Account");
 
                     b.Navigation("Contract");
+                });
+
+            modelBuilder.Entity("Database.Entity.Account", b =>
+                {
+                    b.Navigation("Contract");
+
+                    b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("Database.Entity.Contract", b =>
+                {
+                    b.Navigation("Transaction");
                 });
 
             modelBuilder.Entity("Database.Entity.Customer", b =>
                 {
                     b.Navigation("ContactPoint");
 
-                    b.Navigation("CustomerBankingRelationship");
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Database.Entity.CustomerBankingRelationship", b =>

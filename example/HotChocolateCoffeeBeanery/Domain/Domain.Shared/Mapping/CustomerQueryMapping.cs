@@ -13,7 +13,7 @@ public static class CustomerQueryMapping
         {
             var customerDb = mappedObject as DatabaseEntity.Customer;
 
-            var index = customers.FindIndex(x => x.Id == customerDb.Id);
+            var index = customers.FindIndex(x => x.CustomerKey == customerDb.CustomerKey);
 
             if (index >= 0)
             {

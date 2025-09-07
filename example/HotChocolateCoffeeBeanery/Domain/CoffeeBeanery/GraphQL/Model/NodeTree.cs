@@ -12,16 +12,15 @@ public class NodeTree
 
     public string ParentName { get; set; }
 
-    public string JoinKey { get; set; }
+    public List<FieldMap> JoinKey { get; set; }
 
-    public List<string> UpsertKeys { get; set; }
+    public List<FieldMap> UpsertKeys { get; set; }
 
     public List<NodeTree> Children { get; set; }
 
     public List<string> ChildrenNames { get; set; }
 
-    public Dictionary<string, string> Mappings { get; set; } =
-        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    public List<FieldMap> Mappings { get; set; } = [];
 
-    public Dictionary<string, Dictionary<string, string>> EnumerationMappings { get; set; }
+    public List<GraphElement> GraphElements { get; set; } = [];
 }

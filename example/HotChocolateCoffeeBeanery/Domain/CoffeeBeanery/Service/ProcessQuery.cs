@@ -30,23 +30,30 @@ public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
     {
         var types = new List<Type>()
         {
-            typeof(TotalPageRecords)
+            
         };
+
+        if (parameters != null)
+        {
+            types.Add(typeof(TotalPageRecords));
+            types.Add(typeof(TotalRecordCount));
+            if (parameters.HasTotalCount && parameters.HasPagination)
+            {
+                parameters.SplitOnDapper.Insert(0, "RowNumber");
+            }
+        }
+        
         types.AddRange(_treeMap.EntityTypes.Select(t => t.GetType()));
+        var typesToMap = new List<Type>();
 
-        var typesToMap = new List<Type>
+        if (parameters == null)
         {
-            typeof(TotalRecordCount)
-        };
-
-        if (parameters.HasTotalCount && parameters.HasPagination)
-        {
-            parameters.SplitOnDapper.Insert(0, "RowNumber");
+            return ([], 0, 0, 0, 0);
         }
 
         foreach (var splitOnPart in parameters.SplitOnDapper)
         {
-            typesToMap.Add(types.FirstOrDefault(t =>
+            typesToMap.Add(types.First(t =>
                 t.Name.Matches(splitOnPart.Split('_')[0])));
         }
 

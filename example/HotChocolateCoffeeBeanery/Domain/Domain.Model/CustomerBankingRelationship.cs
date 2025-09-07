@@ -1,26 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿
 using CoffeeBeanery.GraphQL.Configuration;
-using HotChocolate;
 
 namespace Domain.Model;
 
-public class CustomerBankingRelationship : Process
+public class CustomerBankingRelationship
 {
-    [BusinessKey]
+    [UpsertKey("CustomerBankingRelationship","Banking")]
     public Guid CustomerBankingRelationshipKey { get; set; }
 
+    [JoinKey("Customer")]
     public Guid? CustomerKey { get; set; }
-    
-    public Guid? ContractKey { get; set; }
 
-    [JoinKey]
     public int? CustomerId { get; set; }
-        
-    [GraphQLIgnore]
-    public Customer? Customer { get; set; }
     
+    [LinkKey("Contract")]
     public List<Contract>? Contract { get; set; }
-
-    [NotMapped, BusinessSchema, GraphQLIgnore]
-    public Schema Schema { get; set; } =  Schema.Banking;
 }

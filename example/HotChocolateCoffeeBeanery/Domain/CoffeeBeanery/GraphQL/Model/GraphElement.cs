@@ -1,6 +1,6 @@
 ﻿namespace CoffeeBeanery.GraphQL.Model;
 
-public struct GraphElement
+public class GraphElement
 {
     public int EntityId { get; set; }
     public GraphElementType GraphElementType { get; set; }
@@ -17,5 +17,6 @@ public struct GraphElement
 public enum GraphElementType
 {
     Edge,
-    Node
+    Node,
+    Mutation
 }
