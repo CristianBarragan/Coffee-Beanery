@@ -180,39 +180,42 @@ public static class SqlNodeResolverHelper
         Dictionary<string, string> sqlWhereStatement)
     {
         var sqlUpsertStatement = string.Empty;
-        entityNames.Reverse();
-
+        
         foreach (var entity in entityNames)
         {
-            var whereParentValue = sqlWhereStatement.GetValueOrDefault(trees[entity].ParentName);
+            var processingTree = trees[entity];
+            var whereParentValue = sqlWhereStatement.GetValueOrDefault(processingTree.ParentName);
             var whereParentClause = string.Empty;
             if (!string.IsNullOrEmpty(whereParentValue))
             {
-                whereParentClause = $" WHERE {whereParentValue.Replace("~", trees[entity].ParentName)}";
+                whereParentClause = $" WHERE {whereParentValue.Replace("~", processingTree.ParentName)}";
             }
 
-            var whereCurrentValue = sqlWhereStatement.GetValueOrDefault(trees[entity].Name);
+            var whereCurrentValue = sqlWhereStatement.GetValueOrDefault(processingTree.Name);
             var whereCurrentClause = string.Empty;
 
             if (!string.IsNullOrEmpty(whereCurrentClause) && string.IsNullOrEmpty(whereParentClause))
             {
-                whereCurrentClause = $" WHERE {whereCurrentValue.Replace("~", trees[entity].Name)}";
+                whereCurrentClause = $" WHERE {whereCurrentValue.Replace("~", processingTree.Name)}";
             }
             
             if (!string.IsNullOrEmpty(whereCurrentClause) && !string.IsNullOrEmpty(whereParentClause))
             {
-                whereCurrentClause += $" {whereParentClause} {whereCurrentValue.Replace("~", trees[entity].Name)}";
+                whereCurrentClause += $" {whereParentClause} {whereCurrentValue.Replace("~", processingTree.Name)}";
             }
 
-            if (entityNames.Any(e => e.Matches(trees[entity].ParentName)) &&
-                entityNames.Any(e => e.Matches(trees[entity].Name)))
+            if (entityNames.Any(e => e.Matches(processingTree.ParentName)) &&
+                entityNames.Any(e => e.Matches(processingTree.Name) &&
+                processingTree.GraphElements.Any(e => processingTree.UpsertKeys.All(u => u.FieldDestinationName.Matches(e.FieldName))))
+            )
             {
-                sqlUpsertStatement += GenerateSelectUpsert(trees[entity], trees[trees[entity].ParentName],
+                sqlUpsertStatement += GenerateSelectUpsert(processingTree, trees[processingTree.ParentName],
                     whereCurrentClause);
             }
-            else if (entityNames.Any(e => e.Matches(trees[entity].Name)))
+            else if (entityNames.Any(e => e.Matches(processingTree.Name)) &&
+                     processingTree.GraphElements.Any(e => processingTree.UpsertKeys.All(u => u.FieldDestinationName.Matches(e.FieldName))))
             {
-                sqlUpsertStatement += GenerateUpsert(trees[entity], whereCurrentClause);
+                sqlUpsertStatement += GenerateUpsert(processingTree, whereCurrentClause);
             }
         }
         return sqlUpsertStatement;
@@ -635,7 +638,7 @@ public static class SqlNodeResolverHelper
                         continue;
                     }
 
-                    var valueMutation = uNode.ToString().Split(':')[1].Replace('"', '\'');
+                    var valueMutation = uNode.ToString().Split(':')[1].Sanitize();
                     
                     var enumerationMutation = fieldMap.DestinationEnumerationValues.FirstOrDefault(e => e.Key.Matches(valueMutation.Replace("_",""))).Value;
 
@@ -648,7 +651,7 @@ public static class SqlNodeResolverHelper
                     {
                         GraphElementType = GraphElementType.Mutation,
                         FieldName = fieldMap.FieldDestinationName,
-                        FieldValue = valueMutation
+                        FieldValue = $"'{valueMutation}'"
                     };
                     ProcessField(trees, currentTree, element, entityNames);
                     continue;

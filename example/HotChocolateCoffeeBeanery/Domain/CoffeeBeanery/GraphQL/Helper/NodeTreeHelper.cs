@@ -94,7 +94,7 @@ public static class NodeTreeHelper
         }
         
         var entityMapping = GraphQLMapper.GetMappings<E, M>(mapperConfiguration, 
-            nodeModelClass);
+            nodeModelClass, nodeEntityClass);
 
         var nodeName = nodeModelClass.GetType().Name;
         
@@ -118,7 +118,7 @@ public static class NodeTreeHelper
             UpsertKeys = entityMapping.Where(f => f.IsUpsertKey).ToList()
         };
 
-        if (entityMapping.Count >= 0 && !entities.Contains(entityMapping[0].DestinationEntity))
+        if (entityMapping.Count > 0 && !entities.Contains(entityMapping[0].DestinationEntity))
         {
             entities.Add(entityMapping[0].DestinationEntity);
             var entityType = Type.GetType($"{nodeEntityClass.GetType().Namespace}.{entityMapping[0].DestinationEntity},{nodeEntityClass.GetType().Assembly}");
@@ -154,7 +154,6 @@ public static class NodeTreeHelper
             nonNullableModelType = Nullable.GetUnderlyingType(modelProperty?.PropertyType!) ?? modelProperty?.PropertyType;
             
             M modelVariable = null;
-            E entityVariable = null;
 
             if (modelProperty != null && nonNullableModelType.CustomAttributes
                     .Any(a => a.AttributeType == typeof(LinkKeyAttribute)))
@@ -199,14 +198,8 @@ public static class NodeTreeHelper
                 continue;
             }
             
-            E entityType = null;
-            if (entityType == null)
-            {
-                entityVariable = nodeEntityClass;
-            }
-            
             tree = IterateTree<E, M>(nodeTrees, entities, models, entityTypes,
-                entityVariable,
+                nodeEntityClass,
                 modelTypes,
                 modelVariable,
                 modelVariable.GetType().Name, name,

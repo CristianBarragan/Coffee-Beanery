@@ -16,14 +16,14 @@ public static class GraphQLMapper
     /// <param name="mapper"></param>
     /// <param name="entity"></param>
     /// <returns></returns>
-    public static List<FieldMap> GetMappings<E,M>(MapperConfiguration mapper, M model)
+    public static List<FieldMap> GetMappings<E,M>(MapperConfiguration mapper, M model, E entity)
      where E : class where M : class
     {
         var configurationProvider = mapper.Internal().GetAllTypeMaps();
         var mappingFields = new List<FieldMap>();
         var mappings = configurationProvider
-            .Where(configuration => string.Equals(configuration.SourceType.Name, model.GetType().Name,
-                StringComparison.CurrentCultureIgnoreCase)).ToList();
+            .Where(configuration => configuration.SourceType.Name.Matches(model.GetType().Name) ||
+                                    configuration.SourceType.Name.Matches(entity.GetType().Name));
 
         foreach (var mapMapping in mappings.Select(configuration =>
                  configuration.MemberMaps))
@@ -34,8 +34,8 @@ public static class GraphQLMapper
                     .Name.Matches(model.GetType().Assembly.GetName().Name);
 
                 if (string.IsNullOrEmpty(mapping.GetSourceMemberName()) ||
-                    (mappingFields.Any(a => a.FieldDestinationName.Matches(mapping.DestinationName)) && isDestinationEntity) ||
-                    (mappingFields.Any(a => a.FieldSourceName.Matches(mapping.DestinationName)) && !isDestinationEntity))
+                    (mappingFields.Any(a => a.FieldDestinationName.Matches(mapping.DestinationName))) ||
+                    (mappingFields.Any(a => a.FieldSourceName.Matches(mapping.GetSourceMemberName()))))
                 {
                     continue;
                 }
@@ -50,19 +50,27 @@ public static class GraphQLMapper
                     DestinationEntity = !isDestinationEntity ? mapping.TypeMap.SourceType.Name : mapping.TypeMap.DestinationType.Name
                 };
                 
-                var propertyAttributeType = model.GetType().GetProperties()
-                    .FirstOrDefault(n => n.Name.Matches(mapping.GetSourceMemberName()));
-
-                if (propertyAttributeType == null)
+                var propertyModelAttributeType = model.GetType().GetProperties()
+                    .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldSourceName));
+                
+                var entityNodeType = Type.GetType($"{entity.GetType().Namespace}.{processingFieldMap.DestinationEntity},{entity.GetType().Assembly}");
+                var entityVariable = (E)Activator.CreateInstance(entityNodeType);
+                
+                var propertyEntityAttributeType = entityVariable.GetType().GetProperties()
+                    .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldDestinationName));
+                
+                if (propertyModelAttributeType == null || propertyEntityAttributeType == null)
                 {
                     continue;
                 }
+
+                var nonNullableEntityType = Nullable.GetUnderlyingType(propertyEntityAttributeType.PropertyType) ?? propertyEntityAttributeType.PropertyType;
                 
-                if (propertyAttributeType.GetType().IsEnum)
+                if (nonNullableEntityType != null && nonNullableEntityType.IsEnum || propertyEntityAttributeType.PropertyType.IsEnum)
                 {
                     var enumDictionary = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
                     var k = 0;
-                    foreach (var value in Enum.GetValues(propertyAttributeType.GetType()))
+                    foreach (var value in Enum.GetValues(nonNullableEntityType))
                     {
                         enumDictionary.Add(value.ToString()!, k.ToString());
                         k++;
@@ -71,10 +79,10 @@ public static class GraphQLMapper
                     processingFieldMap.DestinationEnumerationValues = enumDictionary;
                 }
                 
-                var upsertAttribute = propertyAttributeType.CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(UpsertKeyAttribute));
+                var upsertAttribute = propertyModelAttributeType.CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(UpsertKeyAttribute));
                 processingFieldMap.IsUpsertKey = upsertAttribute != null;
                 processingFieldMap.FieldDestinationSchema = upsertAttribute != null ? upsertAttribute.ConstructorArguments[1].Value.ToString() : string.Empty;
-                processingFieldMap.IsJoinKey =  propertyAttributeType.CustomAttributes.Any(a => a.AttributeType == typeof(JoinKeyAttribute));
+                processingFieldMap.IsJoinKey =  propertyModelAttributeType.CustomAttributes.Any(a => a.AttributeType == typeof(JoinKeyAttribute));
                 mappingFields!.Add(processingFieldMap);
             }
         }
