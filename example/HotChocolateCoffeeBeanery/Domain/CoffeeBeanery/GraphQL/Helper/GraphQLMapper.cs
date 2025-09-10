@@ -53,7 +53,8 @@ public static class GraphQLMapper
                     DestinationEntity = !isDestinationEntity && isModel ? mapping.TypeMap.SourceType.Name : mapping.TypeMap.DestinationType.Name
                 };
 
-                if (isModel && linkEntityDictionaryTree != null &&
+                // if (isModel && linkEntityDictionaryTree != null &&
+                if (linkEntityDictionaryTree != null &&
                     !linkEntityDictionaryTree
                         .ContainsKey($"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}"))
                 {
@@ -67,7 +68,8 @@ public static class GraphQLMapper
                     });
                 }
                 
-                if (isModel && linkEntityDictionaryTree != null &&
+                // if (isModel && linkEntityDictionaryTree != null &&
+                if (linkEntityDictionaryTree != null &&
                     !linkEntityDictionaryTree
                         .ContainsKey($"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}"))
                 {
@@ -110,35 +112,63 @@ public static class GraphQLMapper
                     processingFieldMap.DestinationEnumerationValues = enumDictionary;
                 }
                 
-                var upsertAttribute = propertyModelAttributeType.CustomAttributes
-                    .FirstOrDefault(a => a.AttributeType == typeof(UpsertKeyAttribute));
-                processingFieldMap.IsUpsertKey = upsertAttribute != null;
-
-                if (isModel && upsertKeys != null && upsertAttribute != null)
-                {
-                    upsertKeys.Add(
-                        $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
-                        $"{upsertAttribute
-                            .ConstructorArguments[0].Value.ToString()}~{
-                            upsertAttribute
-                                .ConstructorArguments[1].Value.ToString()}"
-                    );
-                }
-                
-                var joinAttribute = propertyModelAttributeType.CustomAttributes
-                    .FirstOrDefault(a => a.AttributeType == typeof(JoinKeyAttribute));
-                processingFieldMap.IsJoinKey = joinAttribute != null;
-                
-                if (isModel && joinKeys != null && joinAttribute != null)
-                {
-                    joinKeys.Add(
-                        $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
-                        $"{joinAttribute
-                            .ConstructorArguments[0].Value.ToString()}~{
-                            joinAttribute
-                                .ConstructorArguments[1].Value.ToString()}"
-                    );
-                }
+                // var upsertAttribute = propertyModelAttributeType.CustomAttributes
+                //     .FirstOrDefault(a => a.AttributeType == typeof(UpsertKeyAttribute));
+                // processingFieldMap.IsUpsertKey = upsertAttribute != null;
+                //
+                // // if (isModel && upsertKeys != null && upsertAttribute != null)
+                // if (upsertKeys != null && upsertAttribute != null &&
+                //     !upsertKeys.ContainsKey($"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}"))
+                // {
+                //     upsertKeys.Add(
+                //         $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
+                //         $"{upsertAttribute
+                //             .ConstructorArguments[0].Value.ToString()}~{
+                //             upsertAttribute
+                //                 .ConstructorArguments[1].Value.ToString()}"
+                //     );
+                // }
+                //
+                // if (upsertKeys != null && upsertAttribute != null &&
+                //     !upsertKeys.ContainsKey($"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}"))
+                // {
+                //     upsertKeys.Add(
+                //         $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
+                //         $"{upsertAttribute
+                //             .ConstructorArguments[0].Value.ToString()}~{
+                //             upsertAttribute
+                //                 .ConstructorArguments[1].Value.ToString()}"
+                //     );
+                // }
+                //
+                // var joinAttribute = propertyModelAttributeType.CustomAttributes
+                //     .FirstOrDefault(a => a.AttributeType == typeof(JoinKeyAttribute));
+                // processingFieldMap.IsJoinKey = joinAttribute != null;
+                //
+                // // if (isModel && joinKeys != null && joinAttribute != null)
+                // if (joinKeys != null && joinAttribute != null &&
+                //     !joinKeys.ContainsKey($"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}"))
+                // {
+                //     joinKeys.Add(
+                //         $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
+                //         $"{joinAttribute
+                //             .ConstructorArguments[0].Value.ToString()}~{
+                //             joinAttribute
+                //                 .ConstructorArguments[1].Value.ToString()}"
+                //     );
+                // }
+                //
+                // if (joinKeys != null && joinAttribute != null &&
+                //     !joinKeys.ContainsKey($"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}"))
+                // {
+                //     joinKeys.Add(
+                //         $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
+                //         $"{joinAttribute
+                //             .ConstructorArguments[0].Value.ToString()}~{
+                //             joinAttribute
+                //                 .ConstructorArguments[1].Value.ToString()}"
+                //     );
+                // }
                 
                 mappingFields!.Add(processingFieldMap);
             }

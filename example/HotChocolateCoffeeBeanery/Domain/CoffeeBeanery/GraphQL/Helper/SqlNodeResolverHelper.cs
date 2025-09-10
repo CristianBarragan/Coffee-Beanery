@@ -21,7 +21,8 @@ public static class SqlNodeResolverHelper
     /// <param name="cache"></param>
     /// <param name="permissions"></param>
     /// <returns></returns>
-    public static SqlStructure HandleGraphQL<D,S>(ISelection graphQlSelection, IEntityTreeMap<D,S> entityTreeMap, IModelTreeMap<D,S> modelTreeMap,
+    public static SqlStructure HandleGraphQL<D,S>(ISelection graphQlSelection, IEntityTreeMap<D,S> entityTreeMap, 
+        IModelTreeMap<D,S> modelTreeMap, string wrapperName,
         IFasterKV<string, string> cache, string cacheKey,
         Dictionary<string, List<string>> permissions = null)
         where D : class where S : class
@@ -38,7 +39,8 @@ public static class SqlNodeResolverHelper
         var sqlQuery = new StringBuilder();
         var sqlSelectStatement = string.Empty;
         var sqlUpsertStatement = string.Empty;
-        var rootEntityName = modelTreeMap.ModelNames.Last();
+        var models = modelTreeMap.ModelNames.Where(m => !m.Matches(wrapperName)).ToList();
+        var rootEntityName = models?.Last();
 
         //Where conditions
         GetFieldsWhere(modelTreeMap.DictionaryTree, whereFields, sqlWhereStatement, graphQlSelection.SyntaxNode.Arguments
@@ -108,21 +110,28 @@ public static class SqlNodeResolverHelper
         // using var cacheReadSession = cache.NewSession(new SimpleFunctions<string, string>());
         // cacheReadSession.Read(ref cacheKey, ref sqlSelectStatement);
         rootNodeTree = modelTreeMap.DictionaryTree.Last().Value;
+        var sqlStatementNodes = new Dictionary<string,SqlNode>();
         
         if (graphQlSelection.SelectionSet?.Selections!
                 .FirstOrDefault(s => s.ToString().StartsWith("edges")) != null)
         {
-            GetFields(modelTreeMap.DictionaryTree, edgeNode!.GetNodes().Skip(1).First(),
-                modelTreeMap.DictionaryTree.Last().Value,
-                new NodeTree(), modelTreeMap.ModelNames, true);
+            GetFields(modelTreeMap.DictionaryTree, edgeNode,
+                entityTreeMap.LinkEntityDictionaryTree,
+                sqlStatementNodes,
+                modelTreeMap.DictionaryTree.First(t => 
+                    t.Key.Matches(rootEntityName)).Value,
+                new NodeTree(), models, modelTreeMap.EntityNames, true);
         }
 
         if (graphQlSelection.SelectionSet?.Selections!
                 .FirstOrDefault(s => s.ToString().StartsWith("nodes")) != null)
         {
             GetFields(modelTreeMap.DictionaryTree, node,
-                modelTreeMap.DictionaryTree.Last().Value,
-                new NodeTree(), modelTreeMap.ModelNames, false);
+                entityTreeMap.LinkEntityDictionaryTree,
+                sqlStatementNodes,
+                modelTreeMap.DictionaryTree.First(t => 
+                    t.Key.Matches(rootEntityName)).Value,
+                new NodeTree(), models, modelTreeMap.EntityNames, false);
         }
 
         if (string.IsNullOrEmpty(sqlSelectStatement))
@@ -745,87 +754,22 @@ public static class SqlNodeResolverHelper
     /// <param name="entityNames"></param>
     /// <param name="entityMap"></param>
     /// <param name="isEdge"></param>
-    public static void GetFields(Dictionary<string, NodeTree> trees, ISyntaxNode node, NodeTree currentTree,
-        NodeTree parentTree, List<string> entityNames, bool isEdge)
+    public static void GetFields(Dictionary<string, NodeTree> trees, ISyntaxNode node, 
+        Dictionary<string,SqlNode> linkEntityDictionaryTree, Dictionary<string, SqlNode> sqlStatementNodes, NodeTree currentTree,
+        NodeTree parentTree, List<string> modelNames, List<string> entityNames, bool isEdge)
     {
         if (node != null && node.GetNodes()?.Count() == 0)
         {
-            if (string.IsNullOrEmpty(currentTree.Name))
+            if (linkEntityDictionaryTree.TryGetValue($"{currentTree.Name}~{node.ToString()}", out var sqlNodeFrom))
             {
-                currentTree = trees.Last().Value;
-            }
-
-            var dbField = string.Empty;
-            var fieldMap = default(FieldMap);
-
-            if (node.ToString().Matches("nodes") || node.ToString().Matches("node"))
-            {
-                dbField = node.ToString();
-            }
-            else if (entityNames.Any(e => e.Matches(node.ToString())))
-            {
-                dbField = currentTree.Name;
-            }
-            else
-            {
-                fieldMap = currentTree?.Mappings?.FirstOrDefault(f => f.FieldSourceName.Matches(node.ToString()));
-                dbField = fieldMap?.DestinationEntity;
-            }
-
-            if (string.IsNullOrEmpty(dbField))
-            {
-                return;
-            }
-
-            var element = new GraphElement
-            {
-                EntityId = currentTree.Id,
-                GraphElementType = isEdge ? GraphElementType.Edge : GraphElementType.Node,
-                TableName = currentTree.Name
-            };
-
-            if (currentTree.Name.Matches(dbField) && !entityNames.Contains(fieldMap?.DestinationEntity!))
-            {
-                element.FieldName = dbField;
-                element.Field =
-                    $"{currentTree.Name}.\"Id\" AS \"{dbField.ToUpperCamelCase()}_{"Id".ToSnakeCase(currentTree.Id)}\"";
-            }
-            else if (string.IsNullOrEmpty(currentTree.Name) || dbField.Matches("nodes") || dbField.Matches("node"))
-            {
-                element.FieldName = currentTree.Name;
-                element.Field =
-                    $"{currentTree.Name}.\"Id\" AS \"{currentTree.Name.ToUpperCamelCase()}_{"Id".ToSnakeCase(currentTree.Id)}\"";
-            }
-            else
-            {
-                //Case when model entity is different then entities
-                if (!dbField.Matches(currentTree.Name))
+                if (!sqlStatementNodes.ContainsKey(sqlNodeFrom.RelationshipKey) &&
+                    linkEntityDictionaryTree.TryGetValue(sqlNodeFrom.RelationshipKey, out var sqlNodeTo))
                 {
-                    var elementAux = new GraphElement()
-                    {
-                        EntityId = currentTree.Id,
-                        GraphElementType = isEdge ? GraphElementType.Edge : GraphElementType.Node,
-                        TableName = fieldMap.DestinationEntity,
-                        FieldName = fieldMap.FieldDestinationName,
-                        Field =
-                            $"{fieldMap.DestinationEntity}.\"Id\" AS \"{fieldMap.DestinationEntity.ToUpperCamelCase()}_{"Id".ToSnakeCase(currentTree.Id)}\""
-                    };
-                }
-                
-                if (fieldMap != default(FieldMap))
-                {
-                    element.FieldName = fieldMap.FieldDestinationName;
-                    element.Field =
-                        $"{fieldMap.DestinationEntity}.\"{fieldMap.FieldDestinationName}\" AS \"{fieldMap.FieldDestinationName.ToSnakeCase(currentTree.Id)}\"";
-                    element.TableName = fieldMap.DestinationEntity;
+                    sqlNodeTo.SqlNodeType = isEdge ? SqlNodeType.Edge : SqlNodeType.Node;
+                    sqlStatementNodes.Add(sqlNodeFrom.RelationshipKey, sqlNodeTo);
                 }
             }
             
-            if (entityNames.Any(e => e.Matches(currentTree.Name)))
-            {
-                UpsertElement(trees, currentTree, element);
-            }
-
             return;
         }
 
@@ -836,51 +780,41 @@ public static class SqlNodeResolverHelper
         
         foreach (var childNode in node.GetNodes())
         {
-            if (entityNames.Any(e => e.Matches(childNode.ToString().Split('{')[0])))
+            if (modelNames.Any(e => e.Matches(childNode.ToString().Split('{')[0])) || node.ToString().Matches("nodes") || 
+                node.ToString().Matches("node"))
             {
-                currentTree = trees[childNode.ToString().Split('{')[0]];
-                if (!string.IsNullOrWhiteSpace(currentTree.ParentName))
+                if (node.ToString().Matches("nodes") || 
+                    node.ToString().Matches("node"))
                 {
-                    parentTree = trees[currentTree.ParentName];
+                    currentTree = trees[modelNames.Last()];
                 }
                 else
                 {
+                    currentTree = trees[childNode.ToString().Split('{')[0]];
+                }
+
+                if (string.IsNullOrWhiteSpace(currentTree.ParentName))
+                {
                     parentTree = currentTree;
                 }
+                else
+                {
+                    parentTree = trees[currentTree.ParentName];
+                }
+                
+                // if (entityNames.Any(e => currentTree.ParentName.Matches(e)))
+                // // if (!string.IsNullOrWhiteSpace(currentTree.ParentName))
+                // {
+                //     
+                // }
+                // else
+                // {
+                //     
+                // }
             }
-            GetFields(trees, childNode, currentTree, parentTree, entityNames, isEdge);
-        }
-    }
-
-    /// <summary>
-    /// Method for adding a graph element into a dictionary
-    /// </summary>
-    /// <param name="dictionary"></param>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    private static void AddToGraphElementDictionary(Dictionary<string, List<GraphElement>> dictionary, string key,
-        GraphElement value)
-    {
-        if (!dictionary.TryGetValue(key, out var currentList))
-        {
-            var newGraphList = new List<GraphElement>()
-            {
-                value
-            };
-            dictionary.Add(key, newGraphList);
-        }
-        else
-        {
-            var currentFieldIndex = currentList.FindIndex(f => f.Field.Matches(value.Field));
-
-            if (currentFieldIndex < 0)
-            {
-                currentList.Add(value);
-            }
-            else
-            {
-                currentList[currentFieldIndex] = value;
-            }
+            
+            GetFields(trees, childNode, linkEntityDictionaryTree, sqlStatementNodes, currentTree, 
+                parentTree, modelNames, entityNames, isEdge);
         }
     }
 

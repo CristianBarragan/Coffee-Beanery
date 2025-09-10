@@ -52,7 +52,7 @@ public class ProcessService<M, D, S>
     }
 
     private async Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>
-        ExecuteStatementAsync<M>(string cacheKey, ISelection graphQlSelection, string rootName,
+        ExecuteStatementAsync<M>(string cacheKey, ISelection graphQlSelection, string wrapperName,
             CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(graphQlSelection.ToString()))
@@ -61,7 +61,8 @@ public class ProcessService<M, D, S>
         }
 
         var sqlStructure = new SqlStructure();
-        sqlStructure = SqlNodeResolverHelper.HandleGraphQL(graphQlSelection, _entityTreeMap, _modelTreeMap, _cache, cacheKey);
+        sqlStructure = SqlNodeResolverHelper.HandleGraphQL(graphQlSelection, _entityTreeMap, _modelTreeMap,
+            wrapperName, _cache, cacheKey);
         //Permissions )
 
         return await _queryDispatcher

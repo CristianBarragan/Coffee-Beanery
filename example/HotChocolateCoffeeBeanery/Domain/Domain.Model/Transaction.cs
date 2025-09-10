@@ -5,7 +5,7 @@ namespace Domain.Model;
 public class Transaction
 {
     [UpsertKey("Transaction","Lending")]
-    public Guid TransactionKey { get; set; }
+    public Guid? TransactionKey { get; set; }
 
     public decimal? Amount { get; set; }
 

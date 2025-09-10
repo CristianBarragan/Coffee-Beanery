@@ -5,7 +5,7 @@ namespace Domain.Model;
 public class Account
 {
     [UpsertKey("Account", "Account")]
-    public Guid AccountKey { get; set; }
+    public Guid? AccountKey { get; set; }
 
     public string? AccountNumber { get; set; }
 

@@ -7,7 +7,7 @@ namespace Domain.Model;
 public class Contract
 {
     [UpsertKey("Contract","Lending")]
-    public Guid ContractKey { get; set; }
+    public Guid? ContractKey { get; set; }
 
     public ContractType? ContractType { get; set; }
 

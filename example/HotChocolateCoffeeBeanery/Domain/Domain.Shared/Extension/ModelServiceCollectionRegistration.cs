@@ -94,7 +94,7 @@ public static class ModelServiceCollectionRegistration
             (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
             (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
             nameof(Wrapper),
-            mapperConfiguration, entityNodeId, false);
+            mapperConfiguration, entityNodeId, false, linkEntityDictionaryTree, upsertKeys, linkKeys, joinKeys);
         
         foreach (var tree in modelDictionaryTree)
         {
@@ -119,37 +119,49 @@ public static class ModelServiceCollectionRegistration
         foreach (var upsertKey in upsertKeys)
         {
             foreach (var linkEntity in linkEntityDictionaryTree
-                .Where(l => upsertKey.Key
-                    .Matches(l.Key)).Select(l => l.Key))
+                .Where(l => upsertKey.Key.Split('~')[0]
+                    .Matches(l.Key.Split('~')[0])).Select(l => l.Key))
             {
-                var link = linkEntityDictionaryTree[upsertKey.Key];
-                if (!link.UpsertKeys.Any(u => u.Matches(upsertKey.Value)))
+                foreach (var linkKeyValue in linkEntityDictionaryTree
+                    .Where(k => k.Key.Split('~')[0].Matches(linkEntity.Split('~')[0])))
                 {
-                    link.UpsertKeys.Add(upsertKey.Value);
+                    var link = linkEntityDictionaryTree[linkKeyValue.Key];
+                    if (!link.UpsertKeys.Any(u => u.Matches(upsertKey.Value)))
+                    {
+                        link.UpsertKeys.Add(upsertKey.Value);
+                    }
+                    // var entityNode = entityNodeId.FirstOrDefault(id => id.Key.Matches(linkEntity.Split('~')[0]));
+                    //
+                    // if (entityNode.Value != null)
+                    // {
+                    //     link.SelectColumn = $"\"{link.SelectColumn}\" AS \"{link.SelectColumn.ToSnakeCase(entityNode.Value)}\"";    
+                    // }
                 }
-                var entityId = entityNodeId.First(id => id.Key.Matches(linkEntity.Split('~')[0])).Value;
-                link.SelectColumn = $"\"{link.SelectColumn}\" AS \"{link.SelectColumn.ToSnakeCase(entityId)}\"";
             }
         }
         
         foreach (var joinKey in joinKeys)
         {
-            foreach (var _ in linkEntityDictionaryTree
-                         .Where(l => joinKey.Key
-                             .Matches(l.Key)).Select(l => l.Key))
+            foreach (var linkEntity in linkEntityDictionaryTree
+                         .Where(l => joinKey.Key.Split('~')[0]
+                             .Matches(l.Key.Split('~')[0])).Select(l => l.Key))
             {
-                var link = linkEntityDictionaryTree[joinKey.Key];
-                AddToDictionary(link.JoinKeys, joinKey.Key, joinKey.Value);
+                foreach (var linkKeyValue in linkEntityDictionaryTree
+                             .Where(k => k.Key.Split('~')[0].Matches(linkEntity.Split('~')[0])))
+                {
+                    var link = linkEntityDictionaryTree[linkKeyValue.Key];
+                    AddToDictionary(link.JoinKeys, joinKey.Key, joinKey.Value);
+                }
             }
         }
         
         foreach (var linkKey in linkKeys)
         {
-            foreach (var _ in linkEntityDictionaryTree
-                         .Where(l => linkKey.Key
-                             .Matches(l.Key)).Select(l => l.Key))
+            foreach (var linkKeyValue in linkEntityDictionaryTree
+                         .Where(l => linkKey.Key.Split('~')[0]
+                             .Matches(l.Key.Split('~')[0])).Select(l => l.Key))
             {
-                var link = linkEntityDictionaryTree[linkKey.Key];
+                var link = linkEntityDictionaryTree[linkKeyValue];
                 AddToDictionary(link.LinkKeys, linkKey.Key, linkKey.Value);
             }
         }

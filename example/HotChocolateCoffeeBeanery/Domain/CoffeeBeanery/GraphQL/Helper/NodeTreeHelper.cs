@@ -59,7 +59,9 @@ public static class NodeTreeHelper
             nodeId.Add(new KeyValuePair<string, int>(nodeToClass!.GetType().Name!, nodeId.Count + 1));
         }
 
-        if (isModel)
+        // if (isModel)
+        // {
+        if (!linkEntityDictionaryTree.ContainsKey($"{nodeToClass.GetType().Name}~Id"))
         {
             linkEntityDictionaryTree.Add($"{nodeToClass.GetType().Name}~Id",
                 new SqlNode()
@@ -69,6 +71,7 @@ public static class NodeTreeHelper
                     ExludedColumn  = string.Empty
                 });
         }
+        // }
         
         var fromMapping = GraphQLMapper.GetMappings<E, M>(mapperConfiguration, 
             nodeFromClass, nodeToClass, isModel, linkEntityDictionaryTree, upsertKeys);
@@ -124,7 +127,8 @@ public static class NodeTreeHelper
                 var joinKeyAttribute = toProperty.CustomAttributes.FirstOrDefault(ca => ca.AttributeType == typeof(JoinKeyAttribute));
                 var model = joinKeyAttribute.ConstructorArguments[0].Value;
                 
-                if (isModel && joinKeys != null)
+                // if (isModel && joinKeys != null)
+                if (joinKeys != null)
                 {
                     var column = joinKeyAttribute.ConstructorArguments[1].Value.ToString();
                     var joinKey = $"{model}~{column}";
@@ -146,7 +150,8 @@ public static class NodeTreeHelper
                 var linkKeyAttribute = toProperty.CustomAttributes.FirstOrDefault(ca => ca.AttributeType == typeof(LinkKeyAttribute));
                 var model = linkKeyAttribute.ConstructorArguments[0].Value;
                 
-                if (isModel && linkKeys != null)
+                // if (isModel && linkKeys != null)
+                if (linkKeys != null)
                 {
                     var column = linkKeyAttribute.ConstructorArguments[1].Value.ToString();
                     var linkKey = $"{model}~{column}";
@@ -155,7 +160,7 @@ public static class NodeTreeHelper
                     {
                         linkKeys.Add(linkKey,$"{nodeToClass.GetType().Name}~{properties[i].Name}");    
                     }
-                }   
+                }
                 
                 var modelType = Type.GetType($"{nodeToClass.GetType().Namespace}.{model},{nodeToClass.GetType().Assembly}");
                 toVariable = (M)Activator.CreateInstance(modelType);
@@ -166,6 +171,17 @@ public static class NodeTreeHelper
             {
                 schemaValue = toProperty.CustomAttributes.First().ConstructorArguments[1].Value.ToString();
                 node.Schema = schemaValue;
+                
+                var upsertKeyAttribute = toProperty.CustomAttributes.FirstOrDefault(ca => ca.AttributeType == typeof(UpsertKeyAttribute));
+                var model = upsertKeyAttribute.ConstructorArguments[0].Value;
+                
+                var column = upsertKeyAttribute.ConstructorArguments[1].Value.ToString();
+                var upsertKey = $"{model}~{column}";
+
+                if (!upsertKeys.ContainsKey(upsertKey))
+                {
+                    upsertKeys.Add(upsertKey,$"{nodeToClass.GetType().Name}~{properties[i].Name}");    
+                }
             }
             
             if (GraphQLFieldExtension.IsPrimitiveType(nonNullableFromType))

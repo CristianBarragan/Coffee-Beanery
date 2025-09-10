@@ -6,7 +6,7 @@ namespace Domain.Model;
 public class CustomerBankingRelationship
 {
     [UpsertKey("CustomerBankingRelationship","Banking")]
-    public Guid CustomerBankingRelationshipKey { get; set; }
+    public Guid? CustomerBankingRelationshipKey { get; set; }
 
     [JoinKey("Product", "Id")]
     public Guid? ProductKey { get; set; }

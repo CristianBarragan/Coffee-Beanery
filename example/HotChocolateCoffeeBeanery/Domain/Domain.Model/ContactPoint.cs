@@ -5,7 +5,7 @@ namespace Domain.Model;
 public class ContactPoint
 {
     [UpsertKey("ContactPoint","Banking")]
-    public Guid ContactPointKey { get; set; }
+    public Guid? ContactPointKey { get; set; }
 
     public ContactPointType? ContactPointType { get; set; }
 

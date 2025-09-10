@@ -6,9 +6,6 @@ namespace Domain.Model;
 
 public class Product
 {
-    [UpsertKey("Product","Customer")]
-    public Guid? ProductKey { get; set; }
-    
     [JoinKey("CustomerBankingRelationship", "Id")]
     public Guid? CustomerBankingRelationshipKey { get; set; }
     
@@ -20,17 +17,14 @@ public class Product
     
     [LinkKey("Account", "Id")]
     public Guid? AccountKey { get; set; }
-    
-    [LinkKey("Transaction", "Id")]
-    public Guid? TransactionKey { get; set; }
 
     public string? AccountName { get; set; }
     
     public string? AccountNumber { get; set; }
 
-    public decimal Amount { get; set; }
+    public decimal? Amount { get; set; }
 
-    public decimal Balance { get; set; }
+    public decimal? Balance { get; set; }
 
     public ProductType ProductType { get; set; }
 
