@@ -28,16 +28,18 @@ public class ProcessService<M, D, S>
     private readonly ILogger<ProcessService<M, D, S>> _logger;
     private readonly IQueryDispatcher _queryDispatcher;
     private readonly NpgsqlConnection _connection;
-    private readonly ITreeMap<D, S> _treeMap;
+    private readonly IEntityTreeMap<D, S> _entityTreeMap;
+    private readonly IModelTreeMap<D, S> _modelTreeMap;
     private IFasterKV<string, string> _cache;
 
     public ProcessService(ILogger<ProcessService<M, D, S>> logger, IQueryDispatcher queryDispatcher,
-        NpgsqlConnection connection, ITreeMap<D, S> treeMap, IFasterKV<string, string> cache)
+        NpgsqlConnection connection, IEntityTreeMap<D, S> entityTreeMap, IModelTreeMap<D, S> modelTreeMap, IFasterKV<string, string> cache)
     {
         _logger = logger;
         _queryDispatcher = queryDispatcher;
         _connection = connection;
-        _treeMap = treeMap;
+        _entityTreeMap = entityTreeMap;
+        _modelTreeMap = modelTreeMap;
         _cache = cache;
     }
 
@@ -59,8 +61,7 @@ public class ProcessService<M, D, S>
         }
 
         var sqlStructure = new SqlStructure();
-        sqlStructure = SqlNodeResolverHelper.HandleGraphQL(graphQlSelection, _treeMap.DictionaryTree, rootName,
-            _treeMap.EntityNames, _treeMap.ModelNames, _cache, cacheKey);
+        sqlStructure = SqlNodeResolverHelper.HandleGraphQL(graphQlSelection, _entityTreeMap, _modelTreeMap, _cache, cacheKey);
         //Permissions )
 
         return await _queryDispatcher

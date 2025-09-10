@@ -12,22 +12,23 @@ public class Transaction : Process
         Schema = Entity.Schema.Lending;
     }
 
+    [UpsertKey("Transaction","Customer")]
     public Guid TransactionKey { get; set; }
 
     public decimal? Amount { get; set; }
 
     public decimal? Balance { get; set; }
 
+    [JoinKey("Contract", "Id")]
     public Guid? ContractKey { get; set; }
-
-    [JoinKey("Contract")]
+    
     public Contract? Contract { get; set; }
 
     public int? ContractId { get; set; }
 
+    [JoinKey("Account", "Id")]
     public Guid? AccountKey { get; set; }
-
-    [JoinKey("Account")]
+    
     public Account? Account { get; set; }
 
     public int? AccountId { get; set; }

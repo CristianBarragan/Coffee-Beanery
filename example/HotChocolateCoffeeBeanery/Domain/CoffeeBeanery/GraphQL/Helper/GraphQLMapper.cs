@@ -16,14 +16,17 @@ public static class GraphQLMapper
     /// <param name="mapper"></param>
     /// <param name="entity"></param>
     /// <returns></returns>
-    public static List<FieldMap> GetMappings<E,M>(MapperConfiguration mapper, M model, E entity)
+    public static List<FieldMap> GetMappings<E,M>(MapperConfiguration mapper, E from, M to, bool isModel,
+        Dictionary<string, SqlNode>? linkEntityDictionaryTree = null, Dictionary<string, string>? upsertKeys = null,
+        Dictionary<string, string>? joinKeys = null)
      where E : class where M : class
     {
         var configurationProvider = mapper.Internal().GetAllTypeMaps();
         var mappingFields = new List<FieldMap>();
+        
         var mappings = configurationProvider
-            .Where(configuration => configuration.SourceType.Name.Matches(model.GetType().Name) ||
-                                    configuration.SourceType.Name.Matches(entity.GetType().Name));
+            .Where(configuration => configuration.SourceType.Name.Matches(to.GetType().Name) ||
+                                    configuration.SourceType.Name.Matches(from.GetType().Name));
 
         foreach (var mapMapping in mappings.Select(configuration =>
                  configuration.MemberMaps))
@@ -31,7 +34,7 @@ public static class GraphQLMapper
             foreach (var mapping in mapMapping)
             {
                 var isDestinationEntity = !mapping.TypeMap.DestinationType.Assembly.GetName()
-                    .Name.Matches(model.GetType().Assembly.GetName().Name);
+                    .Name.Matches(to.GetType().Assembly.GetName().Name);
 
                 if (string.IsNullOrEmpty(mapping.GetSourceMemberName()) ||
                     (mappingFields.Any(a => a.FieldDestinationName.Matches(mapping.DestinationName))) ||
@@ -42,18 +45,46 @@ public static class GraphQLMapper
 
                 var processingFieldMap = new FieldMap()
                 {
-                    FieldSourceName = isDestinationEntity ? mapping.GetSourceMemberName() : mapping.DestinationName,
-                    FieldSourceType = isDestinationEntity ? mapping.TypeMap.SourceType : mapping.TypeMap.DestinationType,
-                    SourceModel = isDestinationEntity ? mapping.TypeMap.SourceType.Name : mapping.TypeMap.DestinationType.Name,
-                    FieldDestinationName = !isDestinationEntity ? mapping.GetSourceMemberName() : mapping.DestinationName,
-                    FieldDestinationType = !isDestinationEntity ? mapping.TypeMap.SourceType : mapping.TypeMap.DestinationType,
-                    DestinationEntity = !isDestinationEntity ? mapping.TypeMap.SourceType.Name : mapping.TypeMap.DestinationType.Name
+                    FieldSourceName = isDestinationEntity && !isModel ? mapping.GetSourceMemberName() : mapping.DestinationName,
+                    FieldSourceType = isDestinationEntity && !isModel ? mapping.TypeMap.SourceType : mapping.TypeMap.DestinationType,
+                    SourceModel = isDestinationEntity && !isModel ? mapping.TypeMap.SourceType.Name : mapping.TypeMap.DestinationType.Name,
+                    FieldDestinationName = !isDestinationEntity && isModel ? mapping.GetSourceMemberName() : mapping.DestinationName,
+                    FieldDestinationType = !isDestinationEntity && isModel ? mapping.TypeMap.SourceType : mapping.TypeMap.DestinationType,
+                    DestinationEntity = !isDestinationEntity && isModel ? mapping.TypeMap.SourceType.Name : mapping.TypeMap.DestinationType.Name
                 };
+
+                if (isModel && linkEntityDictionaryTree != null &&
+                    !linkEntityDictionaryTree
+                        .ContainsKey($"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}"))
+                {
+                    linkEntityDictionaryTree.Add($"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}", 
+                        new SqlNode()
+                    {
+                        RelationshipKey = $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
+                        InsertColumn = processingFieldMap.FieldSourceName,
+                        SelectColumn = processingFieldMap.FieldSourceName,
+                        ExludedColumn = $"EXCLUDED.\"{processingFieldMap.FieldSourceName}\""
+                    });
+                }
                 
-                var propertyModelAttributeType = model.GetType().GetProperties()
+                if (isModel && linkEntityDictionaryTree != null &&
+                    !linkEntityDictionaryTree
+                        .ContainsKey($"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}"))
+                {
+                    linkEntityDictionaryTree.Add($"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}", 
+                        new SqlNode()
+                        {
+                            RelationshipKey = $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
+                            InsertColumn = processingFieldMap.FieldDestinationName,
+                            SelectColumn = processingFieldMap.FieldDestinationName,
+                            ExludedColumn = $"EXCLUDED.\"{processingFieldMap.FieldDestinationName}\""
+                        });
+                }
+                
+                var propertyModelAttributeType = to.GetType().GetProperties()
                     .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldSourceName));
                 
-                var entityNodeType = Type.GetType($"{entity.GetType().Namespace}.{processingFieldMap.DestinationEntity},{entity.GetType().Assembly}");
+                var entityNodeType = Type.GetType($"{from.GetType().Namespace}.{processingFieldMap.DestinationEntity},{from.GetType().Assembly}");
                 var entityVariable = (E)Activator.CreateInstance(entityNodeType);
                 
                 var propertyEntityAttributeType = entityVariable.GetType().GetProperties()
@@ -79,10 +110,36 @@ public static class GraphQLMapper
                     processingFieldMap.DestinationEnumerationValues = enumDictionary;
                 }
                 
-                var upsertAttribute = propertyModelAttributeType.CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(UpsertKeyAttribute));
+                var upsertAttribute = propertyModelAttributeType.CustomAttributes
+                    .FirstOrDefault(a => a.AttributeType == typeof(UpsertKeyAttribute));
                 processingFieldMap.IsUpsertKey = upsertAttribute != null;
-                processingFieldMap.FieldDestinationSchema = upsertAttribute != null ? upsertAttribute.ConstructorArguments[1].Value.ToString() : string.Empty;
-                processingFieldMap.IsJoinKey =  propertyModelAttributeType.CustomAttributes.Any(a => a.AttributeType == typeof(JoinKeyAttribute));
+
+                if (isModel && upsertKeys != null && upsertAttribute != null)
+                {
+                    upsertKeys.Add(
+                        $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
+                        $"{upsertAttribute
+                            .ConstructorArguments[0].Value.ToString()}~{
+                            upsertAttribute
+                                .ConstructorArguments[1].Value.ToString()}"
+                    );
+                }
+                
+                var joinAttribute = propertyModelAttributeType.CustomAttributes
+                    .FirstOrDefault(a => a.AttributeType == typeof(JoinKeyAttribute));
+                processingFieldMap.IsJoinKey = joinAttribute != null;
+                
+                if (isModel && joinKeys != null && joinAttribute != null)
+                {
+                    joinKeys.Add(
+                        $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
+                        $"{joinAttribute
+                            .ConstructorArguments[0].Value.ToString()}~{
+                            joinAttribute
+                                .ConstructorArguments[1].Value.ToString()}"
+                    );
+                }
+                
                 mappingFields!.Add(processingFieldMap);
             }
         }

@@ -16,8 +16,8 @@ public class CustomerQueryHandler<M, D, S> : ProcessQuery<M, D, S>, IQuery<SqlSt
 {
     private readonly IMapper _mapper;
 
-    public CustomerQueryHandler(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection, ITreeMap<D, S> treeMap,
-        IMapper mapper) : base(loggerFactory, dbConnection, treeMap)
+    public CustomerQueryHandler(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection, IModelTreeMap<D, S> modelTreeMap,
+        IMapper mapper) : base(loggerFactory, dbConnection, modelTreeMap)
     {
         _mapper = mapper;
     }

@@ -12,7 +12,7 @@ public class MappingProfile : Profile
         CreateMap<Customer, DataEntity.Customer>()
             .EqualityComparison((src, dest) => src.CustomerKey == dest.CustomerKey)
             .ForMember(dest => dest.ContactPoint, opt => opt.MapFrom(ps => ps.ContactPoint))
-            .ForMember(dest => dest.Product, opt => opt.MapFrom(ps => ps.Product))
+            .ForMember(dest => dest.CustomerBankingRelationship, opt => opt.MapFrom(ps => ps.Product))
             .ForMember(dest => dest.CustomerType, opt => opt.MapFrom(ps => ps.CustomerType))
             .ForMember(dest => dest.FirstName, opt => opt.MapFrom(ps => ps.FirstNaming))
             .ForMember(dest => dest.LastName, opt => opt.MapFrom(ps => ps.LastNaming))

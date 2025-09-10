@@ -4,18 +4,19 @@ public class SqlNode
 {
     public SqlNodeType SqlNodeType { get; set; } = SqlNodeType.Node;
 
-    public List<string> InsertColumns { get; set; } = new List<string>();
+    public string RelationshipKey { get; set; } = String.Empty;
 
-    public List<string> SelectColumns { get; set; } = new List<string>();
+    public string InsertColumn { get; set; } = String.Empty;
 
-    public List<string> UpdateColumns { get; set; } = new List<string>();
+    public string SelectColumn { get; set; } = String.Empty;
 
-    public Dictionary<string, List<string>> Values { get; set; } =
-        new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+    public string ExludedColumn { get; set; } = String.Empty;
+    
+    public List<string> UpsertKeys { get; set; } = [];
 
-    public NodeTree NodeTree { get; set; }
-
-    public int Id { get; set; }
+    public Dictionary<string,string> JoinKeys { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    
+    public Dictionary<string,string> LinkKeys { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 }
 
 public enum SqlNodeType

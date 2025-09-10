@@ -15,20 +15,26 @@ public class UpsertKeyAttribute() : Attribute
 
 public class JoinKeyAttribute() : Attribute
 {
-    public JoinKeyAttribute(string entity) : this()
+    public JoinKeyAttribute(string entity, string column) : this()
     {
         Entity = entity;
+        Column = column;
     }
     
     public string Entity { get; set; }
+    
+    public string Column { get; set; }
 }
 
 public class LinkKeyAttribute() : Attribute
 {
-    public LinkKeyAttribute(string entity) : this()
+    public LinkKeyAttribute(string entity, string column) : this()
     {
         Entity = entity;
+        Column = column;
     }
     
     public string Entity { get; set; }
+    
+    public string Column { get; set; }
 }

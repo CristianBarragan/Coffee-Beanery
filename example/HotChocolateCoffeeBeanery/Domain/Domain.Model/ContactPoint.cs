@@ -11,7 +11,7 @@ public class ContactPoint
 
     public string? ContactPointValue { get; set; }
 
-    [JoinKey("Customer")]
+    [JoinKey("Customer", "Id")]
     public Guid? CustomerKey { get; set; }
 }
 

@@ -8,11 +8,11 @@ public class CustomerBankingRelationship
     [UpsertKey("CustomerBankingRelationship","Banking")]
     public Guid CustomerBankingRelationshipKey { get; set; }
 
-    [JoinKey("Customer")]
-    public Guid? CustomerKey { get; set; }
+    [JoinKey("Product", "Id")]
+    public Guid? ProductKey { get; set; }
 
     public int? CustomerId { get; set; }
     
-    [LinkKey("Contract")]
+    [LinkKey("Contract", "Id")]
     public List<Contract>? Contract { get; set; }
 }

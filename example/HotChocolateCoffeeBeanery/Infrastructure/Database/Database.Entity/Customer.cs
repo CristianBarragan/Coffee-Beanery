@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CoffeeBeanery.GraphQL.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Database.Entity;
@@ -10,6 +11,7 @@ public class Customer : Process
         Schema = Entity.Schema.Banking;
     }
     
+    [UpsertKey("Customer","Customer")]
     public Guid CustomerKey { get; set; }
 
     public string? FirstName { get; set; }
@@ -20,9 +22,11 @@ public class Customer : Process
 
     public CustomerType? CustomerType { get; set; }
 
+    [LinkKey("ContactPoint", "Id")]
     public List<ContactPoint>? ContactPoint { get; set; }
 
-    public List<CustomerBankingRelationship>? Product { get; set; }
+    [LinkKey("CustomerBankingRelationship", "Id")]
+    public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
 }
 
 public enum CustomerType
@@ -50,7 +54,7 @@ public class CustomerEntityConfiguration : IEntityTypeConfiguration<Customer>
 
         builder.HasMany(c => c.ContactPoint).WithOne(c => c.Customer).HasForeignKey(c => c.CustomerId);
 
-        builder.HasMany(c => c.Product).WithOne(c => c.Customer).HasForeignKey(c => c.CustomerId);
+        builder.HasMany(c => c.CustomerBankingRelationship).WithOne(c => c.Customer).HasForeignKey(c => c.CustomerId);
 
         builder.Property(c => c.ProcessedDateTime).HasDefaultValueSql("(now() at time zone 'utc')");
     }

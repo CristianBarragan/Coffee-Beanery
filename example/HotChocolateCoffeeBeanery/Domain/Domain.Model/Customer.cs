@@ -15,10 +15,10 @@ public class Customer
 
     public CustomerType? CustomerType { get; set; }
 
-    [LinkKey("Product")]
+    [LinkKey("Product", "Id")]
     public List<Product>? Product { get; set; }
 
-    [LinkKey("ContactPoint")]
+    [LinkKey("ContactPoint", "Id")]
     public List<ContactPoint>? ContactPoint { get; set; }
 }
 

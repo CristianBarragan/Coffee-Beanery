@@ -11,9 +11,9 @@ public class Transaction
 
     public decimal? Balance { get; set; }
     
-    [JoinKey("Account")]
+    [JoinKey("Account", "Id")]
     public Guid? AccountKey { get; set; }
     
-    [JoinKey("Contract")]
+    [JoinKey("Contract", "Id")]
     public Guid? ContractKey { get; set; }
 }

@@ -12,14 +12,17 @@ public class Contract
     public ContractType? ContractType { get; set; }
 
     public decimal? Amount { get; set; }
+
+    [JoinKey("Product", "Id")]
+    public Guid? ProductKey { get; set; }
     
-    [JoinKey("Account")]
+    [LinkKey("Account", "Id")]
     public Guid? AccountKey { get; set; }
     
-    [JoinKey("CustomerBankingRelationship")]
+    [JoinKey("CustomerBankingRelationship", "Id")]
     public Guid? CustomerBankingRelationshipKey { get; set; }
     
-    [LinkKey("Transaction")]
+    [LinkKey("Transaction", "Id")]
     public List<Transaction>? Transaction { get; set; }
 }
 

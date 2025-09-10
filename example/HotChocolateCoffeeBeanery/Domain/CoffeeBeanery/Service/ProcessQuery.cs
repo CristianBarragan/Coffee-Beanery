@@ -14,14 +14,14 @@ public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
 {
     private readonly ILogger<ProcessQuery<M, D, S>> _logger;
     private readonly NpgsqlConnection _dbConnection;
-    private readonly ITreeMap<D, S> _treeMap;
+    private readonly IModelTreeMap<D, S> _modelTreeMap;
     private List<M> _models;
 
-    public ProcessQuery(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection, ITreeMap<D, S> treeMap)
+    public ProcessQuery(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection, IModelTreeMap<D, S> modelTreeMap)
     {
         _logger = loggerFactory.CreateLogger<ProcessQuery<M, D, S>>();
         _dbConnection = dbConnection;
-        _treeMap = treeMap;
+        _modelTreeMap = modelTreeMap;
         _models = new List<M>();
     }
 
@@ -29,9 +29,7 @@ public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
         ExecuteAsync(SqlStructure parameters, CancellationToken cancellationToken)
     {
         var types = new List<Type>()
-        {
-            
-        };
+        { };
 
         if (parameters != null)
         {
@@ -43,7 +41,7 @@ public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
             }
         }
         
-        types.AddRange(_treeMap.EntityTypes.Select(t => t.GetType()));
+        types.AddRange(_modelTreeMap.EntityTypes.Select(t => t.GetType()));
         var typesToMap = new List<Type>();
 
         if (parameters == null)

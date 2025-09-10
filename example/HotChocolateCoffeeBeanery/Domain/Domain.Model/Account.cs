@@ -10,7 +10,13 @@ public class Account
     public string? AccountNumber { get; set; }
 
     public string? AccountName { get; set; }
+
+    [JoinKey("Product", "Id")]
+    public Guid? ProductKey { get; set; }
     
-    [LinkKey("Transaction")]
+    [JoinKey("Contract", "Id")]
+    public Guid ContractKey { get; set; }
+    
+    [LinkKey("Transaction", "Id")]
     public List<Transaction>? Transaction { get; set; }
 }

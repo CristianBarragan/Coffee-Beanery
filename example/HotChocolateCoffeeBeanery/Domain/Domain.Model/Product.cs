@@ -6,19 +6,22 @@ namespace Domain.Model;
 
 public class Product
 {
-    [JoinKey("CustomerBankingRelationship")]
+    [UpsertKey("Product","Customer")]
+    public Guid? ProductKey { get; set; }
+    
+    [JoinKey("CustomerBankingRelationship", "Id")]
     public Guid? CustomerBankingRelationshipKey { get; set; }
     
-    [JoinKey("Contract")]
+    [LinkKey("Contract", "Id")]
     public Guid? ContractKey { get; set; }
     
-    [JoinKey("Customer")]
+    [JoinKey("Customer", "Id")]
     public Guid? CustomerKey { get; set; }
     
-    [JoinKey("Account")]
+    [LinkKey("Account", "Id")]
     public Guid? AccountKey { get; set; }
     
-    [JoinKey("Transaction")]
+    [LinkKey("Transaction", "Id")]
     public Guid? TransactionKey { get; set; }
 
     public string? AccountName { get; set; }
@@ -31,17 +34,14 @@ public class Product
 
     public ProductType ProductType { get; set; }
 
-    [LinkKey("CustomerBankingRelationship")]
+    [LinkKey("CustomerBankingRelationship", "Id")]
     public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
     
-    [LinkKey("Contract")]
+    [LinkKey("Contract", "Id")]
     public List<Contract>? Contract { get; set; }
 
-    [LinkKey("Account")]
+    [LinkKey("Account", "Id")]
     public List<Account>? Account { get; set; }
-    
-    // [LinkKey("Transaction"), GraphQLIgnore]
-    // public List<Transaction>? Transaction { get; set; }
 }
 
 public enum ProductType
