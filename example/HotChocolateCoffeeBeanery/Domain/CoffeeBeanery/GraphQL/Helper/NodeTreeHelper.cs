@@ -59,8 +59,6 @@ public static class NodeTreeHelper
             nodeId.Add(new KeyValuePair<string, int>(nodeToClass!.GetType().Name!, nodeId.Count + 1));
         }
 
-        // if (isModel)
-        // {
         if (!linkEntityDictionaryTree.ContainsKey($"{nodeToClass.GetType().Name}~Id"))
         {
             linkEntityDictionaryTree.Add($"{nodeToClass.GetType().Name}~Id",
@@ -71,7 +69,6 @@ public static class NodeTreeHelper
                     ExludedColumn  = string.Empty
                 });
         }
-        // }
         
         var fromMapping = GraphQLMapper.GetMappings<E, M>(mapperConfiguration, 
             nodeFromClass, nodeToClass, isModel, linkEntityDictionaryTree, upsertKeys);
@@ -93,9 +90,7 @@ public static class NodeTreeHelper
             ParentId = string.IsNullOrEmpty(nodeIdParent.Key) ? nodeId.Count : nodeIdParent.Value,
             Mappings = fromMapping,
             Children = [],
-            ChildrenNames = [],
-            JoinKey= fromMapping.Where(f => f.IsJoinKey).ToList(),
-            UpsertKeys = fromMapping.Where(f => f.IsUpsertKey).ToList()
+            ChildrenNames = []
         };
         
         var schema = node.Mappings.FirstOrDefault(f => !string.IsNullOrEmpty(f.FieldDestinationSchema));
@@ -127,7 +122,6 @@ public static class NodeTreeHelper
                 var joinKeyAttribute = toProperty.CustomAttributes.FirstOrDefault(ca => ca.AttributeType == typeof(JoinKeyAttribute));
                 var model = joinKeyAttribute.ConstructorArguments[0].Value;
                 
-                // if (isModel && joinKeys != null)
                 if (joinKeys != null)
                 {
                     var column = joinKeyAttribute.ConstructorArguments[1].Value.ToString();
@@ -150,7 +144,6 @@ public static class NodeTreeHelper
                 var linkKeyAttribute = toProperty.CustomAttributes.FirstOrDefault(ca => ca.AttributeType == typeof(LinkKeyAttribute));
                 var model = linkKeyAttribute.ConstructorArguments[0].Value;
                 
-                // if (isModel && linkKeys != null)
                 if (linkKeys != null)
                 {
                     var column = linkKeyAttribute.ConstructorArguments[1].Value.ToString();
@@ -224,9 +217,9 @@ public static class NodeTreeHelper
                 if (fieldMap != null)
                 {
                     tree.JoinKey = tree.JoinKey ?? new List<FieldMap>();
-                    tree.JoinKey.AddRange(tree.Mappings.Where(f => f.IsJoinKey && !tree.JoinKey.Contains(f)));
+                    tree.JoinKey.AddRange(tree.Mappings.Where(f => !tree.JoinKey.Contains(f)));
                     tree.UpsertKeys = tree.UpsertKeys ?? new List<FieldMap>();
-                    tree.UpsertKeys.AddRange(tree.Mappings.Where(f => f.IsUpsertKey && !tree.UpsertKeys.Contains(f)));
+                    tree.UpsertKeys.AddRange(tree.Mappings.Where(f => !tree.UpsertKeys.Contains(f)));
                     tree.Mappings.ForEach(f => f.FieldDestinationSchema = fieldMap.FieldDestinationSchema);
                 }
                 

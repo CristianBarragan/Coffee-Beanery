@@ -52,123 +52,99 @@ public static class GraphQLMapper
                     FieldDestinationType = !isDestinationEntity && isModel ? mapping.TypeMap.SourceType : mapping.TypeMap.DestinationType,
                     DestinationEntity = !isDestinationEntity && isModel ? mapping.TypeMap.SourceType.Name : mapping.TypeMap.DestinationType.Name
                 };
-
-                // if (isModel && linkEntityDictionaryTree != null &&
-                if (linkEntityDictionaryTree != null &&
-                    !linkEntityDictionaryTree
-                        .ContainsKey($"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}"))
+                
+                var propertyToAttributeType = to.GetType().GetProperties()
+                    .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldSourceName));
+                
+                var entityNodeType = Type.GetType($"{from.GetType().Namespace}.{processingFieldMap.DestinationEntity},{from.GetType().Assembly}");
+                var entityVariable = (E)Activator.CreateInstance(entityNodeType);
+                
+                var propertyFromAttributeType = entityVariable.GetType().GetProperties()
+                    .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldDestinationName));
+                
+                if (propertyToAttributeType == null || propertyFromAttributeType == null)
                 {
-                    linkEntityDictionaryTree.Add($"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}", 
-                        new SqlNode()
+                    continue;
+                }
+
+                var nonNullableFromType = Nullable.GetUnderlyingType(propertyFromAttributeType
+                    .PropertyType) ?? propertyFromAttributeType.PropertyType;
+                var nonNullableToType = Nullable.GetUnderlyingType(propertyToAttributeType
+                    .PropertyType) ?? propertyToAttributeType.PropertyType;
+                
+                var enumDictionaryFrom = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                
+                if (nonNullableFromType != null && nonNullableFromType.IsEnum || 
+                    propertyFromAttributeType.PropertyType.IsEnum)
+                {
+                    var k = 0;
+                    foreach (var value in Enum.GetValues(nonNullableFromType))
                     {
-                        RelationshipKey = $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
-                        InsertColumn = processingFieldMap.FieldSourceName,
-                        SelectColumn = processingFieldMap.FieldSourceName,
-                        ExludedColumn = $"EXCLUDED.\"{processingFieldMap.FieldSourceName}\""
-                    });
+                        enumDictionaryFrom.Add(value.ToString()!, k.ToString());
+                        k++;
+                    }
                 }
                 
-                // if (isModel && linkEntityDictionaryTree != null &&
-                if (linkEntityDictionaryTree != null &&
-                    !linkEntityDictionaryTree
-                        .ContainsKey($"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}"))
+                var enumDictionaryTo = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                
+                if (propertyToAttributeType != null && nonNullableToType.IsEnum || 
+                    propertyToAttributeType.PropertyType.IsEnum)
                 {
+                    var k = 0;
+                    foreach (var value in Enum.GetValues(nonNullableToType))
+                    {
+                        enumDictionaryTo.Add(value.ToString()!, k.ToString());
+                        k++;
+                    }
+                }
+
+                if (linkEntityDictionaryTree != null &&
+                    linkEntityDictionaryTree.TryGetValue($"{processingFieldMap.DestinationEntity}~{
+                        processingFieldMap.FieldDestinationName}", out var valueLinkEntity))
+                {
+                    valueLinkEntity.IsEnumeration = processingFieldMap.FieldSourceType.IsEnum;
+                    valueLinkEntity.FromEnumeration = enumDictionaryFrom;
+                    valueLinkEntity.ToEnumeration = enumDictionaryTo;
+                    linkEntityDictionaryTree[$"{processingFieldMap.DestinationEntity}~{
+                        processingFieldMap.FieldDestinationName}"] = valueLinkEntity;
+                }
+                else {
                     linkEntityDictionaryTree.Add($"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}", 
                         new SqlNode()
                         {
                             RelationshipKey = $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
                             InsertColumn = processingFieldMap.FieldDestinationName,
                             SelectColumn = processingFieldMap.FieldDestinationName,
-                            ExludedColumn = $"EXCLUDED.\"{processingFieldMap.FieldDestinationName}\""
+                            ExludedColumn = $"EXCLUDED.\"{processingFieldMap.FieldDestinationName}\"",
+                            IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
+                            FromEnumeration = enumDictionaryFrom,
+                            ToEnumeration = enumDictionaryTo
                         });
                 }
                 
-                var propertyModelAttributeType = to.GetType().GetProperties()
-                    .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldSourceName));
-                
-                var entityNodeType = Type.GetType($"{from.GetType().Namespace}.{processingFieldMap.DestinationEntity},{from.GetType().Assembly}");
-                var entityVariable = (E)Activator.CreateInstance(entityNodeType);
-                
-                var propertyEntityAttributeType = entityVariable.GetType().GetProperties()
-                    .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldDestinationName));
-                
-                if (propertyModelAttributeType == null || propertyEntityAttributeType == null)
+                if (linkEntityDictionaryTree != null &&
+                    linkEntityDictionaryTree.TryGetValue($"{processingFieldMap.SourceModel}~{
+                        processingFieldMap.FieldSourceName}", out valueLinkEntity))
                 {
-                    continue;
+                    valueLinkEntity.IsEnumeration = processingFieldMap.FieldSourceType.IsEnum;
+                    valueLinkEntity.FromEnumeration = enumDictionaryFrom;
+                    valueLinkEntity.ToEnumeration = enumDictionaryTo;
+                    linkEntityDictionaryTree[$"{processingFieldMap.SourceModel}~{
+                        processingFieldMap.FieldSourceName}"] = valueLinkEntity;
                 }
-
-                var nonNullableEntityType = Nullable.GetUnderlyingType(propertyEntityAttributeType.PropertyType) ?? propertyEntityAttributeType.PropertyType;
-                
-                if (nonNullableEntityType != null && nonNullableEntityType.IsEnum || propertyEntityAttributeType.PropertyType.IsEnum)
-                {
-                    var enumDictionary = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-                    var k = 0;
-                    foreach (var value in Enum.GetValues(nonNullableEntityType))
-                    {
-                        enumDictionary.Add(value.ToString()!, k.ToString());
-                        k++;
-                    }
-                    processingFieldMap.IsEnum = true;
-                    processingFieldMap.DestinationEnumerationValues = enumDictionary;
+                else {
+                    linkEntityDictionaryTree.Add($"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}", 
+                        new SqlNode()
+                        {
+                            RelationshipKey = $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
+                            InsertColumn = processingFieldMap.FieldSourceName,
+                            SelectColumn = processingFieldMap.FieldSourceName,
+                            ExludedColumn = $"EXCLUDED.\"{processingFieldMap.FieldSourceName}\"",
+                            IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
+                            FromEnumeration = enumDictionaryFrom,
+                            ToEnumeration = enumDictionaryTo
+                        });
                 }
-                
-                // var upsertAttribute = propertyModelAttributeType.CustomAttributes
-                //     .FirstOrDefault(a => a.AttributeType == typeof(UpsertKeyAttribute));
-                // processingFieldMap.IsUpsertKey = upsertAttribute != null;
-                //
-                // // if (isModel && upsertKeys != null && upsertAttribute != null)
-                // if (upsertKeys != null && upsertAttribute != null &&
-                //     !upsertKeys.ContainsKey($"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}"))
-                // {
-                //     upsertKeys.Add(
-                //         $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
-                //         $"{upsertAttribute
-                //             .ConstructorArguments[0].Value.ToString()}~{
-                //             upsertAttribute
-                //                 .ConstructorArguments[1].Value.ToString()}"
-                //     );
-                // }
-                //
-                // if (upsertKeys != null && upsertAttribute != null &&
-                //     !upsertKeys.ContainsKey($"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}"))
-                // {
-                //     upsertKeys.Add(
-                //         $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
-                //         $"{upsertAttribute
-                //             .ConstructorArguments[0].Value.ToString()}~{
-                //             upsertAttribute
-                //                 .ConstructorArguments[1].Value.ToString()}"
-                //     );
-                // }
-                //
-                // var joinAttribute = propertyModelAttributeType.CustomAttributes
-                //     .FirstOrDefault(a => a.AttributeType == typeof(JoinKeyAttribute));
-                // processingFieldMap.IsJoinKey = joinAttribute != null;
-                //
-                // // if (isModel && joinKeys != null && joinAttribute != null)
-                // if (joinKeys != null && joinAttribute != null &&
-                //     !joinKeys.ContainsKey($"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}"))
-                // {
-                //     joinKeys.Add(
-                //         $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
-                //         $"{joinAttribute
-                //             .ConstructorArguments[0].Value.ToString()}~{
-                //             joinAttribute
-                //                 .ConstructorArguments[1].Value.ToString()}"
-                //     );
-                // }
-                //
-                // if (joinKeys != null && joinAttribute != null &&
-                //     !joinKeys.ContainsKey($"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}"))
-                // {
-                //     joinKeys.Add(
-                //         $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
-                //         $"{joinAttribute
-                //             .ConstructorArguments[0].Value.ToString()}~{
-                //             joinAttribute
-                //                 .ConstructorArguments[1].Value.ToString()}"
-                //     );
-                // }
                 
                 mappingFields!.Add(processingFieldMap);
             }

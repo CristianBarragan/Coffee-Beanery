@@ -27,7 +27,7 @@ public static class SqlGraphQLHelper
 
         var fieldMap = nodeTree.Mappings.FirstOrDefault(s =>
             s.FieldSourceName.Matches(field))!;
-        enumeration = fieldMap.DestinationEnumerationValues.FirstOrDefault(s => s.Key == field).Value;
+        // enumeration = fieldMap.DestinationEnumerationValues.FirstOrDefault(s => s.Key == field).Value;
         
         switch (filterType)
         {

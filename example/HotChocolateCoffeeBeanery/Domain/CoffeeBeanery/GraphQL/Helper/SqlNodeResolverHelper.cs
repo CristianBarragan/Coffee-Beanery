@@ -87,11 +87,19 @@ public static class SqlNodeResolverHelper
                 }
             }
 
-            if (argument.Name.Value.Matches(rootEntityName))
+            var sqlUpsertStatementNodes = new Dictionary<string,SqlNode>();
+            var visitedModels = new List<string>();
+            
+            if (argument.Name.Value.Matches(wrapperName))
             {
                 var nodeTreeRoot = new NodeTree();
                 nodeTreeRoot.Name = string.Empty;
-                GetMutations(modelTreeMap.DictionaryTree, argument.Value.GetNodes().ToList()[0], nodeTreeRoot, new NodeTree(), modelTreeMap.EntityNames);
+                
+                GetMutations(modelTreeMap.DictionaryTree, argument.Value.GetNodes().ToList()[0],
+                    entityTreeMap.LinkEntityDictionaryTree, sqlUpsertStatementNodes, modelTreeMap.DictionaryTree.First(t => 
+                    t.Key.Matches(rootEntityName)).Value, string.Empty,
+                    new NodeTree(), models, modelTreeMap.EntityNames, visitedModels, false);
+                
                 sqlUpsertStatement = GenerateUpsertStatements(modelTreeMap.DictionaryTree, modelTreeMap.EntityNames, sqlWhereStatement);
             }
         }
@@ -393,14 +401,10 @@ public static class SqlNodeResolverHelper
                 childrenFieldAux.Add(fieldName);
             }
         }
-
-        if (currentTree.Name.Matches("Customer"))
-        {
-            var a = true;
-        }
-
-        var joinKeyToAdd = tableFields.Any(f => currentTree.Mappings.Where(m => m.IsJoinKey)
-            .Any(mf => f.FieldName.Matches(mf.FieldDestinationName)));
+        
+        //
+        // var joinKeyToAdd = tableFields.Any(f => currentTree.Mappings.Where(m => m.IsJoinKey)
+        //     .Any(mf => f.FieldName.Matches(mf.FieldDestinationName)));
 
         if (childrenSqlStatement.Count > 0 && !childrenSqlStatement.ContainsKey(currentTree.Name) &&
             tableFields.Count > 0 && tableFields.Count <= 2 && 
@@ -446,25 +450,25 @@ public static class SqlNodeResolverHelper
             return (string.Empty, currentTree);
         }
 
-        if (!joinKeyToAdd)
-        {
-            foreach (var fieldMap in currentTree.Mappings.Where(m => m.IsJoinKey && m.DestinationEntity.Matches(currentTree.Name)))
-            {
-                tableFields.Add(
-                    new GraphElement()
-                    {
-                        EntityId = currentTree.Id,
-                        GraphElementType = tableFields.Any(f => f.TableName.Matches(currentTree.Name) &&
-                                                                f.GraphElementType == GraphElementType.Edge)
-                            ? GraphElementType.Edge
-                            : GraphElementType.Node,
-                        TableName = fieldMap.DestinationEntity,
-                        FieldName = fieldMap.FieldDestinationName,
-                        Field =
-                            $"{fieldMap.DestinationEntity}.\"{fieldMap.FieldDestinationName.ToUpperCamelCase()}\" AS \"{fieldMap.FieldDestinationName.ToUpperCamelCase().ToSnakeCase(currentTree.Id)}\""
-                    });
-            }
-        }
+        // if (!joinKeyToAdd)
+        // {
+        //     foreach (var fieldMap in currentTree.Mappings.Where(m => m.IsJoinKey && m.DestinationEntity.Matches(currentTree.Name)))
+        //     {
+        //         tableFields.Add(
+        //             new GraphElement()
+        //             {
+        //                 EntityId = currentTree.Id,
+        //                 GraphElementType = tableFields.Any(f => f.TableName.Matches(currentTree.Name) &&
+        //                                                         f.GraphElementType == GraphElementType.Edge)
+        //                     ? GraphElementType.Edge
+        //                     : GraphElementType.Node,
+        //                 TableName = fieldMap.DestinationEntity,
+        //                 FieldName = fieldMap.FieldDestinationName,
+        //                 Field =
+        //                     $"{fieldMap.DestinationEntity}.\"{fieldMap.FieldDestinationName.ToUpperCamelCase()}\" AS \"{fieldMap.FieldDestinationName.ToUpperCamelCase().ToSnakeCase(currentTree.Id)}\""
+        //             });
+        //     }
+        // }
 
         var idToAdd = tableFields.Any(f => f.FieldName.Matches("Id"));
         
@@ -631,84 +635,106 @@ public static class SqlNodeResolverHelper
     }
 
     /// <summary>
-    /// Generates upsert SQL statement while recursively iteration the tree nodes
+    /// Method for getting upsert field information used for the SQL Statement
     /// </summary>
     /// <param name="trees"></param>
-    /// <param name="sqlUpsert"></param>
-    /// <param name="upsertNode"></param>
+    /// <param name="node"></param>
     /// <param name="currentTree"></param>
     /// <param name="parentTree"></param>
-    /// <param name="sqlNodes"></param>
-    /// <param name="child"></param>
-    /// <param name="sqlWhereStatement"></param>
-    /// <param name="permissions"></param>
-    public static void GetMutations(Dictionary<string, NodeTree> trees, ISyntaxNode upsertNode, NodeTree currentTree,
-        NodeTree parentTree, List<string> entityNames)
+    /// <param name="entityNames"></param>
+    /// <param name="entityMap"></param>
+    /// <param name="isEdge"></param>
+    public static void GetMutations(Dictionary<string, NodeTree> trees, ISyntaxNode node, 
+        Dictionary<string,SqlNode> linkEntityDictionaryTree, Dictionary<string, SqlNode> sqlStatementNodes, NodeTree currentTree,
+        string previousNode,
+        NodeTree parentTree, List<string> modelNames, List<string> entityNames, List<string> visitedModels, bool isEdge)
     {
-        if (!upsertNode.ToString().Split(':')[0].Replace("{", "").Trim().Matches(currentTree.Name) &&
-            trees.ContainsKey(upsertNode.ToString().Split(':')[0].Replace("{", "").Trim()))
+        if (node != null && node.GetNodes()?.Count() == 0)
         {
-            parentTree = currentTree;
-            currentTree = trees[upsertNode.ToString().Split(':')[0].Replace("{", "").Trim()];
+            var currentModel = visitedModels.LastOrDefault();
+            
+            if (linkEntityDictionaryTree.TryGetValue($"{currentTree.Name}~{node.ToString()}", out var sqlNodeFrom) ||
+                linkEntityDictionaryTree.TryGetValue($"{currentModel}~{node.ToString()}", out sqlNodeFrom))
+            {
+                if (
+                    linkEntityDictionaryTree.TryGetValue(sqlNodeFrom.RelationshipKey, out var sqlNodeTo))
+                {
+                    sqlNodeTo.SqlNodeType = SqlNodeType.Mutation;
+
+                    if (previousNode.Split(':').Length == 2)
+                    {
+                        if (sqlNodeFrom.FromEnumeration.TryGetValue(previousNode.Split(':')[1].Replace("_", "").Sanitize(),
+                                out var enumValue))
+                        {
+                            var toEnum = sqlNodeTo.ToEnumeration.FirstOrDefault(e => 
+                                e.Value.Matches(enumValue)).Value;
+                            sqlNodeTo.Value =  toEnum;   
+                        }
+                        else
+                        {
+                            sqlNodeTo.Value = previousNode.Split(':')[1].Sanitize();
+                        }
+                    }
+                    sqlStatementNodes[sqlNodeFrom.RelationshipKey] = sqlNodeTo;
+                }
+                else if (linkEntityDictionaryTree.ContainsKey(sqlNodeFrom.RelationshipKey))
+                {
+                    sqlStatementNodes.Add(sqlNodeFrom.RelationshipKey, sqlNodeTo);
+                }
+
+                if (!visitedModels.Contains(currentTree.Name))
+                {
+                    visitedModels.Add(currentTree.Name);
+                }
+            }
+            
+            return;
         }
 
-        foreach (var uNode in upsertNode.GetNodes())
+        if (node == null)
         {
-            if (uNode.ToString().Split('{').Length > 1)
+            return;
+        }
+        
+        foreach (var childNode in node.GetNodes())
+        {
+            if (modelNames.Any(e => e.Matches(childNode.ToString().Split('{')[0])) || node.ToString().Matches("nodes") || 
+                node.ToString().Matches("node"))
             {
-                GetMutations(trees, uNode, currentTree, parentTree, entityNames);
-            }
-            else
-            {
-                if (uNode.ToString().Split(':').Length == 2)
+                if (node.ToString().Matches("nodes") || 
+                    node.ToString().Matches("node"))
                 {
-                    var fieldMap = currentTree.Mappings.FirstOrDefault(m =>
-                        m.FieldSourceName.Matches(uNode.ToString().Split(':')[0].Trim()));
-
-                    if (fieldMap == null)
-                    {
-                        continue;
-                    }
-
-                    var valueMutation = uNode.ToString().Split(':')[1].Sanitize();
-                    
-                    var enumerationMutation = fieldMap.DestinationEnumerationValues.FirstOrDefault(e => e.Key.Matches(valueMutation.Replace("_",""))).Value;
-
-                    if (!string.IsNullOrEmpty(enumerationMutation))
-                    {
-                        valueMutation = enumerationMutation;
-                    }
-                    
-                    var element = new GraphElement()
-                    {
-                        GraphElementType = GraphElementType.Mutation,
-                        FieldName = fieldMap.FieldDestinationName,
-                        FieldValue = $"'{valueMutation}'"
-                    };
-                    ProcessField(trees, currentTree, element, entityNames);
-                    continue;
+                    currentTree = trees[modelNames.Last()];
+                }
+                else
+                {
+                    currentTree = trees[childNode.ToString().Split('{')[0]];
                 }
 
-                if (uNode.ToString().Split(':').Length == 4 && uNode.ToString().Split('.')[1].Length == 5 &&
-                    uNode.ToString().Split('.')[1][3] == 'Z')
+                if (string.IsNullOrWhiteSpace(currentTree.ParentName))
                 {
-                    var fieldMap = currentTree.Mappings.FirstOrDefault(m =>
-                        m.FieldSourceName.Matches(uNode.ToString().Split(':')[0].Trim()));
-
-                    if (fieldMap == null)
-                    {
-                        continue;
-                    }
-                    
-                    var element = new GraphElement()
-                    {
-                        GraphElementType = GraphElementType.Mutation,
-                        FieldName = fieldMap.FieldDestinationName,
-                        FieldValue = string.Join('`', uNode.ToString().Split(':').Skip(1).ToList()).Replace('"', '\'')
-                    };
-                    ProcessField(trees, currentTree, element, entityNames);
+                    parentTree = currentTree;
+                }
+                else
+                {
+                    parentTree = trees[currentTree.ParentName];
                 }
             }
+            
+            GetMutations(trees, childNode, linkEntityDictionaryTree, sqlStatementNodes, currentTree, node.ToString(), 
+                parentTree, modelNames, entityNames, visitedModels, isEdge);
+        }
+    }
+    
+    private static void AddMutation(Dictionary<string, string> dictionary, string key, string value)
+    {
+        if (!dictionary.TryGetValue(key, out var _))
+        {
+            dictionary.Add(key, value);
+        }
+        else
+        {
+            dictionary[key] = value;
         }
     }
 
@@ -801,16 +827,6 @@ public static class SqlNodeResolverHelper
                 {
                     parentTree = trees[currentTree.ParentName];
                 }
-                
-                // if (entityNames.Any(e => currentTree.ParentName.Matches(e)))
-                // // if (!string.IsNullOrWhiteSpace(currentTree.ParentName))
-                // {
-                //     
-                // }
-                // else
-                // {
-                //     
-                // }
             }
             
             GetFields(trees, childNode, linkEntityDictionaryTree, sqlStatementNodes, currentTree, 

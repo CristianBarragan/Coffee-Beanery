@@ -130,12 +130,6 @@ public static class ModelServiceCollectionRegistration
                     {
                         link.UpsertKeys.Add(upsertKey.Value);
                     }
-                    // var entityNode = entityNodeId.FirstOrDefault(id => id.Key.Matches(linkEntity.Split('~')[0]));
-                    //
-                    // if (entityNode.Value != null)
-                    // {
-                    //     link.SelectColumn = $"\"{link.SelectColumn}\" AS \"{link.SelectColumn.ToSnakeCase(entityNode.Value)}\"";    
-                    // }
                 }
             }
         }
