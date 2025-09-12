@@ -1,21 +1,19 @@
 ﻿using CoffeeBeanery.GraphQL.Configuration;
-using Database.Entity;
-using HotChocolate;
 
 namespace Domain.Model;
 
 public class Product
 {
-    [JoinKey("CustomerBankingRelationship", "Id")]
+
     public Guid? CustomerBankingRelationshipKey { get; set; }
     
-    [LinkKey("Contract", "Id")]
+
     public Guid? ContractKey { get; set; }
     
-    [JoinKey("Customer", "Id")]
+
     public Guid? CustomerKey { get; set; }
     
-    [LinkKey("Account", "Id")]
+
     public Guid? AccountKey { get; set; }
 
     public string? AccountName { get; set; }
@@ -28,13 +26,13 @@ public class Product
 
     public ProductType ProductType { get; set; }
 
-    [LinkKey("CustomerBankingRelationship", "Id")]
+    [LinkKey("CustomerBankingRelationship","CustomerBankingRelationshipKey")]
     public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
     
-    [LinkKey("Contract", "Id")]
+    [LinkKey("Contract","ContractKey")]
     public List<Contract>? Contract { get; set; }
 
-    [LinkKey("Account", "Id")]
+    [LinkKey("Account","AccountKey")]
     public List<Account>? Account { get; set; }
 }
 

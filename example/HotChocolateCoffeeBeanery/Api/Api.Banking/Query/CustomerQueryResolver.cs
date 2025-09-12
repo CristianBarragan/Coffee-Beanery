@@ -18,7 +18,7 @@ public class CustomerQueryResolver : IOutputType
     }
 
     [UsePaging]
-    // [UseFiltering]
+    [UseFiltering]
     [UseSorting]
     public async Task<Connection<Customer>> GetCustomer(
         [Service] IProcessService<Customer, dynamic, dynamic> service,

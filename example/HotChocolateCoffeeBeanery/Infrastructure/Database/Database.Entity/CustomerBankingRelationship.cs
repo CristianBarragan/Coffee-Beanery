@@ -11,17 +11,17 @@ public class CustomerBankingRelationship : Process
         Schema = Entity.Schema.Banking;
     }
 
-    [UpsertKey("Product", "Customer")]
+    [UpsertKey("CustomerBankingRelationship", "Banking")]
     public Guid CustomerBankingRelationshipKey { get; set; }
 
-    [JoinKey("Customer", "Id")]
     public Guid? CustomerKey { get; set; }
 
+    [JoinKey("Customer","Id")]
     public int? CustomerId { get; set; }
     
     public Customer? Customer { get; set; }
-
-    [LinkKey("Contract", "Id")]
+    
+    [LinkKey("Contract","ContractKey")]
     public List<Contract>? Contract { get; set; }
 }
 

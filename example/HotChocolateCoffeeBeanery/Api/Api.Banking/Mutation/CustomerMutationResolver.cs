@@ -18,7 +18,7 @@ public class CustomerMutationResolver : IInputType, IOutputType
     }
 
     [UsePaging]
-    // [UseFiltering]
+    [UseFiltering]
     [UseSorting]
     public async Task<Connection<Customer>> UpsertCustomer(
         [Service] IProcessService<Customer, dynamic, dynamic> service,

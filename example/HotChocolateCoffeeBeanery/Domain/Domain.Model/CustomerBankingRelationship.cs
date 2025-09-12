@@ -5,14 +5,13 @@ namespace Domain.Model;
 
 public class CustomerBankingRelationship
 {
-    [UpsertKey("CustomerBankingRelationship","Banking")]
-    public Guid? CustomerBankingRelationshipKey { get; set; }
-
-    [JoinKey("Product", "Id")]
-    public Guid? ProductKey { get; set; }
-
-    public int? CustomerId { get; set; }
     
-    [LinkKey("Contract", "Id")]
+    public Guid? CustomerBankingRelationshipKey { get; set; }
+    
+    
+    public Guid? CustomerKey { get; set; }
+    
+    [LinkKey("Contract","ContractKey")]
+
     public List<Contract>? Contract { get; set; }
 }

@@ -12,15 +12,9 @@ public class NodeTree
 
     public string ParentName { get; set; }
 
-    public List<FieldMap> JoinKey { get; set; }
+    public List<NodeTree> Children { get; set; } = [];
 
-    public List<FieldMap> UpsertKeys { get; set; }
-
-    public List<NodeTree> Children { get; set; }
-
-    public List<string> ChildrenNames { get; set; }
+    public List<string> ChildrenNames { get; set; } = [];
 
     public List<FieldMap> Mappings { get; set; } = [];
-
-    public List<GraphElement> GraphElements { get; set; } = [];
 }

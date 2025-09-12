@@ -11,16 +11,16 @@ public class ContactPoint : Process
         Schema = Entity.Schema.Banking;
     }
     
-    [UpsertKey("ContactPoint","Customer")]
+    [UpsertKey("ContactPoint","Banking")]
     public Guid ContactPointKey { get; set; }
 
     public ContactPointType? ContactPointType { get; set; }
 
     public string? ContactPointValue { get; set; }
-
-    [JoinKey("Customer","Id")]
+    
     public Guid? CustomerKey { get; set; }
 
+    [JoinKey("Customer","Id")]
     public int? CustomerId { get; set; }
     
     public Customer? Customer { get; set; }

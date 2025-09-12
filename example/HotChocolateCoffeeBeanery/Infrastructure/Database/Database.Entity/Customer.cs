@@ -11,7 +11,7 @@ public class Customer : Process
         Schema = Entity.Schema.Banking;
     }
     
-    [UpsertKey("Customer","Customer")]
+    [UpsertKey("Customer","Banking")]
     public Guid CustomerKey { get; set; }
 
     public string? FirstName { get; set; }
@@ -21,11 +21,11 @@ public class Customer : Process
     public string? FullName { get; set; }
 
     public CustomerType? CustomerType { get; set; }
-
-    [LinkKey("ContactPoint", "Id")]
+    
+    [LinkKey("ContactPoint","ContactPointKey")]
     public List<ContactPoint>? ContactPoint { get; set; }
-
-    [LinkKey("CustomerBankingRelationship", "Id")]
+    
+    [LinkKey("CustomerBankingRelationship","CustomerBankingRelationshipKey")]
     public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
 }
 

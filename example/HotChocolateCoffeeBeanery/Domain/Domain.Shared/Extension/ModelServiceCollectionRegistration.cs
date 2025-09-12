@@ -80,21 +80,27 @@ public static class ModelServiceCollectionRegistration
         var modelDictionaryTree = new Dictionary<string, NodeTree>(StringComparer.OrdinalIgnoreCase);
         var entityDictionaryTree = new Dictionary<string, NodeTree>(StringComparer.OrdinalIgnoreCase);
         var linkEntityDictionaryTree = new Dictionary<string, SqlNode>(StringComparer.OrdinalIgnoreCase);
-        var joinKeys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var upsertKeys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var linkKeys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-        var modelNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(modelDictionaryTree,
+        var linkKeys = new List<LinkKey>();
+        var joinKeys = new List<JoinKey>();
+        var upsertKeys = new List<string>();
+        
+        // var modelNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(entityDictionaryTree,
+        //     (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
+        //     (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
+        //     nameof(Wrapper),
+        //     mapperConfiguration, entityNodeId, false, linkEntityDictionaryTree, upsertKeys, joinKeys, linkKeys);
+        //
+        // var entityNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(modelDictionaryTree,
+        //     (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
+        //     (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
+        //     nameof(DatabaseCommon.Wrapper),
+        //     mapperConfiguration, modelNodeId, true, linkEntityDictionaryTree, upsertKeys, joinKeys, linkKeys);
+        
+        var entityNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(modelDictionaryTree,
             (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
             (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
             nameof(DatabaseCommon.Wrapper),
-            mapperConfiguration, modelNodeId, true, linkEntityDictionaryTree, upsertKeys, linkKeys, joinKeys);
-        
-        var entityNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(entityDictionaryTree,
-            (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
-            (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
-            nameof(Wrapper),
-            mapperConfiguration, entityNodeId, false, linkEntityDictionaryTree, upsertKeys, linkKeys, joinKeys);
+            mapperConfiguration, modelNodeId, true, entities, models, linkEntityDictionaryTree, upsertKeys, joinKeys, linkKeys);
         
         foreach (var tree in modelDictionaryTree)
         {
@@ -103,61 +109,93 @@ public static class ModelServiceCollectionRegistration
             var modelType = Type.GetType($"{typeof(Customer).Namespace}" +
                                          $".{tree.Value.Name},{typeof(Customer).Assembly}");
 
-            if (entityType != null)
+            if (entityType != null && !entityType.Name.Matches(nameof(Wrapper)))
             {
                 entities.Add(entityType.Name);
                 entityTypes.Add(entityType);    
             }
             
-            if (modelType != null)
+            if (modelType != null && !modelType.Name.Matches(nameof(Wrapper)))
             {
                 models.Add(modelType.Name);
                 modelTypes.Add(modelType);    
             }
         }
+        
+        var modelNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(entityDictionaryTree,
+            (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
+            (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
+            nameof(Wrapper),
+            mapperConfiguration, entityNodeId, false, entities, models, linkEntityDictionaryTree, upsertKeys, joinKeys, linkKeys);
 
-        foreach (var upsertKey in upsertKeys)
+        foreach (var upsertKey in upsertKeys.Where(u => entities.Contains(u.Split('~')[0])))
         {
             foreach (var linkEntity in linkEntityDictionaryTree
-                .Where(l => upsertKey.Key.Split('~')[0]
+                .Where(l => upsertKey.Split('~')[0]
                     .Matches(l.Key.Split('~')[0])).Select(l => l.Key))
             {
                 foreach (var linkKeyValue in linkEntityDictionaryTree
                     .Where(k => k.Key.Split('~')[0].Matches(linkEntity.Split('~')[0])))
                 {
                     var link = linkEntityDictionaryTree[linkKeyValue.Key];
-                    if (!link.UpsertKeys.Any(u => u.Matches(upsertKey.Value)))
+                    if (!link.UpsertKeys.Any(u => u.Matches(upsertKey)))
                     {
-                        link.UpsertKeys.Add(upsertKey.Value);
+                        link.UpsertKeys.Add(upsertKey);
                     }
                 }
             }
         }
         
-        foreach (var joinKey in joinKeys)
+        foreach (var joinKey in joinKeys.Where(u => entities.Contains(u.From.Split('~')[0])))
         {
             foreach (var linkEntity in linkEntityDictionaryTree
-                         .Where(l => joinKey.Key.Split('~')[0]
+                         .Where(l => joinKey.From.Split('~')[0]
                              .Matches(l.Key.Split('~')[0])).Select(l => l.Key))
             {
                 foreach (var linkKeyValue in linkEntityDictionaryTree
                              .Where(k => k.Key.Split('~')[0].Matches(linkEntity.Split('~')[0])))
                 {
                     var link = linkEntityDictionaryTree[linkKeyValue.Key];
-                    AddToDictionary(link.JoinKeys, joinKey.Key, joinKey.Value);
+                    if (!link.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
+                    {
+                        link.JoinKeys.Add(joinKey);
+                    }
                 }
             }
         }
         
-        foreach (var linkKey in linkKeys)
+        foreach (var linkKey in linkKeys.Where(u => entities.Contains(u.From.Split('~')[0])))
         {
-            foreach (var linkKeyValue in linkEntityDictionaryTree
-                         .Where(l => linkKey.Key.Split('~')[0]
+            foreach (var linkEntity in linkEntityDictionaryTree
+                         .Where(l => linkKey.From.Split('~')[0]
                              .Matches(l.Key.Split('~')[0])).Select(l => l.Key))
             {
-                var link = linkEntityDictionaryTree[linkKeyValue];
-                AddToDictionary(link.LinkKeys, linkKey.Key, linkKey.Value);
+                foreach (var linkKeyValue in linkEntityDictionaryTree
+                             .Where(k => k.Key.Split('~')[0].Matches(linkEntity.Split('~')[0])))
+                {
+                    var link = linkEntityDictionaryTree[linkKeyValue.Key];
+                    if (!link.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
+                    {
+                        link.LinkKeys.Add(linkKey);
+                    }
+                }
             }
+        }
+
+        foreach (var modelTree in modelDictionaryTree)
+        {
+            if (entityDictionaryTree.TryGetValue(modelTree.Key, out var value))
+            {
+                modelTree.Value.Schema = value.Schema;
+            }
+        }
+
+        foreach (var linkedTree in linkEntityDictionaryTree
+                     .Where(e => entities.Any(a => a.Matches(e.Key.Split('~')[0])) &&
+                                 (entities.Any(a => a.Matches(e.Key.Split('~')[1])))
+                     ).ToList())
+        {
+            linkEntityDictionaryTree.Remove(linkedTree.Key);
         }
         
         var entityTreeMap = new EntityTreeMap<dynamic, dynamic>()

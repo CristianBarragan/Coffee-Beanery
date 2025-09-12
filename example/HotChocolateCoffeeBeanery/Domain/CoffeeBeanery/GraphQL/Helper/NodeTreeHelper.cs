@@ -11,25 +11,21 @@ public static class NodeTreeHelper
 {
     public static NodeTree GenerateTree<E, M>(Dictionary<string, NodeTree> nodeTrees,
         E nodeFromClass, M nodeToClass, string name, MapperConfiguration mapperConfiguration,
-        List<KeyValuePair<string, int>> nodeId, bool isModel, Dictionary<string, SqlNode>? linkEntityDictionaryTree = null,
-        Dictionary<string, string>? upsertKeys = null, Dictionary<string, string>? linkKeys = null,
-        Dictionary<string, string>? joinKeys = null)
+        List<KeyValuePair<string, int>> nodeId, bool isModel, List<string> entities, List<string> models, Dictionary<string, SqlNode>? linkEntityDictionaryTree,
+        List<string>? upsertKeys, List<JoinKey>? joinKeys, List<LinkKey>? linkKeys)
         where E : class where M : class
     {
         var visitedNode = new List<string>();
         return IterateTree<E, M>(nodeTrees, nodeFromClass, nodeToClass,
-            name, string.Empty, mapperConfiguration, nodeId, isModel, visitedNode, linkEntityDictionaryTree,
-            upsertKeys, linkKeys, joinKeys)!;
+            name, string.Empty, mapperConfiguration, nodeId, isModel, entities, models, visitedNode, linkEntityDictionaryTree,
+            upsertKeys, joinKeys, linkKeys)!;
     }
 
     private static NodeTree? IterateTree<E, M>(Dictionary<string, NodeTree> nodeTrees,
-        E? nodeFromClass,
-        M? nodeToClass, string name, string parentName,
-        MapperConfiguration mapperConfiguration, List<KeyValuePair<string, int>> nodeId, 
-        bool isModel, List<string> visitedNode, 
-        Dictionary<string, SqlNode>? linkEntityDictionaryTree = null,
-        Dictionary<string, string>? upsertKeys = null, Dictionary<string, string> linkKeys = null,
-        Dictionary<string, string> joinKeys = null)
+        E? nodeFromClass, M? nodeToClass, string name, string parentName,
+        MapperConfiguration mapperConfiguration, List<KeyValuePair<string, int>> nodeId, bool isModel, 
+        List<string> entities, List<string> models, List<string> visitedNode, Dictionary<string, SqlNode>? linkEntityDictionaryTree, 
+        List<string>? upsertKeys, List<JoinKey>? joinKeys, List<LinkKey>? linkKeys)
         where E : class where  M : class
     {
         if (visitedNode.Any(v => v.Matches(name)))
@@ -64,14 +60,12 @@ public static class NodeTreeHelper
             linkEntityDictionaryTree.Add($"{nodeToClass.GetType().Name}~Id",
                 new SqlNode()
                 {
-                    InsertColumn = "Id",
-                    SelectColumn = "Id",
-                    ExludedColumn  = string.Empty
+                    Column = "Id"
                 });
         }
         
         var fromMapping = GraphQLMapper.GetMappings<E, M>(mapperConfiguration, 
-            nodeFromClass, nodeToClass, isModel, linkEntityDictionaryTree, upsertKeys);
+            nodeFromClass, nodeToClass, isModel, entities, models, linkEntityDictionaryTree, linkKeys);
 
         var nodeName = nodeToClass.GetType().Name;
         
@@ -92,13 +86,72 @@ public static class NodeTreeHelper
             Children = [],
             ChildrenNames = []
         };
+                
+        var toProperty = nodeToClass.GetType()
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .FirstOrDefault(t => t.CustomAttributes
+                .Any(a => a.AttributeType == typeof(UpsertKeyAttribute)));
         
-        var schema = node.Mappings.FirstOrDefault(f => !string.IsNullOrEmpty(f.FieldDestinationSchema));
-        if (schema != null)
+        if (toProperty != null && toProperty.CustomAttributes
+                .Any(a => a.AttributeType == typeof(UpsertKeyAttribute)))
         {
-            node.Mappings.ForEach(f => f.FieldDestinationSchema = schema.FieldDestinationSchema);
-            node.Schema = schema.FieldDestinationSchema;
+            var schemaValue = toProperty.CustomAttributes.First().ConstructorArguments[1].Value.ToString();
+            node.Schema = schemaValue;
+            node.Mappings.ForEach(f => f.FieldDestinationSchema = schemaValue);
+                
+            var upsertKeyAttribute = toProperty.CustomAttributes.FirstOrDefault(ca => ca.AttributeType == typeof(UpsertKeyAttribute));
+            var model = upsertKeyAttribute.ConstructorArguments[0].Value;
+            var column = toProperty.Name;
+
+            upsertKeys.Add($"{model}~{column}");
+            
+            if (!linkEntityDictionaryTree.ContainsKey($"{model}~{column}"))
+            {
+                linkEntityDictionaryTree.Add($"{model}~{column}",
+                    new SqlNode()
+                    {
+                        Column = column
+                    });
+            }
         }
+        
+        toProperty = nodeToClass.GetType()
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .FirstOrDefault(t => t.CustomAttributes
+                .Any(a => a.AttributeType == typeof(JoinKeyAttribute)));
+        
+        if (toProperty != null && toProperty.CustomAttributes
+                .Any(a => a.AttributeType == typeof(JoinKeyAttribute)))
+        {
+            var attribute = toProperty.CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(JoinKeyAttribute));
+            var joinKey = new JoinKey()
+            {
+                From = $"{nodeToClass.GetType().Name}~{toProperty.Name}",
+                To =
+                    $"{attribute.ConstructorArguments[0].Value.ToString()}~{attribute.ConstructorArguments[1].Value.ToString()}"
+            };
+            
+            joinKeys.Add(joinKey);
+        }
+        
+        // toProperty = nodeToClass.GetType()
+        //     .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        //     .FirstOrDefault(t => t.CustomAttributes
+        //         .Any(a => a.AttributeType == typeof(LinkKeyAttribute)));
+        //
+        // if (toProperty != null && toProperty.CustomAttributes
+        //         .Any(a => a.AttributeType == typeof(LinkKeyAttribute)))
+        // {
+        //     var attribute = toProperty.CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute));
+        //     var linkKey = new LinkKey()
+        //     {
+        //         From = $"{nodeToClass.GetType().Name}~{toProperty.Name}",
+        //         To =
+        //             $"{attribute.ConstructorArguments[0].Value.ToString()}~{attribute.ConstructorArguments[1].Value.ToString()}"
+        //     };
+        //     
+        //     linkKeys.Add(linkKey);
+        // }
 
         var properties = nodeToClass.GetType()
             .GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
@@ -108,75 +161,13 @@ public static class NodeTreeHelper
         var j = 0;
         for (var i = 0; i < properties.Count(); i++)
         {
-            var schemaValue = string.Empty;
-            var toProperty = nodeToClass.GetType().GetProperties()
+            toProperty = nodeToClass.GetType().GetProperties()
                 .FirstOrDefault(n => n.Name.Matches(properties[i].Name));
             
             nonNullableToType = Nullable.GetUnderlyingType(toProperty?.PropertyType!) ?? toProperty?.PropertyType;
             
             M toVariable = null;
-            
-            if (toProperty != null && toProperty.CustomAttributes
-                    .Any(a => a.AttributeType == typeof(JoinKeyAttribute)))
-            {
-                var joinKeyAttribute = toProperty.CustomAttributes.FirstOrDefault(ca => ca.AttributeType == typeof(JoinKeyAttribute));
-                var model = joinKeyAttribute.ConstructorArguments[0].Value;
-                
-                if (joinKeys != null)
-                {
-                    var column = joinKeyAttribute.ConstructorArguments[1].Value.ToString();
-                    var joinKey = $"{model}~{column}";
-            
-                    if (!joinKeys.ContainsKey(joinKey))
-                    {
-                        joinKeys.Add(joinKey,$"{nodeToClass.GetType().Name}~{properties[i].Name}");    
-                    }
-                }   
-                
-                var modelType = Type.GetType($"{nodeToClass.GetType().Namespace}.{model},{nodeToClass.GetType().Assembly}");
-                toVariable = (M)Activator.CreateInstance(modelType);
-            }
-            
-            
-            if (toProperty != null && toProperty.CustomAttributes
-                    .Any(a => a.AttributeType == typeof(LinkKeyAttribute)))
-            {
-                var linkKeyAttribute = toProperty.CustomAttributes.FirstOrDefault(ca => ca.AttributeType == typeof(LinkKeyAttribute));
-                var model = linkKeyAttribute.ConstructorArguments[0].Value;
-                
-                if (linkKeys != null)
-                {
-                    var column = linkKeyAttribute.ConstructorArguments[1].Value.ToString();
-                    var linkKey = $"{model}~{column}";
 
-                    if (!linkKeys.ContainsKey(linkKey))
-                    {
-                        linkKeys.Add(linkKey,$"{nodeToClass.GetType().Name}~{properties[i].Name}");    
-                    }
-                }
-                
-                var modelType = Type.GetType($"{nodeToClass.GetType().Namespace}.{model},{nodeToClass.GetType().Assembly}");
-                toVariable = (M)Activator.CreateInstance(modelType);
-            }
-            
-            if (toProperty != null && toProperty.CustomAttributes
-                    .Any(a => a.AttributeType == typeof(UpsertKeyAttribute)))
-            {
-                schemaValue = toProperty.CustomAttributes.First().ConstructorArguments[1].Value.ToString();
-                node.Schema = schemaValue;
-                
-                var upsertKeyAttribute = toProperty.CustomAttributes.FirstOrDefault(ca => ca.AttributeType == typeof(UpsertKeyAttribute));
-                var model = upsertKeyAttribute.ConstructorArguments[0].Value;
-                
-                var column = upsertKeyAttribute.ConstructorArguments[1].Value.ToString();
-                var upsertKey = $"{model}~{column}";
-
-                if (!upsertKeys.ContainsKey(upsertKey))
-                {
-                    upsertKeys.Add(upsertKey,$"{nodeToClass.GetType().Name}~{properties[i].Name}");    
-                }
-            }
-            
             if (GraphQLFieldExtension.IsPrimitiveType(nonNullableFromType))
             {
                 continue;
@@ -209,22 +200,28 @@ public static class NodeTreeHelper
                 nodeFromClass,
                 toVariable,
                 toVariable.GetType().Name, name,
-                mapperConfiguration, nodeId, isModel, visitedNode, linkEntityDictionaryTree, upsertKeys, linkKeys, joinKeys);
+                mapperConfiguration, nodeId, isModel, entities, models, visitedNode, linkEntityDictionaryTree, upsertKeys, 
+                joinKeys, linkKeys);
             
             if (tree != null)
             {
                 var fieldMap = tree.Mappings.FirstOrDefault(f => !string.IsNullOrEmpty(f.FieldDestinationSchema));
                 if (fieldMap != null)
                 {
-                    tree.JoinKey = tree.JoinKey ?? new List<FieldMap>();
-                    tree.JoinKey.AddRange(tree.Mappings.Where(f => !tree.JoinKey.Contains(f)));
-                    tree.UpsertKeys = tree.UpsertKeys ?? new List<FieldMap>();
-                    tree.UpsertKeys.AddRange(tree.Mappings.Where(f => !tree.UpsertKeys.Contains(f)));
                     tree.Mappings.ForEach(f => f.FieldDestinationSchema = fieldMap.FieldDestinationSchema);
                 }
                 
                 node.ChildrenNames.Add(tree.Name);
                 node.Children.Add(tree);
+                
+                if (nodeTrees.TryGetValue(node.Name, out _))
+                {
+                    nodeTrees[node.Name] = node;
+                }
+                else
+                {
+                    nodeTrees.Add(node.Name, node);    
+                }
             }
         }
         
@@ -238,26 +235,5 @@ public static class NodeTreeHelper
         }
         
         return node;
-    }
-    
-    /// <summary>
-    /// Method for adding a value into a dictionary
-    /// </summary>
-    /// <param name="dictionary"></param>
-    /// <param name="key"></param>
-    /// <param name="values"></param>
-    private static void AddToDictionary(Dictionary<string, List<string>> dictionary, string key, string value)
-    {
-        if (!dictionary.TryGetValue(key, out var currentValues))
-        {
-            currentValues = new List<string>();
-            currentValues.Add(value);
-            dictionary.Add(key, currentValues);
-        }
-        else
-        {
-            currentValues.Add(value);
-            dictionary[key] = currentValues;
-        }
     }
 }

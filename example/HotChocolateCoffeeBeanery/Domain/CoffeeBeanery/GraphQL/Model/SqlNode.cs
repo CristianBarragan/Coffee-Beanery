@@ -14,17 +14,27 @@ public class SqlNode
     
     public string RelationshipKey { get; set; } = String.Empty;
 
-    public string InsertColumn { get; set; } = String.Empty;
-
-    public string SelectColumn { get; set; } = String.Empty;
-
-    public string ExludedColumn { get; set; } = String.Empty;
+    public string Column { get; set; } = String.Empty;
     
     public List<string> UpsertKeys { get; set; } = [];
-
-    public Dictionary<string,string> JoinKeys { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     
-    public Dictionary<string,string> LinkKeys { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    public List<JoinKey> JoinKeys { get; set; } = [];
+    
+    public List<LinkKey> LinkKeys { get; set; } = [];
+}
+
+public class JoinKey()
+{
+    public string From { get; set; }
+    
+    public string To { get; set; }
+}
+
+public class LinkKey()
+{
+    public string From { get; set; }
+    
+    public string To { get; set; }
 }
 
 public enum SqlNodeType

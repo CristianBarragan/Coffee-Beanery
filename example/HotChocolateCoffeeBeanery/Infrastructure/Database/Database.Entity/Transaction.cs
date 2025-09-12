@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using CoffeeBeanery.GraphQL.Configuration;
+﻿using CoffeeBeanery.GraphQL.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,25 +11,25 @@ public class Transaction : Process
         Schema = Entity.Schema.Lending;
     }
 
-    [UpsertKey("Transaction","Customer")]
+    [UpsertKey("Transaction","Lending")]
     public Guid TransactionKey { get; set; }
 
     public decimal? Amount { get; set; }
 
     public decimal? Balance { get; set; }
 
-    [JoinKey("Contract", "Id")]
     public Guid? ContractKey { get; set; }
     
     public Contract? Contract { get; set; }
 
+    [JoinKey("Contract","Id")]
     public int? ContractId { get; set; }
 
-    [JoinKey("Account", "Id")]
     public Guid? AccountKey { get; set; }
     
     public Account? Account { get; set; }
 
+    [JoinKey("Account","Id")]
     public int? AccountId { get; set; }
 }
 

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections;
+using System.Reflection;
 using AutoMapper;
 using CoffeeBeanery.GraphQL.Configuration;
 using CoffeeBeanery.GraphQL.Extension;
@@ -17,16 +18,15 @@ public static class GraphQLMapper
     /// <param name="entity"></param>
     /// <returns></returns>
     public static List<FieldMap> GetMappings<E,M>(MapperConfiguration mapper, E from, M to, bool isModel,
-        Dictionary<string, SqlNode>? linkEntityDictionaryTree = null, Dictionary<string, string>? upsertKeys = null,
-        Dictionary<string, string>? joinKeys = null)
+        List<string> entities, List<string> models, Dictionary<string, SqlNode>? linkEntityDictionaryTree, 
+        List<LinkKey> linkKeys)
      where E : class where M : class
     {
         var configurationProvider = mapper.Internal().GetAllTypeMaps();
         var mappingFields = new List<FieldMap>();
         
         var mappings = configurationProvider
-            .Where(configuration => configuration.SourceType.Name.Matches(to.GetType().Name) ||
-                                    configuration.SourceType.Name.Matches(from.GetType().Name));
+            .Where(configuration => configuration.SourceType.Name.Matches(to.GetType().Name));
 
         foreach (var mapMapping in mappings.Select(configuration =>
                  configuration.MemberMaps))
@@ -84,7 +84,7 @@ public static class GraphQLMapper
                         k++;
                     }
                 }
-                
+
                 var enumDictionaryTo = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
                 
                 if (propertyToAttributeType != null && nonNullableToType.IsEnum || 
@@ -98,54 +98,82 @@ public static class GraphQLMapper
                     }
                 }
 
+                var linkKeyDestinationProperty = models.Contains(processingFieldMap.FieldDestinationName)
+                    ? $"{processingFieldMap.FieldDestinationName}Key" : processingFieldMap.FieldDestinationName;
+                
+                var linkKeySourceProperty = models.Contains(processingFieldMap.FieldSourceName)
+                    ? $"{processingFieldMap.FieldSourceName}Key" : processingFieldMap.FieldSourceName;
+
                 if (linkEntityDictionaryTree != null &&
                     linkEntityDictionaryTree.TryGetValue($"{processingFieldMap.DestinationEntity}~{
-                        processingFieldMap.FieldDestinationName}", out var valueLinkEntity))
+                        linkKeyDestinationProperty}", out var valueLinkEntity))
                 {
                     valueLinkEntity.IsEnumeration = processingFieldMap.FieldSourceType.IsEnum;
                     valueLinkEntity.FromEnumeration = enumDictionaryFrom;
                     valueLinkEntity.ToEnumeration = enumDictionaryTo;
                     linkEntityDictionaryTree[$"{processingFieldMap.DestinationEntity}~{
-                        processingFieldMap.FieldDestinationName}"] = valueLinkEntity;
+                        linkKeyDestinationProperty}"] = valueLinkEntity;
                 }
                 else {
-                    linkEntityDictionaryTree.Add($"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}", 
+                    linkEntityDictionaryTree.Add($"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}", 
                         new SqlNode()
                         {
-                            RelationshipKey = $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
-                            InsertColumn = processingFieldMap.FieldDestinationName,
-                            SelectColumn = processingFieldMap.FieldDestinationName,
-                            ExludedColumn = $"EXCLUDED.\"{processingFieldMap.FieldDestinationName}\"",
+                            RelationshipKey = $"{processingFieldMap.SourceModel}~{linkKeySourceProperty}",
+                            Column = linkKeyDestinationProperty,
                             IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
                             FromEnumeration = enumDictionaryFrom,
                             ToEnumeration = enumDictionaryTo
                         });
                 }
                 
+                linkKeyDestinationProperty = models.Contains(processingFieldMap.FieldSourceName)
+                    ? $"{processingFieldMap.FieldSourceName}Key" : processingFieldMap.FieldSourceName;
+                
+                linkKeySourceProperty = models.Contains(processingFieldMap.FieldDestinationName)
+                    ? $"{processingFieldMap.FieldDestinationName}Key" : processingFieldMap.FieldDestinationName;
+                
                 if (linkEntityDictionaryTree != null &&
                     linkEntityDictionaryTree.TryGetValue($"{processingFieldMap.SourceModel}~{
-                        processingFieldMap.FieldSourceName}", out valueLinkEntity))
+                        linkKeyDestinationProperty}", out valueLinkEntity))
                 {
                     valueLinkEntity.IsEnumeration = processingFieldMap.FieldSourceType.IsEnum;
                     valueLinkEntity.FromEnumeration = enumDictionaryFrom;
                     valueLinkEntity.ToEnumeration = enumDictionaryTo;
                     linkEntityDictionaryTree[$"{processingFieldMap.SourceModel}~{
-                        processingFieldMap.FieldSourceName}"] = valueLinkEntity;
+                        linkKeyDestinationProperty}"] = valueLinkEntity;
                 }
                 else {
-                    linkEntityDictionaryTree.Add($"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}", 
+                    linkEntityDictionaryTree.Add($"{processingFieldMap.SourceModel}~{linkKeyDestinationProperty}", 
                         new SqlNode()
                         {
-                            RelationshipKey = $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
-                            InsertColumn = processingFieldMap.FieldSourceName,
-                            SelectColumn = processingFieldMap.FieldSourceName,
-                            ExludedColumn = $"EXCLUDED.\"{processingFieldMap.FieldSourceName}\"",
+                            RelationshipKey = $"{processingFieldMap.DestinationEntity}~{linkKeySourceProperty}",
+                            Column = linkKeyDestinationProperty,
                             IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
                             FromEnumeration = enumDictionaryFrom,
                             ToEnumeration = enumDictionaryTo
                         });
                 }
                 
+                var propertyModelAttributeType = to.GetType().GetProperties()
+                    .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldSourceName));
+
+                if (propertyModelAttributeType != null)
+                {
+                    var linkAttribute = propertyModelAttributeType.CustomAttributes
+                        .FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute));
+                
+                    if (linkKeys != null && linkAttribute != null)
+                    {
+                        var linkKey = new LinkKey()
+                        {
+                            From = $"{processingFieldMap.SourceModel}~{linkAttribute.ConstructorArguments[1].Value.ToString()}",
+                            To =
+                                $"{linkAttribute.ConstructorArguments[0].Value.ToString()}~{linkAttribute.ConstructorArguments[1].Value.ToString()}"
+                        };
+                        linkKeys.Add(linkKey);
+                    }
+                }
+
                 mappingFields!.Add(processingFieldMap);
             }
         }

@@ -4,7 +4,7 @@ namespace Domain.Model;
 
 public class Customer
 {
-    [UpsertKey("Customer","Banking")]
+
     public Guid? CustomerKey { get; set; }
 
     public string? FirstNaming { get; set; }
@@ -15,10 +15,10 @@ public class Customer
 
     public CustomerType? CustomerType { get; set; }
 
-    [LinkKey("Product", "Id")]
+    [LinkKey("Product","ProductKey")]
     public List<Product>? Product { get; set; }
 
-    [LinkKey("ContactPoint", "Id")]
+    [LinkKey("ContactPoint","ContactPointKey")]
     public List<ContactPoint>? ContactPoint { get; set; }
 }
 
