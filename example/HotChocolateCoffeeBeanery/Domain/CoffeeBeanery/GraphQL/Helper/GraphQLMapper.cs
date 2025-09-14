@@ -18,7 +18,7 @@ public static class GraphQLMapper
     /// <param name="entity"></param>
     /// <returns></returns>
     public static List<FieldMap> GetMappings<E,M>(MapperConfiguration mapper, E from, M to, bool isModel,
-        List<string> entities, List<string> models, Dictionary<string, SqlNode>? linkEntityDictionaryTree, 
+        string entityNamespaceName, List<string> models, Dictionary<string, SqlNode>? linkEntityDictionaryTree, 
         List<LinkKey> linkKeys)
      where E : class where M : class
     {
@@ -57,6 +57,12 @@ public static class GraphQLMapper
                     .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldSourceName));
                 
                 var entityNodeType = Type.GetType($"{from.GetType().Namespace}.{processingFieldMap.DestinationEntity},{from.GetType().Assembly}");
+
+                if (entityNodeType == null)
+                {
+                    return new List<FieldMap>();
+                }
+                
                 var entityVariable = (E)Activator.CreateInstance(entityNodeType);
                 
                 var propertyFromAttributeType = entityVariable.GetType().GetProperties()
@@ -122,7 +128,8 @@ public static class GraphQLMapper
                             Column = linkKeyDestinationProperty,
                             IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
                             FromEnumeration = enumDictionaryFrom,
-                            ToEnumeration = enumDictionaryTo
+                            ToEnumeration = enumDictionaryTo,
+                            IsModel = entityNamespaceName.Matches(from.GetType().Namespace)
                         });
                 }
                 
@@ -150,7 +157,8 @@ public static class GraphQLMapper
                             Column = linkKeyDestinationProperty,
                             IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
                             FromEnumeration = enumDictionaryFrom,
-                            ToEnumeration = enumDictionaryTo
+                            ToEnumeration = enumDictionaryTo,
+                            IsModel = processingFieldMap.FieldSourceName.GetType().Namespace.Matches(from.GetType().Namespace)
                         });
                 }
                 
@@ -177,6 +185,8 @@ public static class GraphQLMapper
                 mappingFields!.Add(processingFieldMap);
             }
         }
+        
+        linkEntityDictionaryTree.Last().Value.Mapping = mappingFields;
 
         return mappingFields;
     }

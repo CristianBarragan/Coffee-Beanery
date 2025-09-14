@@ -4,11 +4,15 @@ public class SqlNode
 {
     public SqlNodeType SqlNodeType { get; set; } = SqlNodeType.Node;
 
+    public bool IsModel { get; set; }
+
     public string Value { get; set; } = string.Empty;
     
     public Dictionary<string, string> FromEnumeration { get; set; } = new  Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
     
     public Dictionary<string, string> ToEnumeration { get; set; } = new  Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
+    public List<FieldMap> Mapping { get; set; }
 
     public bool IsEnumeration { get; set; }
     

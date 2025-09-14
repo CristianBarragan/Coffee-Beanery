@@ -98,7 +98,7 @@ public static class SqlGraphQLHelper
     /// <returns></returns>
     public static string HandleSort(NodeTree nodeTree, string field, string sortClause)
     {
-        field = nodeTree.Mappings.First(f => f.FieldSourceName.Matches(field)).FieldDestinationName;
+        field = nodeTree.Mapping.First(f => f.FieldSourceName.Matches(field)).FieldDestinationName;
         return $" ~*~.{field} ORDER BY {sortClause},";
     }
 }

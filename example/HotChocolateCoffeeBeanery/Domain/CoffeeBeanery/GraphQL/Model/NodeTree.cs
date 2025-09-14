@@ -14,7 +14,7 @@ public class NodeTree
 
     public List<NodeTree> Children { get; set; } = [];
 
-    public List<string> ChildrenNames { get; set; } = [];
+    public List<string> ChildrenName { get; set; } = [];
 
-    public List<FieldMap> Mappings { get; set; } = [];
+    public List<FieldMap> Mapping { get; set; } = [];
 }

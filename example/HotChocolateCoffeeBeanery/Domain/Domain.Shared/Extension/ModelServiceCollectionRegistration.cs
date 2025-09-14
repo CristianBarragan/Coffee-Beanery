@@ -84,22 +84,10 @@ public static class ModelServiceCollectionRegistration
         var joinKeys = new List<JoinKey>();
         var upsertKeys = new List<string>();
         
-        // var modelNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(entityDictionaryTree,
-        //     (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
-        //     (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
-        //     nameof(Wrapper),
-        //     mapperConfiguration, entityNodeId, false, linkEntityDictionaryTree, upsertKeys, joinKeys, linkKeys);
-        //
-        // var entityNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(modelDictionaryTree,
-        //     (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
-        //     (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
-        //     nameof(DatabaseCommon.Wrapper),
-        //     mapperConfiguration, modelNodeId, true, linkEntityDictionaryTree, upsertKeys, joinKeys, linkKeys);
-        
         var entityNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(modelDictionaryTree,
             (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
             (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
-            nameof(DatabaseCommon.Wrapper),
+            nameof(DatabaseCommon.Wrapper), typeof(DatabaseCommon.Wrapper).Namespace,
             mapperConfiguration, modelNodeId, true, entities, models, linkEntityDictionaryTree, upsertKeys, joinKeys, linkKeys);
         
         foreach (var tree in modelDictionaryTree)
@@ -125,7 +113,7 @@ public static class ModelServiceCollectionRegistration
         var modelNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(entityDictionaryTree,
             (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
             (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
-            nameof(Wrapper),
+            nameof(Wrapper), typeof(DatabaseCommon.Wrapper).Namespace,
             mapperConfiguration, entityNodeId, false, entities, models, linkEntityDictionaryTree, upsertKeys, joinKeys, linkKeys);
 
         foreach (var upsertKey in upsertKeys.Where(u => entities.Contains(u.Split('~')[0])))
@@ -196,6 +184,30 @@ public static class ModelServiceCollectionRegistration
                      ).ToList())
         {
             linkEntityDictionaryTree.Remove(linkedTree.Key);
+        }
+        
+        foreach (var linkSqlNode in linkEntityDictionaryTree.
+             Where(l => entityDictionaryTree.Any(k => k.Key
+                 .Split('~')[0].Matches(l.Key.Split('~')[0]))))
+        {
+            if (linkSqlNode.Key.Split('~')[0].Matches("Transaction"))
+            {
+                var a = false;
+            }
+            
+            if (!(entityDictionaryTree.TryGetValue(linkSqlNode.Key.Split('~')[0], out var tree) && 
+                !tree.Mapping.Any(a => a.FieldSourceName.Matches(linkSqlNode.Value.Column))))
+            {
+                linkSqlNode.Value.IsModel = false;
+            }
+            else if (entities.Contains(linkSqlNode.Key.Split('~')[0]) && linkSqlNode.Value.LinkKeys.Count == 0)
+            {
+                linkSqlNode.Value.IsModel = false;
+            }
+            else
+            {
+                linkSqlNode.Value.IsModel = true;
+            }
         }
         
         var entityTreeMap = new EntityTreeMap<dynamic, dynamic>()

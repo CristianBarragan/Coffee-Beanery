@@ -214,7 +214,7 @@ public static class SqlNodeResolverHelper
 
         foreach (var child in currentTree.Children)
         {
-            if (currentTree.ChildrenNames.Any(k => k.Matches(child.Name)))
+            if (currentTree.ChildrenName.Any(k => k.Matches(child.Name)))
             {
                 var childrenSqlStatementAux = GenerateQuery(entityTrees, sqlStatementNodes, childrenFields, 
                         entities, sqlWhereStatement, 
@@ -393,16 +393,11 @@ public static class SqlNodeResolverHelper
     /// <param name="entityMap"></param>
     public static void GetMutations(Dictionary<string, NodeTree> trees, ISyntaxNode node, 
         Dictionary<string,SqlNode> linkEntityDictionaryTree, Dictionary<string, SqlNode> sqlStatementNodes, NodeTree currentTree,
-        string previousNode, NodeTree parentTree, List<string> modelNames, List<string> entities, List<string> visitedModels)
+        string previousNode, NodeTree parentTree, List<string> models, List<string> entities, List<string> visitedModels)
     {
         if (node != null && node.GetNodes()?.Count() == 0)
         {
             var currentModel = visitedModels.LastOrDefault();
-
-            if (currentModel == "Contract")
-            {
-                var a = false;
-            }
             
             if (linkEntityDictionaryTree.TryGetValue($"{currentTree.Name}~{node.ToString()}", out var sqlNodeFrom) ||
                 linkEntityDictionaryTree.TryGetValue($"{currentModel}~{node.ToString()}", out sqlNodeFrom))
@@ -413,7 +408,7 @@ public static class SqlNodeResolverHelper
 
                     if (previousNode.Split(':').Length == 2)
                     {
-                        if (sqlNodeFrom.FromEnumeration.TryGetValue(previousNode.Split(':')[1].Replace("_", ""),
+                        if (sqlNodeFrom.FromEnumeration.TryGetValue(previousNode.Split(':')[1].Sanitize().Replace("_", ""),
                                 out var enumValue))
                         {
                             var toEnum = sqlNodeTo.ToEnumeration.FirstOrDefault(e => 
@@ -422,18 +417,34 @@ public static class SqlNodeResolverHelper
                         }
                         else
                         {
-                            sqlNodeTo.Value = previousNode.Split(':')[1];
+                            sqlNodeTo.Value = previousNode.Split(':')[1].Sanitize();
                         }
                     }
                     
-                    AddEntity(linkEntityDictionaryTree, sqlStatementNodes, entities,
+                    AddEntity(linkEntityDictionaryTree, sqlStatementNodes, models, entities,
                         sqlNodeTo);
-
+                    
                     if (!visitedModels.Contains(currentTree.Name))
                     {
                         visitedModels.Add(currentTree.Name);
                     }
                 }
+                
+                if (previousNode.Split(':').Length == 2)
+                {
+                    if (sqlNodeFrom.FromEnumeration.TryGetValue(previousNode.Split(':')[1].Sanitize().Replace("_", ""),
+                            out var enumValue))
+                    {
+                        sqlNodeFrom.Value = enumValue;
+                    }
+                    else
+                    {
+                        sqlNodeFrom.Value = previousNode.Split(':')[1].Sanitize();
+                    }
+                }
+                
+                AddEntity(linkEntityDictionaryTree, sqlStatementNodes, models, entities,
+                    sqlNodeFrom);
             }
             
             return;
@@ -446,13 +457,13 @@ public static class SqlNodeResolverHelper
         
         foreach (var childNode in node.GetNodes())
         {
-            if (modelNames.Any(e => e.Matches(childNode.ToString().Split('{')[0])) || node.ToString().Matches("nodes") || 
+            if (models.Any(e => e.Matches(childNode.ToString().Split('{')[0])) || node.ToString().Matches("nodes") || 
                 node.ToString().Matches("node"))
             {
                 if (node.ToString().Matches("nodes") || 
                     node.ToString().Matches("node"))
                 {
-                    currentTree = trees[modelNames.Last()];
+                    currentTree = trees[models.Last()];
                 }
                 else
                 {
@@ -470,26 +481,28 @@ public static class SqlNodeResolverHelper
             }
             
             GetMutations(trees, childNode, linkEntityDictionaryTree, sqlStatementNodes, currentTree, node.ToString(), 
-                parentTree, modelNames, entities, visitedModels);
+                parentTree, models, entities, visitedModels);
         }
     }
 
     private static void AddEntity(Dictionary<string,SqlNode> linkEntityDictionaryTree,
-        Dictionary<string,SqlNode> sqlStatementNodes, List<string> entities, SqlNode? sqlNode)
+        Dictionary<string,SqlNode> sqlStatementNodes, List<string> models, List<string> entities, SqlNode? sqlNode)
     {
         foreach (var entity in linkEntityDictionaryTree
-                     .Where(v => sqlNode.Column.Matches(v.Value.Column)))
+                    .Where(v => sqlNode.Column.Matches(v.Value.Column) && !v.Value.IsModel))
         {
-            if (linkEntityDictionaryTree.ContainsKey(entity.Key) &&
+            entity.Value.Value = sqlNode.Value;
+            entity.Value.SqlNodeType = SqlNodeType.Mutation;
+            if (sqlStatementNodes.ContainsKey(entity.Key) &&
                 entities.Contains(entity.Key.Split("~")[0]))
             {
-                sqlStatementNodes[entity.Key] = sqlNode;    
+                sqlStatementNodes[entity.Key] = entity.Value;    
             }
                 
-            if (!linkEntityDictionaryTree.ContainsKey(entity.Key) &&
+            if (!sqlStatementNodes.ContainsKey(entity.Key) &&
                 entities.Contains(entity.Key.Split("~")[0]))
             {
-                sqlStatementNodes.Add(entity.Key, sqlNode);
+                sqlStatementNodes.Add(entity.Key, entity.Value);
             }
         }
     } 

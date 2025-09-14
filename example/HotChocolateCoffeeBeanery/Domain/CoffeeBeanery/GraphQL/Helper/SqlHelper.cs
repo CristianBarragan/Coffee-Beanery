@@ -116,7 +116,7 @@ public static class SqlHelper
                 entityNames.Any(e => e.Matches(processingTree.Name)))
             {
                 sqlUpsertStatement += GenerateSelectUpsert(processingTree, trees[processingTree.ParentName],
-                    sqlUpsertStatementNodes, whereCurrentClause, entityNames);
+                    sqlUpsertStatementNodes, whereCurrentClause);
             }
             else if (entityNames.Any(e => e.Matches(processingTree.Name)))
             {
@@ -131,8 +131,9 @@ public static class SqlHelper
     {
         var sqlUpsertAux = string.Empty;
         var currentColumns = sqlUpsertStatementNodes
-            .Where(k => k.Key.Split('~')[0].Matches(currentTree.Name)).ToList();
-
+            .Where(k => !k.Value.LinkKeys.Any(l => l.From.Matches(k.Key)) && 
+                        k.Key.Split('~')[0].Matches(currentTree.Name)).ToList();
+        
         if (currentColumns.Count == 0)
         {
             return sqlUpsertAux;
@@ -164,26 +165,26 @@ public static class SqlHelper
     }
 
     public static string GenerateSelectUpsert(NodeTree currentTree, NodeTree parentTree, 
-        Dictionary<string,SqlNode> sqlUpsertStatementNodes, string whereClause, List<string> entityNames)
+        Dictionary<string,SqlNode> sqlUpsertStatementNodes, string whereClause)
     {
         var sqlUpsertAux = string.Empty;
         var insert = new List<string>();
         var currentColumns = sqlUpsertStatementNodes
             .Where(k => k.Key.Split('~')[0].Matches(currentTree.Name)).ToList();
 
-        if (currentColumns.Count == 0)
+        if (currentColumns.Count == 0 || !currentColumns[0].Value.UpsertKeys.All(c => currentColumns.Any(u => u.Key.Matches(c))))
         {
             return sqlUpsertAux;
         }
         
         insert.AddRange(currentColumns.Select(m => m.Value.Column));
-        insert.Add($"{currentTree.ParentName}Id");
+        insert.Add($"\"{currentTree.ParentName}Id\"");
         var joinKey = currentColumns[0].Value.JoinKeys.FirstOrDefault(jk => jk.To.Split('~')[0].Matches(parentTree.Name));
 
         sqlUpsertAux += $" INSERT INTO \"{currentTree.Schema}\".\"{currentTree.Name}\" ( " +
                         $" {string.Join(",", currentColumns.Select(s => $"\"{
                             s.Value.Column}\"").ToList())} {
-                            (joinKey != null ? $", \"{joinKey.To.Split('~')[0]}\".{joinKey.To.Split('~')[1]}" : "")} ) " +
+                            (joinKey != null ? $", \"{joinKey.To.Split('~')[0]}{joinKey.To.Split('~')[1]}\"" : "")} ) " +
                         $" ( SELECT {
                             string.Join(",", currentColumns.Select(m => $"'{
                                 m.Value.Value}' AS \"{

@@ -10,19 +10,19 @@ namespace CoffeeBeanery.GraphQL.Helper;
 public static class NodeTreeHelper
 {
     public static NodeTree GenerateTree<E, M>(Dictionary<string, NodeTree> nodeTrees,
-        E nodeFromClass, M nodeToClass, string name, MapperConfiguration mapperConfiguration,
+        E nodeFromClass, M nodeToClass, string name, string entityNamespaceName, MapperConfiguration mapperConfiguration,
         List<KeyValuePair<string, int>> nodeId, bool isModel, List<string> entities, List<string> models, Dictionary<string, SqlNode>? linkEntityDictionaryTree,
         List<string>? upsertKeys, List<JoinKey>? joinKeys, List<LinkKey>? linkKeys)
         where E : class where M : class
     {
         var visitedNode = new List<string>();
         return IterateTree<E, M>(nodeTrees, nodeFromClass, nodeToClass,
-            name, string.Empty, mapperConfiguration, nodeId, isModel, entities, models, visitedNode, linkEntityDictionaryTree,
+            name, entityNamespaceName, string.Empty, mapperConfiguration, nodeId, isModel, entities, models, visitedNode, linkEntityDictionaryTree,
             upsertKeys, joinKeys, linkKeys)!;
     }
 
     private static NodeTree? IterateTree<E, M>(Dictionary<string, NodeTree> nodeTrees,
-        E? nodeFromClass, M? nodeToClass, string name, string parentName,
+        E? nodeFromClass, M? nodeToClass, string name, string entityNamespaceName, string parentName,
         MapperConfiguration mapperConfiguration, List<KeyValuePair<string, int>> nodeId, bool isModel, 
         List<string> entities, List<string> models, List<string> visitedNode, Dictionary<string, SqlNode>? linkEntityDictionaryTree, 
         List<string>? upsertKeys, List<JoinKey>? joinKeys, List<LinkKey>? linkKeys)
@@ -65,7 +65,7 @@ public static class NodeTreeHelper
         }
         
         var fromMapping = GraphQLMapper.GetMappings<E, M>(mapperConfiguration, 
-            nodeFromClass, nodeToClass, isModel, entities, models, linkEntityDictionaryTree, linkKeys);
+            nodeFromClass, nodeToClass, isModel, entityNamespaceName, models, linkEntityDictionaryTree, linkKeys);
 
         var nodeName = nodeToClass.GetType().Name;
         
@@ -82,9 +82,9 @@ public static class NodeTreeHelper
             ParentName = parentName,
             Id = nodeId.Count + 1,
             ParentId = string.IsNullOrEmpty(nodeIdParent.Key) ? nodeId.Count : nodeIdParent.Value,
-            Mappings = fromMapping,
             Children = [],
-            ChildrenNames = []
+            ChildrenName = [],
+            Mapping = fromMapping
         };
                 
         var toProperty = nodeToClass.GetType()
@@ -97,17 +97,17 @@ public static class NodeTreeHelper
         {
             var schemaValue = toProperty.CustomAttributes.First().ConstructorArguments[1].Value.ToString();
             node.Schema = schemaValue;
-            node.Mappings.ForEach(f => f.FieldDestinationSchema = schemaValue);
+            node.Mapping.ForEach(f => f.FieldDestinationSchema = schemaValue);
                 
             var upsertKeyAttribute = toProperty.CustomAttributes.FirstOrDefault(ca => ca.AttributeType == typeof(UpsertKeyAttribute));
-            var model = upsertKeyAttribute.ConstructorArguments[0].Value;
+            var entity = upsertKeyAttribute.ConstructorArguments[0].Value;
             var column = toProperty.Name;
 
-            upsertKeys.Add($"{model}~{column}");
+            upsertKeys.Add($"{entity}~{column}");
             
-            if (!linkEntityDictionaryTree.ContainsKey($"{model}~{column}"))
+            if (!linkEntityDictionaryTree.ContainsKey($"{entity}~{column}"))
             {
-                linkEntityDictionaryTree.Add($"{model}~{column}",
+                linkEntityDictionaryTree.Add($"{entity}~{column}",
                     new SqlNode()
                     {
                         Column = column
@@ -133,25 +133,6 @@ public static class NodeTreeHelper
             
             joinKeys.Add(joinKey);
         }
-        
-        // toProperty = nodeToClass.GetType()
-        //     .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-        //     .FirstOrDefault(t => t.CustomAttributes
-        //         .Any(a => a.AttributeType == typeof(LinkKeyAttribute)));
-        //
-        // if (toProperty != null && toProperty.CustomAttributes
-        //         .Any(a => a.AttributeType == typeof(LinkKeyAttribute)))
-        // {
-        //     var attribute = toProperty.CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute));
-        //     var linkKey = new LinkKey()
-        //     {
-        //         From = $"{nodeToClass.GetType().Name}~{toProperty.Name}",
-        //         To =
-        //             $"{attribute.ConstructorArguments[0].Value.ToString()}~{attribute.ConstructorArguments[1].Value.ToString()}"
-        //     };
-        //     
-        //     linkKeys.Add(linkKey);
-        // }
 
         var properties = nodeToClass.GetType()
             .GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
@@ -199,19 +180,19 @@ public static class NodeTreeHelper
             tree = IterateTree<E, M>(nodeTrees,
                 nodeFromClass,
                 toVariable,
-                toVariable.GetType().Name, name,
+                toVariable.GetType().Name, entityNamespaceName, name,
                 mapperConfiguration, nodeId, isModel, entities, models, visitedNode, linkEntityDictionaryTree, upsertKeys, 
                 joinKeys, linkKeys);
             
             if (tree != null)
             {
-                var fieldMap = tree.Mappings.FirstOrDefault(f => !string.IsNullOrEmpty(f.FieldDestinationSchema));
+                var fieldMap = tree.Mapping.FirstOrDefault(f => !string.IsNullOrEmpty(f.FieldDestinationSchema));
                 if (fieldMap != null)
                 {
-                    tree.Mappings.ForEach(f => f.FieldDestinationSchema = fieldMap.FieldDestinationSchema);
+                    tree.Mapping.ForEach(f => f.FieldDestinationSchema = fieldMap.FieldDestinationSchema);
                 }
-                
-                node.ChildrenNames.Add(tree.Name);
+
+                node.ChildrenName.Add(tree.Name);
                 node.Children.Add(tree);
                 
                 if (nodeTrees.TryGetValue(node.Name, out _))

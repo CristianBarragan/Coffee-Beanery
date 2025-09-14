@@ -4,7 +4,6 @@ namespace Domain.Model;
 
 public class Customer
 {
-
     public Guid? CustomerKey { get; set; }
 
     public string? FirstNaming { get; set; }
