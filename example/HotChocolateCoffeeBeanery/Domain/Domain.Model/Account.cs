@@ -12,6 +12,6 @@ public class Account
 
     public Guid ContractKey { get; set; }
     
-    [LinkKey("Transaction","TransactionKey")]
+    [LinkBusinessKeyAttribute("Transaction","TransactionKey")]
     public List<Transaction>? Transaction { get; set; }
 }

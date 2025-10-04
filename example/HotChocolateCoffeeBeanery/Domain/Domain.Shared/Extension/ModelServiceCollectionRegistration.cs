@@ -80,15 +80,18 @@ public static class ModelServiceCollectionRegistration
         var modelDictionaryTree = new Dictionary<string, NodeTree>(StringComparer.OrdinalIgnoreCase);
         var entityDictionaryTree = new Dictionary<string, NodeTree>(StringComparer.OrdinalIgnoreCase);
         var linkEntityDictionaryTree = new Dictionary<string, SqlNode>(StringComparer.OrdinalIgnoreCase);
+        var linkModelDictionaryTree = new Dictionary<string, SqlNode>(StringComparer.OrdinalIgnoreCase);
         var linkKeys = new List<LinkKey>();
+        var linkBusinessKeys = new List<LinkBusinessKey>();
         var joinKeys = new List<JoinKey>();
         var upsertKeys = new List<string>();
         
-        var entityNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(modelDictionaryTree,
+        var modelNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(modelDictionaryTree,
             (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
             (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
             nameof(DatabaseCommon.Wrapper), typeof(DatabaseCommon.Wrapper).Namespace,
-            mapperConfiguration, modelNodeId, true, entities, models, linkEntityDictionaryTree, upsertKeys, joinKeys, linkKeys);
+            mapperConfiguration, modelNodeId, true, entities, models, linkEntityDictionaryTree,
+            linkModelDictionaryTree, upsertKeys, joinKeys, linkKeys, linkBusinessKeys);
         
         foreach (var tree in modelDictionaryTree)
         {
@@ -110,11 +113,12 @@ public static class ModelServiceCollectionRegistration
             }
         }
         
-        var modelNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(entityDictionaryTree,
+        var entityNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(entityDictionaryTree,
             (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
             (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
             nameof(Wrapper), typeof(DatabaseCommon.Wrapper).Namespace,
-            mapperConfiguration, entityNodeId, false, entities, models, linkEntityDictionaryTree, upsertKeys, joinKeys, linkKeys);
+            mapperConfiguration, entityNodeId, false, entities, models, linkEntityDictionaryTree,
+            linkModelDictionaryTree, upsertKeys, joinKeys, linkKeys, linkBusinessKeys);
 
         foreach (var upsertKey in upsertKeys.Where(u => entities.Contains(u.Split('~')[0])))
         {
@@ -156,6 +160,7 @@ public static class ModelServiceCollectionRegistration
         {
             foreach (var linkEntity in linkEntityDictionaryTree
                          .Where(l => linkKey.From.Split('~')[0]
+                             .Matches(l.Key.Split('~')[0]) || linkKey.To.Split('~')[0]
                              .Matches(l.Key.Split('~')[0])).Select(l => l.Key))
             {
                 foreach (var linkKeyValue in linkEntityDictionaryTree
@@ -165,6 +170,30 @@ public static class ModelServiceCollectionRegistration
                     if (!link.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
                     {
                         link.LinkKeys.Add(linkKey);
+                    }
+                    
+                    link = linkEntityDictionaryTree[linkKeyValue.Key];
+                    if (!link.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
+                    {
+                        link.LinkKeys.Add(linkKey);
+                    }
+                }
+            }
+        }
+        
+        foreach (var linkBusinessKey in linkBusinessKeys.Where(u => entities.Contains(u.From.Split('~')[0])))
+        {
+            foreach (var linkEntity in linkModelDictionaryTree
+                         .Where(l => linkBusinessKey.From.Split('~')[0]
+                             .Matches(l.Key.Split('~')[0])))
+            {
+                foreach (var linkKeyValue in linkModelDictionaryTree
+                             .Where(k => k.Key.Split('~')[0].Matches(linkEntity.Key.Split('~')[0])))
+                {
+                    var link = linkModelDictionaryTree[linkKeyValue.Key];
+                    if (!link.LinkBusinessKeys.Any(u => u.From.Matches(linkBusinessKey.From)))
+                    {
+                        link.LinkBusinessKeys.Add(linkBusinessKey);
                     }
                 }
             }
@@ -178,37 +207,48 @@ public static class ModelServiceCollectionRegistration
             }
         }
 
+        foreach (var linkSqlNode in linkEntityDictionaryTree)
+        {
+            linkSqlNode.Value.IsModel = !(linkSqlNode.Key.Matches(linkSqlNode.Value.RelationshipKey) &&
+                                          entities.Any(a => a.Matches(linkSqlNode.Key.Split('~')[0])));
+        }
+
         foreach (var linkedTree in linkEntityDictionaryTree
-                     .Where(e => entities.Any(a => a.Matches(e.Key.Split('~')[0])) &&
-                                 (entities.Any(a => a.Matches(e.Key.Split('~')[1])))
-                     ).ToList())
+                     .Where(e => !entities.Any(a => a.Matches(e.Key.Split('~')[0]))
+                     ))
         {
             linkEntityDictionaryTree.Remove(linkedTree.Key);
         }
         
-        foreach (var linkSqlNode in linkEntityDictionaryTree.
-             Where(l => entityDictionaryTree.Any(k => k.Key
-                 .Split('~')[0].Matches(l.Key.Split('~')[0]))))
+        foreach (var linkedTree in linkModelDictionaryTree
+                     .Where(e => !models.Any(a => a.Matches(e.Key.Split('~')[0]))
+                     ))
         {
-            if (linkSqlNode.Key.Split('~')[0].Matches("Transaction"))
-            {
-                var a = false;
-            }
-            
-            if (!(entityDictionaryTree.TryGetValue(linkSqlNode.Key.Split('~')[0], out var tree) && 
-                !tree.Mapping.Any(a => a.FieldSourceName.Matches(linkSqlNode.Value.Column))))
-            {
-                linkSqlNode.Value.IsModel = false;
-            }
-            else if (entities.Contains(linkSqlNode.Key.Split('~')[0]) && linkSqlNode.Value.LinkKeys.Count == 0)
-            {
-                linkSqlNode.Value.IsModel = false;
-            }
-            else
-            {
-                linkSqlNode.Value.IsModel = true;
-            }
+            linkModelDictionaryTree.Remove(linkedTree.Key);
         }
+        
+        //              Where(l => entityDictionaryTree.Any(k => k.Key
+        //                  .Split('~')[0].Matches(l.Key.Split('~')[0]))))
+        // {
+        //     if (linkSqlNode.Key.Split('~')[0].Matches("Transaction"))
+        //     {
+        //         var a = false;
+        //     }
+        //     
+        //     if (!(entityDictionaryTree.TryGetValue(linkSqlNode.Key.Split('~')[0], out var tree) && 
+        //           !tree.Mapping.Any(a => a.FieldSourceName.Matches(linkSqlNode.Value.Column))))
+        //     {
+        //         linkSqlNode.Value.IsModel = false;
+        //     }
+        //     else if (entities.Contains(linkSqlNode.Key.Split('~')[0]) && linkSqlNode.Value.LinkBusinessKeys.Count == 0)
+        //     {
+        //         linkSqlNode.Value.IsModel = false;
+        //     }
+        //     else
+        //     {
+        //         linkSqlNode.Value.IsModel = true;
+        //     }
+        // }
         
         var entityTreeMap = new EntityTreeMap<dynamic, dynamic>()
         {
@@ -219,7 +259,7 @@ public static class ModelServiceCollectionRegistration
             EntityTypes = entityTypes,
             NodeTree = entityNodeTree,
             DictionaryTree = entityDictionaryTree,
-            LinkEntityDictionaryTree = linkEntityDictionaryTree
+            LinkDictionaryTree = linkEntityDictionaryTree
         };
 
         var modelTreeMap = new ModelTreeMap<dynamic, dynamic>()
@@ -231,7 +271,7 @@ public static class ModelServiceCollectionRegistration
             EntityTypes = entityTypes,
             NodeTree = modelNodeTree,
             DictionaryTree = modelDictionaryTree,
-            LinkEntityDictionaryTree = linkEntityDictionaryTree
+            LinkDictionaryTree = linkModelDictionaryTree
         };
 
         services.AddSingleton<IModelTreeMap<dynamic, dynamic>>(

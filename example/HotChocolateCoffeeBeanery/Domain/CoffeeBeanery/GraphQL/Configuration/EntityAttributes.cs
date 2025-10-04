@@ -38,3 +38,16 @@ public class LinkKeyAttribute() : Attribute
     
     public string Column { get; set; }
 }
+
+public class LinkBusinessKeyAttribute() : Attribute
+{
+    public LinkBusinessKeyAttribute(string entity, string column) : this()
+    {
+        Entity = entity;
+        Column = column;
+    }
+    
+    public string Entity { get; set; }
+    
+    public string Column { get; set; }
+}

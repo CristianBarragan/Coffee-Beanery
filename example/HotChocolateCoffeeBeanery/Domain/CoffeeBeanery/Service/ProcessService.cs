@@ -12,12 +12,12 @@ public interface IProcessService<M, N, S>
     where M : class where N : class where S : class
 {
     Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)> QueryProcessAsync<M>(
-        string cacheKey, ISelection graphQlSelection, string rootName, CancellationToken cancellationToken)
+        string cacheKey, ISelection graphQlSelection, string rootName, string wrapperName, CancellationToken cancellationToken)
         where M : class;
 
     Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>
         UpsertProcessAsync<M>(
-            string cacheKey, ISelection graphQlSelection, string rootName, CancellationToken cancellationToken)
+            string cacheKey, ISelection graphQlSelection, string rootName, string wrapperName, CancellationToken cancellationToken)
         where M : class;
 }
 
@@ -45,14 +45,14 @@ public class ProcessService<M, D, S>
 
     public virtual async Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>
         QueryProcessAsync<M>(
-            string cacheKey, ISelection graphQlSelection, string rootName, CancellationToken cancellationToken)
+            string cacheKey, ISelection graphQlSelection, string rootName, string wrapperName, CancellationToken cancellationToken)
         where M : class
     {
-        return await ExecuteStatementAsync<M>(cacheKey, graphQlSelection, rootName, cancellationToken);
+        return await ExecuteStatementAsync<M>(cacheKey, graphQlSelection, rootName, wrapperName, cancellationToken);
     }
 
     private async Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>
-        ExecuteStatementAsync<M>(string cacheKey, ISelection graphQlSelection, string wrapperName,
+        ExecuteStatementAsync<M>(string cacheKey, ISelection graphQlSelection, string rootName, string wrapperName,
             CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(graphQlSelection.ToString()))
@@ -62,7 +62,7 @@ public class ProcessService<M, D, S>
 
         var sqlStructure = new SqlStructure();
         sqlStructure = SqlNodeResolverHelper.HandleGraphQL(graphQlSelection, _entityTreeMap, _modelTreeMap,
-            wrapperName, _cache, cacheKey);
+            rootName, wrapperName, _cache, cacheKey);
         //Permissions )
 
         return await _queryDispatcher
@@ -71,11 +71,11 @@ public class ProcessService<M, D, S>
     }
 
     public virtual async Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>
-        UpsertProcessAsync<M>(string cacheKey, ISelection graphQlSelection, string rootName,
+        UpsertProcessAsync<M>(string cacheKey, ISelection graphQlSelection, string rootName, string wrapperName,
             CancellationToken cancellationToken)
         where M : class
     {
-        return await ExecuteStatementAsync<M>(cacheKey, graphQlSelection, rootName, cancellationToken);
+        return await ExecuteStatementAsync<M>(cacheKey, graphQlSelection, rootName, wrapperName, cancellationToken);
     }
 
     public async Task<ProcessQueryParameters> HandleQuery<M>(SqlStructure sqlStructure,

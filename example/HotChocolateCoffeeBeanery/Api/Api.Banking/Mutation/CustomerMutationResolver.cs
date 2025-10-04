@@ -29,8 +29,8 @@ public class CustomerMutationResolver : IInputType, IOutputType
             //might be sent by client
             var cacheKey = wrapper.CacheKey;
 
-            var set = await service.UpsertProcessAsync<Customer>(cacheKey, resolverContext.Selection, nameof(Wrapper),
-                CancellationToken.None);
+            var set = await service.UpsertProcessAsync<Customer>(cacheKey, resolverContext.Selection, nameof(Customer),
+                nameof(Wrapper), CancellationToken.None);
 
             var connection = ContextResolverHelper.GenerateConnection(
                 set.list.Select(a => new EntityNode<Customer>(a, a.CustomerKey.ToString())),

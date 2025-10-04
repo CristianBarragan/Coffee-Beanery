@@ -16,7 +16,7 @@ public interface IModelTreeMap<T, M> where T : class where M : class
 
     public Dictionary<string, NodeTree> DictionaryTree { get; set; }
 
-    public Dictionary<string, SqlNode> LinkEntityDictionaryTree { get; set; }
+    public Dictionary<string, SqlNode> LinkDictionaryTree { get; set; }
 }
 
 public class ModelTreeMap<T, M> : IModelTreeMap<T, M>
@@ -37,6 +37,6 @@ public class ModelTreeMap<T, M> : IModelTreeMap<T, M>
     public Dictionary<string, NodeTree> DictionaryTree { get; set; } =
         new Dictionary<string, NodeTree>(StringComparer.OrdinalIgnoreCase);
     
-    public Dictionary<string, SqlNode> LinkEntityDictionaryTree { get; set; } =
+    public Dictionary<string, SqlNode> LinkDictionaryTree { get; set; } =
         new Dictionary<string, SqlNode>(StringComparer.OrdinalIgnoreCase);
 }

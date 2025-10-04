@@ -15,7 +15,7 @@ public static class SqlGraphQLHelper
     /// <param name="filterCondition"></param>
     /// <returns></returns>
     public static List<string> ProcessFilter(NodeTree nodeTree, Dictionary<string, SqlNode> linkEntityDictionaryTree, 
-        string field, string filterType, string value, string filterCondition)
+        Dictionary<string, SqlNode> linkModelDictionaryTree, string field, string filterType, string value, string filterCondition)
     {
         var enumeration = string.Empty;
         var conditions = new List<string>();
@@ -26,66 +26,68 @@ public static class SqlGraphQLHelper
             return conditions;
         }
         
-        if (linkEntityDictionaryTree.TryGetValue($"{nodeTree.Name}~{field}", out var sqlNodeFrom))
+        if (linkModelDictionaryTree.TryGetValue($"{nodeTree.Name}~{field}", out var sqlNodeFrom))
         {
-            if (sqlNodeFrom.FromEnumeration.TryGetValue(value,
-                    out var enumValue))
+            if (linkEntityDictionaryTree.TryGetValue(sqlNodeFrom.RelationshipKey, out var sqlNodeTo))
             {
-                var toEnum = sqlNodeFrom.ToEnumeration.FirstOrDefault(e => 
-                    e.Value.Matches(enumValue)).Value;
-                enumeration =  toEnum;
-            }
-            else
-            {
-                enumeration = string.Empty;
-            }
-        }
-
-        if (sqlNodeFrom == null)
-        {
-            return conditions;
-        }
+                if (sqlNodeFrom.FromEnumeration.TryGetValue(value,
+                        out var enumValue))
+                {
+                    var toEnum = sqlNodeFrom.ToEnumeration.FirstOrDefault(e => 
+                        e.Value.Matches(enumValue)).Value;
+                    enumeration =  toEnum;
+                }
+                else
+                {
+                    enumeration = string.Empty;
+                }
+                
+                if (sqlNodeTo == null)
+                {
+                    return conditions;
+                }
         
-        switch (filterType)
-        {
-            case "<>":
-                
-                if (value.Matches("null"))
+                switch (filterType)
                 {
-                    conditions.Add($" {filterCondition} ~.\"{sqlNodeFrom.Column}\" IS NOT NULL ");
-                    return conditions;
-                }
+                    case "<>":
                 
-                conditions.Add(
-                    $" {filterCondition} ~.\"{sqlNodeFrom.Column}\" <> '{(string.IsNullOrEmpty(enumeration) ? value : enumeration)}' ");
-                return conditions;
-
-            case "=":
+                        if (value.Matches("null"))
+                        {
+                            conditions.Add($" {filterCondition} ~.\"{sqlNodeTo.Column}\" IS NOT NULL ");
+                            return conditions;
+                        }
                 
-                if (value.Matches("null"))
-                {
-                    conditions.Add($" {filterCondition} ~.\"{sqlNodeFrom.Column}\" IS NULL ");
-                    return conditions;
-                }
+                        conditions.Add(
+                            $" {filterCondition} ~.\"{sqlNodeTo.Column}\" <> '{(string.IsNullOrEmpty(enumeration) ? value : enumeration)}' ");
+                        return conditions;
+
+                    case "=":
                 
-                conditions.Add(
-                    $" {filterCondition} ~.\"{sqlNodeFrom.Column}\" = '{(string.IsNullOrEmpty(enumeration) ? value : enumeration)}' ");
-                return conditions;
+                        if (value.Matches("null"))
+                        {
+                            conditions.Add($" {filterCondition} ~.\"{sqlNodeTo.Column}\" IS NULL ");
+                            return conditions;
+                        }
+                
+                        conditions.Add(
+                            $" {filterCondition} ~.\"{sqlNodeTo.Column}\" = '{(string.IsNullOrEmpty(enumeration) ? value : enumeration)}' ");
+                        return conditions;
 
-            case "in":
-                var inValues = string.Empty;
-                foreach (var val in value.Split(','))
-                {
-                    var valAux = val.Sanitize().Replace("(", "").Replace(")", "").ToUpperCamelCase();
-                    inValues += $"'{(string.IsNullOrEmpty(enumeration) ? valAux : enumeration)}'" + ",";
-                    conditions.Add(
-                        $" {filterCondition} ~.\"{sqlNodeFrom.Column}\" = '{(string.IsNullOrEmpty(enumeration) ? valAux : enumeration)}'");
+                    case "in":
+                        var inValues = string.Empty;
+                        foreach (var val in value.Split(','))
+                        {
+                            var valAux = val.Sanitize().Replace("(", "").Replace(")", "").ToUpperCamelCase();
+                            inValues += $"'{(string.IsNullOrEmpty(enumeration) ? valAux : enumeration)}'" + ",";
+                            conditions.Add(
+                                $" {filterCondition} ~.\"{sqlNodeTo.Column}\" = '{(string.IsNullOrEmpty(enumeration) ? valAux : enumeration)}'");
+                        }
+
+                        conditions.Add($" {filterCondition} ~.\"{sqlNodeTo.Column}\" in ({inValues.Substring(0, inValues.Length - 1)})");
+                        return conditions;
                 }
-
-                conditions.Add($" {filterCondition} ~.\"{sqlNodeFrom.Column}\" in ({inValues.Substring(0, inValues.Length - 1)})");
-                return conditions;
+            }
         }
-
         return conditions;
     }
 

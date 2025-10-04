@@ -20,7 +20,7 @@ public class Account : Process
 
     public Contract? Contract { get; set; }
     
-    [LinkKey("Transaction","TransactionKey")]
+    [LinkKey("Transaction","TransactionId")]
     public List<Transaction>? Transaction { get; set; }
 }
 

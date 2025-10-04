@@ -1,4 +1,3 @@
-using CoffeeBeanery.GraphQL.Configuration;
 
 namespace Domain.Model;
 
