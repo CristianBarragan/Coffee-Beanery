@@ -653,7 +653,7 @@ public static class SqlNodeResolverHelper
                 
                 if (previousNode.Split(':').Length == 2)
                 {
-                    if (sqlNodeFrom.FromEnumeration.TryGetValue(previousNode.Split(':')[1].Sanitize().Replace("_", ""),
+                    if (sqlNodeFrom.ToEnumeration.TryGetValue(previousNode.Split(':')[1].Sanitize().Replace("_", ""),
                             out var enumValue))
                     {
                         sqlNodeFrom.Value = enumValue;
