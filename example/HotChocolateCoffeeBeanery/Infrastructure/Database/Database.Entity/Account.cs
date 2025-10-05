@@ -17,7 +17,8 @@ public class Account : Process
     public string? AccountNumber { get; set; }
 
     public string? AccountName { get; set; }
-
+    
+    [LinkKey("Contract","ContractId")]
     public Contract? Contract { get; set; }
     
     [LinkKey("Transaction","TransactionId")]

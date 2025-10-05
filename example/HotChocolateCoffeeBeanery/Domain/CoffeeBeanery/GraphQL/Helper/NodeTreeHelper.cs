@@ -188,7 +188,7 @@ public static class NodeTreeHelper
                 mapperConfiguration, nodeId, isModel, models, entities, visitedNode, linkEntityDictionaryTree, linkModelDictionaryTree, 
                 upsertKeys, joinKeys, linkKeys, linkBusinessKeys);
             
-            if (tree != null)
+            if (tree != null && !string.IsNullOrEmpty(tree.Name))
             {
                 var fieldMap = tree.Mapping.FirstOrDefault(f => !string.IsNullOrEmpty(f.FieldDestinationSchema));
                 if (fieldMap != null)
