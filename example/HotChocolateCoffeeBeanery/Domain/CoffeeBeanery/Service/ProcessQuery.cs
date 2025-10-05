@@ -41,7 +41,7 @@ public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
             }
         }
         
-        types.AddRange(_modelTreeMap.EntityTypes.Select(t => t.GetType()));
+        types.AddRange(_modelTreeMap.EntityTypes.Select(a => a as Type));
         var typesToMap = new List<Type>();
 
         if (parameters == null)
@@ -49,10 +49,10 @@ public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
             return ([], 0, 0, 0, 0);
         }
 
-        foreach (var splitOnPart in parameters.SplitOnDapper)
+        foreach (var splitOnPart in parameters.SplitOnTypes)
         {
             typesToMap.Add(types.First(t =>
-                t.Name.Matches(splitOnPart.Split('_')[0])));
+                t.Name.Matches(splitOnPart)));
         }
 
         var splitOn = string.Join(',', parameters.SplitOnDapper);

@@ -153,7 +153,7 @@ public static class SqlNodeResolverHelper
             GenerateQuery(entityTreeMap.DictionaryTree, entityTreeMap.LinkDictionaryTree, sqlQueryStatement,
                 sqlStatementNodes, [], entityTreeMap.NodeTree.Children[0],
                 childrenSqlStatement, rootEntityName, sqlQueryStructures);
-            sqlSelectStatement = sqlQueryStatement.ToString();
+            sqlSelectStatement = sqlQueryStructures.LastOrDefault().Value.Query;
             
             //Update cache
             // if (!isCached)
@@ -173,9 +173,9 @@ public static class SqlNodeResolverHelper
         
         sqlQuery.Append(sqlSelectStatement);
 
-        var splitOn = sqlSelectStatement.Split(" FROM ")[0].Split(',').Where(c => c.Split(" AS ")[1]
-            .Contains("_Id_") && c.Split(" AS ")[1].Replace("_", "").Sanitize()
-            .Length > 2).Select(c => c.Split(" AS ")[1].Sanitize()).ToList();
+        var splitOn = sqlSelectStatement.Substring("SELECT ".Length).Split(" FROM ")[0].Split(',')
+            .Where(a => a.Split("AS")[1].Contains($"\"Id"));
+        
 
         var hasTotalCount = false;
 
@@ -191,7 +191,8 @@ public static class SqlNodeResolverHelper
             SqlQuery = sqlQuery.ToString(),
             Parameters = parameters,
             SqlUpsert = sqlUpsertStatement,
-            SplitOnDapper = splitOn,
+            SplitOnDapper = splitOn.Select(a => a.Split("AS")[1].Sanitize()).ToList(),
+            SplitOnTypes = splitOn.Select(a => a.Split("AS")[0].Split('.')[0].Sanitize()).ToList(),
             Pagination = pagination,
             HasTotalCount = false
         };
@@ -352,6 +353,7 @@ public static class SqlNodeResolverHelper
     {
         var currentColumns = sqlStatementNodes
             .Where(k => k.Key.Split('~')[0].Matches(currentTree.Name) && !k.Key.Split('~')[1].Contains(currentTree.Name)).ToList();
+        currentColumns.Reverse();
         var queryBuilder = string.Empty;
         var queryColumns = new List<string>();
         var parentQueryColumns = new List<string>();
@@ -590,8 +592,8 @@ public static class SqlNodeResolverHelper
         var sqlStructure = new SqlQueryStructure()
         {
             Id = currentTree.Id,
-            SqlNodeType = currentColumns.Count > 0 ? currentColumns[0].Value.SqlNodeType : SqlNodeType.Node,
-            SqlNode = currentColumns.Count > 0 ? currentColumns[0].Value : new SqlNode(),
+            SqlNodeType = currentColumns.Count > 0 ? currentColumns.Last().Value.SqlNodeType : SqlNodeType.Node,
+            SqlNode = currentColumns.Count > 0 ? currentColumns.Last().Value : new SqlNode(),
             Query = queryBuilder,
             Columns = queryColumns,
             ParentColumns = parentQueryColumns

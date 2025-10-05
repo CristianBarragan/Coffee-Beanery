@@ -161,7 +161,7 @@ public static class ModelServiceCollectionRegistration
                                  .Matches(l.Key.Split('~')[0]) || linkKey.To.Split('~')[0]
                                  .Matches(l.Key.Split('~')[0])))
                 {
-                    if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(linkKey.From)))
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
                     {
                         linkEntity.Value.LinkKeys.Add(linkKey);
                     }
