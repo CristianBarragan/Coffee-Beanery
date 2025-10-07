@@ -353,6 +353,14 @@ public static class SqlNodeResolverHelper
     {
         var currentColumns = sqlStatementNodes
             .Where(k => k.Key.Split('~')[0].Matches(currentTree.Name) && !k.Key.Split('~')[1].Contains(currentTree.Name)).ToList();
+        currentColumns.AddRange(sqlStatementNodes.Where(n => 
+            n.Key.Matches(currentColumns.LastOrDefault().Key)).Where(c => !currentColumns
+            .Any(cc => cc.Key.Matches(c.Key))));
+
+        var missingUpsertKeys = linkEntityDictionaryTree.Where(e =>
+            currentColumns.FirstOrDefault().Value.UpsertKeys.Contains(e.Key)).ToList();
+        
+        currentColumns.InsertRange(0, missingUpsertKeys);
         currentColumns.Reverse();
         var queryBuilder = string.Empty;
         var queryColumns = new List<string>();

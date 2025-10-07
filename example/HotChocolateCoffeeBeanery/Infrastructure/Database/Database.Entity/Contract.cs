@@ -28,7 +28,7 @@ public class Contract : Process
 
     public CustomerBankingRelationship? CustomerBankingRelationship { get; set; }
     
-    [JoinKey("CustomerBankingRelationship","Id")]
+    [JoinKey("CustomerBankingRelationship","CustomerBankingRelationshipId")]
     public int? CustomerBankingRelationshipId { get; set; }
 
     [LinkKey("Transaction","TransactionId")]

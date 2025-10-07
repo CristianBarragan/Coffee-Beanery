@@ -171,43 +171,52 @@ public static class SqlHelper
         Dictionary<string,SqlNode> sqlUpsertStatementNodes, string whereClause)
     {
         var sqlUpsertAux = string.Empty;
+        var hasUpsert = true;
         var currentColumns = sqlUpsertStatementNodes
             .Where(k => k.Key.Split('~')[0].Matches(currentTree.Name)).ToList();
 
-        if (currentColumns.Count == 0 || !currentColumns[currentColumns!.Count-1].Value
+        if (currentColumns.Count == 0 || !currentColumns.LastOrDefault().Value
                 .UpsertKeys.All(c => currentColumns.Any(u => u.Key.Matches(c))))
         {
             return sqlUpsertAux;
         }
         
-        foreach (var joinKey in currentColumns[currentColumns!.Count-1].Value.JoinKeys.Where(jk => jk.From.Split('~')[0].Matches(currentTree.Name)))
+        foreach (var joinKey in currentColumns.LastOrDefault().Value.JoinKeys.Where(jk => jk.From.Split('~')[0].Matches(currentTree.Name)))
         {
-            for (var i = 0; i < 2; i++)
+            hasUpsert = true;
+            for (var i = 0; i < 1; i++)
             {
-                var tree = new NodeTree();
-                var upsertKeys = currentColumns[currentColumns!.Count - 1].Value.UpsertKeys;
+                var tree = trees[joinKey.To.Split('~')[0]];
+                var upsertKeys = currentColumns.LastOrDefault().Value.UpsertKeys;
                 var selectJoin = string.Empty;
                 var insertJoin = string.Empty;
-                var whereColumns = new List<KeyValuePair<string, SqlNode>>();
+                // var whereColumns = new List<KeyValuePair<string, SqlNode>>();
+                var excludeJoin = string.Empty;
+                var sqlUpsertStatementNodesJoin = sqlUpsertStatementNodes
+                    .Where(k => k.Key.Split('~')[0].Matches(tree.Name)).ToList();
+
+                if (!sqlUpsertStatementNodesJoin.Any())
+                {
+                    continue;
+                }
 
                 if (i == 0)
                 {
-                    tree = trees[joinKey.To.Split('~')[0]];
                     insertJoin = $", \"{joinKey.To.Split('~')[1]}\"";
                     selectJoin = $"{joinKey.To.Split('~')[0]}.\"{joinKey.To.Split('~')[1]}\" AS" +
                                  $" \"{joinKey.To.Split('~')[0]}{joinKey.To.Split('~')[1]}\"";
-                    whereColumns = sqlUpsertStatementNodes
-                        .Where(k => k.Key.Split('~')[0].Matches(joinKey.To.Split('~')[0])).ToList();
+                    excludeJoin = $"\"{joinKey.To.Split('~')[1]}\" = EXCLUDED.\"{joinKey.To.Split('~')[1]}\"";
+                    // whereColumns = sqlUpsertStatementNodesJoin
                 }
 
                 if (i == 1)
                 {
-                    tree = trees[joinKey.From.Split('~')[0]];
                     insertJoin = $", \"{joinKey.From.Split('~')[1]}\"";
-                    selectJoin = $"{joinKey.From.Split('~')[0]}.\"{joinKey.From.Split('~')[1]}\" AS" +
-                                 $" \"{joinKey.From.Split('~')[0]}{joinKey.From.Split('~')[1]}\"";
-                    whereColumns = sqlUpsertStatementNodes
-                        .Where(k => k.Key.Split('~')[0].Matches(joinKey.From.Split('~')[0])).ToList();
+                    selectJoin = $"{tree.Name}.\"Id\" AS" +
+                                 $" \"{joinKey.From.Split('~')[1]}\"";
+                    excludeJoin = $"\"{joinKey.From.Split('~')[1]}\" = EXCLUDED.\"{joinKey.From.Split('~')[1]}\"";
+                    // whereColumns = sqlUpsertStatementNodesJoin
+                    //     .Where(k => k.Key.Split('~')[0].Matches(joinKey.From.Split('~')[0])).ToList();
                 }
 
                 var sqlUpsertAux2 = $" INSERT INTO \"{currentTree.Schema}\".\"{currentTree.Name}\" ( " +
@@ -218,7 +227,7 @@ public static class SqlHelper
                                             m.Value.Value}' AS \"{
                                                 m.Value.Column}\"").ToList())}" +
                                     $", {selectJoin}" + $" FROM \"{tree.Schema}\".\"{tree.Name}\" {tree.Name} WHERE {
-                                        string.Join(" AND ", whereColumns.Select(s => $"\"{s.Value.Column}\" = '{s.Value.Value}'"))
+                                        string.Join(" AND ", sqlUpsertStatementNodesJoin.Select(s => $"\"{s.Value.Column}\" = '{s.Value.Value}'"))
                                     }";
 
                 var exclude = new List<string>();
@@ -227,6 +236,8 @@ public static class SqlHelper
                         .UpsertKeys.Contains($"{currentTree.Name}~{c.Value.Column}")).Select(e => 
                         $"\"{e.Value.Column}\" = EXCLUDED.\"{e.Value.Column}\"")
                 );
+
+                exclude.Add(excludeJoin);
             
                 sqlUpsertAux2 += $" ) ON CONFLICT" +
                                  $" ({string.Join(",", upsertKeys.Select(s => $"\"{s.Split('~')[1]}\""))}) ";
@@ -243,6 +254,93 @@ public static class SqlHelper
                 sqlUpsertAux += sqlUpsertAux2;
             }
         }
+
+        if (hasUpsert)
+        {
+            foreach (var joinKey in currentColumns.LastOrDefault().Value.LinkKeys.Where(jk => jk.From.Split('~')[0].Matches(currentTree.Name)))
+            {
+                for (var i = 0; i < 1; i++)
+                {
+                    var tree = trees[joinKey.To.Split('~')[0]];
+                    currentColumns = sqlUpsertStatementNodes
+                        .Where(k => k.Key.Split('~')[0].Matches(tree.Name)).ToList();
+
+                    if (!currentColumns.Any())
+                    {
+                        continue;
+                    }
+                    
+                    var upsertKeys = currentColumns.LastOrDefault().Value.UpsertKeys
+                        .Where(u => tree.Mapping.Any(m => $"{m.DestinationEntity}~{m.FieldDestinationName}".Matches(u))).ToList();
+                    var selectJoin = string.Empty;
+                    var insertJoin = string.Empty;
+                    // var whereColumns = new List<KeyValuePair<string, SqlNode>>();
+                    var excludeJoin = string.Empty;
+                    var sqlUpsertStatementNodesJoin = sqlUpsertStatementNodes
+                        .Where(k => k.Key.Split('~')[0].Matches(currentTree.Name)).ToList();
+                    
+                    if (!sqlUpsertStatementNodesJoin.Any(n => upsertKeys.Contains(n.Key)))
+                    {
+                        continue;
+                    }
+
+                    if (i == 0)
+                    {
+                        insertJoin = $", \"{joinKey.From.Split('~')[0]}Id\"";
+                        selectJoin = $"{joinKey.From.Split('~')[0]}.\"Id\" AS" +
+                                     $" \"{joinKey.From.Split('~')[0]}Id\"";
+                        excludeJoin = $"\"{joinKey.From.Split('~')[0]}Id\" = EXCLUDED.\"{joinKey.From.Split('~')[0]}Id\"";
+                        // whereColumns = sqlUpsertStatementNodesJoin
+                    }
+
+                    if (i == 1)
+                    {
+                        insertJoin = $", \"{joinKey.From.Split('~')[1]}\"";
+                        selectJoin = $"{tree.Name}.\"{joinKey.From.Split('~')[1]}\" AS" +
+                                     $" \"{joinKey.From.Split('~')[1]}\"";
+                        excludeJoin = $"\"{joinKey.From.Split('~')[1]}\" = EXCLUDED.\"{joinKey.From.Split('~')[1]}\"";
+                        // whereColumns = sqlUpsertStatementNodesJoin
+                        //     .Where(k => k.Key.Split('~')[0].Matches(joinKey.From.Split('~')[0])).ToList();
+                    }
+
+                    var sqlUpsertAux2 = $" INSERT INTO \"{tree.Schema}\".\"{tree.Name}\" ( " +
+                                        $" {string.Join(",", currentColumns.Select(s => $"\"{
+                                            s.Value.Column}\"").ToList())} {insertJoin} ) " +
+                                        $" ( SELECT {
+                                            string.Join(",", currentColumns.Select(m => $"'{
+                                                m.Value.Value}' AS \"{
+                                                    m.Value.Column}\"").ToList())}" +
+                                        $", {selectJoin}" + $" FROM \"{currentTree.Schema}\".\"{currentTree.Name}\" {currentTree.Name} WHERE {
+                                            string.Join(" AND ", sqlUpsertStatementNodesJoin.Select(s => $"\"{s.Value.Column}\" = '{s.Value.Value}'"))
+                                        }";
+
+                    var exclude = new List<string>();
+                    exclude.AddRange(
+                        currentColumns.Where(c => !currentColumns.LastOrDefault().Value
+                            .UpsertKeys.Contains($"{tree.Name}~{c.Value.Column}")).Select(e => 
+                            $"\"{e.Value.Column}\" = EXCLUDED.\"{e.Value.Column}\"")
+                    );
+
+                    exclude.Add(excludeJoin);
+                
+                    sqlUpsertAux2 += $" ) ON CONFLICT" +
+                                     $" ({string.Join(",", upsertKeys.Select(s => $"\"{s.Split('~')[1]}\""))}) ";
+
+                    if (exclude.Count > 0)
+                    {
+                        sqlUpsertAux2 += $" DO UPDATE SET {string.Join(",", exclude)} {whereClause};";
+                    }
+                    else
+                    {
+                        sqlUpsertAux2 += $" DO NOTHING {whereClause};";
+                    }
+
+                    sqlUpsertAux += sqlUpsertAux2;
+                }
+            }
+        }
+        
+        
 
         return sqlUpsertAux;
     }

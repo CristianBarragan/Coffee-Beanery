@@ -35,13 +35,26 @@ public static class CustomerBankingRelationshipQueryMapping
             }
             else
             {
-                var customer = new Customer();
-                customer.Product = new List<Product>();
-                var product = new Product();
-                product = mapper.Map(customerBankingRelationshipEntity,
-                    product);
-                customer.Product.Add(product);
-                models.Add(customer);
+                var customer = models.FirstOrDefault(c => c.CustomerKey.Value == customerBankingRelationshipEntity.CustomerKey);
+
+                if (customer != null)
+                {
+                    var product = new Product();
+                    customer.Product ??= new List<Product>();
+                    product = mapper.Map(customerBankingRelationshipEntity,
+                        product);
+                    customer.Product.Add(product);
+                }
+                else
+                {
+                    customer = new Customer();
+                    customer.Product ??= new List<Product>();
+                    var product = new Product();
+                    product = mapper.Map(customerBankingRelationshipEntity,
+                        product);
+                    customer.Product.Add(product);
+                    models.Add(customer);
+                }
             }
         }
     }
