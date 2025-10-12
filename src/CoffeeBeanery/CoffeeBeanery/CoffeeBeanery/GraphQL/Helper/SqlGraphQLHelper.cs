@@ -6,132 +6,6 @@ namespace CoffeeBeanery.GraphQL.Helper;
 public static class SqlGraphQLHelper
 {
     /// <summary>
-    /// Handles upserted fields to be used for generating the SQL Statement  
-    /// </summary>
-    /// <param name="insert"></param>
-    /// <param name="exclude"></param>
-    /// <param name="nodeTree"></param>
-    /// <param name="sqlNodes"></param>
-    /// <param name="field"></param>
-    /// <param name="value"></param>
-    /// <param name="isDatetime"></param>
-    /// <param name="child"></param>
-    public static void
-        HandleUpsertField(List<string> insert, List<string> exclude, NodeTree nodeTree, List<SqlNode> sqlNodes,
-            string field, string value, bool isDatetime, int child)
-    {
-        string fieldUpsertParameter;
-        field = nodeTree.Mappings.FirstOrDefault(s => s.Key.Matches(field)).Value;
-        var sqlNode = default(SqlNode);
-        var sqlNodeAux = default(SqlNode);
-        sqlNode = sqlNodes.FirstOrDefault(s => s.NodeTree.Name.Matches(nodeTree.Name));
-
-        var enumeration = string.Empty;
-        if (!isDatetime)
-        {
-            if (field != null && nodeTree.EnumerationMappings.ContainsKey(field))
-            {
-                enumeration = nodeTree.EnumerationMappings[field].GetValueOrDefault(value);
-            }
-
-            if (!string.IsNullOrEmpty(enumeration))
-            {
-                value = enumeration;
-            }
-
-            if (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(field))
-            {
-                return;
-            }
-
-            fieldUpsertParameter = $"${nodeTree.Id}~{child}~{nodeTree.Name}~{field}";
-            sqlNodeAux = HandleUpsertFieldStatement(nodeTree, field, fieldUpsertParameter, nodeTree.Id);
-        }
-        else
-        {
-            fieldUpsertParameter = $"${nodeTree.Id}~{child}~{nodeTree.Name}~{field}";
-            value = $"TO_TIMESTAMP({$"{fieldUpsertParameter}\""}, " +
-                    $"'YYYY-MM-DD T HH24:MI:SS:MS Z')::timestamptz at time zone 'Etc/UTC'";
-            sqlNodeAux = HandleUpsertFieldStatement(nodeTree, field, fieldUpsertParameter, nodeTree.Id);
-        }
-
-        InsertIfDoesNotExist(insert, sqlNodeAux.InsertColumns[0]);
-        if (sqlNodeAux.UpdateColumns.Count > 0)
-        {
-            InsertIfDoesNotExist(exclude, sqlNodeAux.UpdateColumns[0]);
-        }
-
-        if (sqlNode != default(SqlNode))
-        {
-            sqlNodeAux.SqlNodeType = SqlNodeType.Mutation;
-            if (sqlNode.Values.ContainsKey(fieldUpsertParameter))
-            {
-                var listValue = sqlNode.Values[fieldUpsertParameter];
-                if (listValue != null)
-                {
-                    listValue.Add($"{nodeTree.Id}~{child - 1}~{field}~{value}");
-                }
-            }
-            else
-            {
-                var listValue = new List<string>();
-                listValue.Add($"{nodeTree.Id}~{child - 1}~{field}~{value}");
-                sqlNode.Values.Add(fieldUpsertParameter, listValue);
-            }
-        }
-        else if (!string.IsNullOrEmpty(value))
-        {
-            sqlNodeAux.SqlNodeType = SqlNodeType.Mutation;
-            var listValue = sqlNodeAux.Values.GetValueOrDefault(fieldUpsertParameter);
-            listValue = new List<string>();
-            listValue.Add($"{nodeTree.Id}~{child}~{field}~{value}");
-            sqlNodeAux.Values.Add(fieldUpsertParameter, listValue);
-            sqlNodes.Add(sqlNodeAux);
-        }
-    }
-
-    /// <summary>
-    /// Inserts an element, if it does not exist
-    /// </summary>
-    /// <param name="list"></param>
-    /// <param name="value"></param>
-    private static void InsertIfDoesNotExist(List<string> list, string value)
-    {
-        if (!string.IsNullOrEmpty(value) && !list.Contains(value))
-        {
-            list.Add(value);
-        }
-    }
-
-    /// <summary>
-    /// Handle the three dynamic properties required by the SQL statement
-    /// </summary>
-    /// <param name="nodeTree"></param>
-    /// <param name="field"></param>
-    /// <param name="value"></param>
-    /// <param name="id"></param>
-    /// <returns></returns>
-    private static SqlNode HandleUpsertFieldStatement(NodeTree nodeTree, string field, string value, int id)
-    {
-        var sqlNode = new SqlNode();
-
-        if (string.IsNullOrEmpty(value))
-        {
-            return sqlNode;
-        }
-
-        sqlNode.NodeTree = nodeTree;
-        sqlNode.InsertColumns.Add(field);
-        sqlNode.SelectColumns.Add($"{value} AS {field}");
-        if (!nodeTree.UpsertKeys.Contains(field))
-        {
-            sqlNode.UpdateColumns.Add($"\"{field}\" = EXCLUDED.\"{field}\"");
-        }
-
-        return sqlNode;
-    }
-
-    /// <summary>
     /// Method to translate filter from entity model fields into data model columns 
     /// </summary>
     /// <param name="nodeTree"></param>
@@ -140,67 +14,80 @@ public static class SqlGraphQLHelper
     /// <param name="value"></param>
     /// <param name="filterCondition"></param>
     /// <returns></returns>
-    public static List<string> ProcessFilter(NodeTree nodeTree, string field, string filterType, string value,
-        string filterCondition)
+    public static List<string> ProcessFilter(NodeTree nodeTree, Dictionary<string, SqlNode> linkEntityDictionaryTree, 
+        Dictionary<string, SqlNode> linkModelDictionaryTree, string field, string filterType, string value, string filterCondition)
     {
         var enumeration = string.Empty;
         var conditions = new List<string>();
 
-        if (string.IsNullOrEmpty(field))
+        if (string.IsNullOrEmpty(field) ||
+            string.IsNullOrEmpty(filterType))
         {
             return conditions;
         }
-
-        switch (filterType)
+        
+        if (linkModelDictionaryTree.TryGetValue($"{nodeTree.Name}~{field}", out var sqlNodeFrom))
         {
-            case "<>":
-                field = nodeTree.Mappings.FirstOrDefault(s =>
-                    s.Key.Matches(field)).Value;
-                if (value.Matches("null"))
+            if (linkEntityDictionaryTree.TryGetValue(sqlNodeFrom.RelationshipKey, out var sqlNodeTo))
+            {
+                if (sqlNodeFrom.FromEnumeration.TryGetValue(value,
+                        out var enumValue))
                 {
-                    conditions.Add($" {filterCondition} ~.\"{field}\" IS NOT NULL ");
+                    var toEnum = sqlNodeFrom.ToEnumeration.FirstOrDefault(e => 
+                        e.Value.Matches(enumValue)).Value;
+                    enumeration =  toEnum;
+                }
+                else
+                {
+                    enumeration = string.Empty;
+                }
+                
+                if (sqlNodeTo == null)
+                {
                     return conditions;
                 }
-
-                enumeration = nodeTree.EnumerationMappings.FirstOrDefault(s => s.Key == field)
-                    .Value.FirstOrDefault(v => v.Key.Matches(value.ToUpperCamelCase())).Value;
-                conditions.Add(
-                    $" {filterCondition} ~.\"{field}\" <> '{(string.IsNullOrEmpty(enumeration) ? value : enumeration)}' ");
-                return conditions;
-
-            case "=":
-                field = nodeTree.Mappings.FirstOrDefault(s =>
-                    s.Key.Matches(field)).Value;
-                if (value.Matches("null"))
+        
+                switch (filterType)
                 {
-                    conditions.Add($" {filterCondition} ~.\"{field}\" IS NULL ");
-                    return conditions;
+                    case "<>":
+                
+                        if (value.Matches("null"))
+                        {
+                            conditions.Add($" {filterCondition} ~.\"{sqlNodeTo.Column}\" IS NOT NULL ");
+                            return conditions;
+                        }
+                
+                        conditions.Add(
+                            $" {filterCondition} ~.\"{sqlNodeTo.Column}\" <> '{(string.IsNullOrEmpty(enumeration) ? value : enumeration)}' ");
+                        return conditions;
+
+                    case "=":
+                
+                        if (value.Matches("null"))
+                        {
+                            conditions.Add($" {filterCondition} ~.\"{sqlNodeTo.Column}\" IS NULL ");
+                            return conditions;
+                        }
+                
+                        conditions.Add(
+                            $" {filterCondition} ~.\"{sqlNodeTo.Column}\" = '{(string.IsNullOrEmpty(enumeration) ? value : enumeration)}' ");
+                        return conditions;
+
+                    case "in":
+                        var inValues = string.Empty;
+                        foreach (var val in value.Split(','))
+                        {
+                            var valAux = val.Sanitize().Replace("(", "").Replace(")", "").ToUpperCamelCase();
+                            inValues += $"'{(string.IsNullOrEmpty(enumeration) ? valAux : enumeration)}'" + ",";
+                            conditions.Add(
+                                $" {filterCondition} ~.\"{sqlNodeTo.Column}\" = '{(string.IsNullOrEmpty(enumeration) ? valAux : enumeration)}'");
+                        }
+
+                        conditions.Add($" {filterCondition} ~.\"{sqlNodeTo.Column}\" in ({inValues.Substring(0, inValues.Length - 1)})");
+                        return conditions;
                 }
-
-                enumeration = nodeTree.EnumerationMappings.FirstOrDefault(s => s.Key == field)
-                    .Value.FirstOrDefault(v => v.Key.Matches(value.ToUpperCamelCase())).Value;
-                conditions.Add(
-                    $" {filterCondition} ~.\"{field}\" = '{(string.IsNullOrEmpty(enumeration) ? value : enumeration)}' ");
-                return conditions;
-
-            case "in":
-                field = nodeTree.Mappings.FirstOrDefault(s =>
-                    s.Key.Matches(field)).Value;
-                var inValues = string.Empty;
-                foreach (var val in value.Split(','))
-                {
-                    var valAux = val.Sanitize().Replace("(", "").Replace(")", "").ToUpperCamelCase();
-                    enumeration = nodeTree.EnumerationMappings.FirstOrDefault(s => s.Key == field).Value?
-                        .FirstOrDefault(v => v.Key.Matches(valAux)).Value;
-                    inValues += $"'{(string.IsNullOrEmpty(enumeration) ? valAux : enumeration)}'" + ",";
-                    conditions.Add(
-                        $" {filterCondition} ~.\"{field}\" = '{(string.IsNullOrEmpty(enumeration) ? valAux : enumeration)}'");
-                }
-
-                conditions.Add($" {filterCondition} ~.\"{field}\" in ({inValues.Substring(0, inValues.Length - 1)})");
-                return conditions;
+            }
         }
-
         return conditions;
     }
 
@@ -213,7 +100,7 @@ public static class SqlGraphQLHelper
     /// <returns></returns>
     public static string HandleSort(NodeTree nodeTree, string field, string sortClause)
     {
-        field = nodeTree.Mappings[field];
+        field = nodeTree.Mapping.First(f => f.FieldSourceName.Matches(field)).FieldDestinationName;
         return $" ~*~.{field} ORDER BY {sortClause},";
     }
 }

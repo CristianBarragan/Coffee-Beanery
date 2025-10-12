@@ -12,16 +12,9 @@ public class NodeTree
 
     public string ParentName { get; set; }
 
-    public string JoinKey { get; set; }
+    public List<NodeTree> Children { get; set; } = [];
 
-    public List<string> UpsertKeys { get; set; }
+    public List<string> ChildrenName { get; set; } = [];
 
-    public List<NodeTree> Children { get; set; }
-
-    public List<string> ChildrenNames { get; set; }
-
-    public Dictionary<string, string> Mappings { get; set; } =
-        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-    public Dictionary<string, Dictionary<string, string>> EnumerationMappings { get; set; }
+    public List<FieldMap> Mapping { get; set; } = [];
 }

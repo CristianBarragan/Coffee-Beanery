@@ -4,18 +4,52 @@ public class SqlNode
 {
     public SqlNodeType SqlNodeType { get; set; } = SqlNodeType.Node;
 
-    public List<string> InsertColumns { get; set; } = new List<string>();
+    public bool IsModel { get; set; }
 
-    public List<string> SelectColumns { get; set; } = new List<string>();
+    public string Value { get; set; } = string.Empty;
+    
+    public Dictionary<string, string> FromEnumeration { get; set; } = new  Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+    
+    public Dictionary<string, string> ToEnumeration { get; set; } = new  Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
-    public List<string> UpdateColumns { get; set; } = new List<string>();
+    public List<FieldMap> Mapping { get; set; }
 
-    public Dictionary<string, List<string>> Values { get; set; } =
-        new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+    public bool IsEnumeration { get; set; }
+    
+    public string RelationshipKey { get; set; } = String.Empty;
 
-    public NodeTree NodeTree { get; set; }
+    public string Column { get; set; } = String.Empty;
+    
+    public List<string> UpsertKeys { get; set; } = [];
+    
+    public List<JoinKey> JoinKeys { get; set; } = [];
+    
+    public List<LinkKey> LinkKeys { get; set; } = [];
+    
+    public List<LinkBusinessKey> LinkBusinessKeys { get; set; } = [];
 
-    public int Id { get; set; }
+    public string Namespace { get; set; }
+}
+
+public class JoinKey()
+{
+    public string From { get; set; }
+    
+    public string To { get; set; }
+}
+
+public class LinkKey()
+{
+    public string From { get; set; }
+    
+    public string To { get; set; }
+}
+
+public class LinkBusinessKey()
+{
+    public string From { get; set; }
+    
+    public string To { get; set; }
 }
 
 public enum SqlNodeType

@@ -14,14 +14,14 @@ public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
 {
     private readonly ILogger<ProcessQuery<M, D, S>> _logger;
     private readonly NpgsqlConnection _dbConnection;
-    private readonly ITreeMap<D, S> _treeMap;
+    private readonly IModelTreeMap<D, S> _modelTreeMap;
     private List<M> _models;
 
-    public ProcessQuery(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection, ITreeMap<D, S> treeMap)
+    public ProcessQuery(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection, IModelTreeMap<D, S> modelTreeMap)
     {
         _logger = loggerFactory.CreateLogger<ProcessQuery<M, D, S>>();
         _dbConnection = dbConnection;
-        _treeMap = treeMap;
+        _modelTreeMap = modelTreeMap;
         _models = new List<M>();
     }
 
@@ -29,25 +29,30 @@ public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
         ExecuteAsync(SqlStructure parameters, CancellationToken cancellationToken)
     {
         var types = new List<Type>()
-        {
-            typeof(TotalPageRecords)
-        };
-        types.AddRange(_treeMap.EntityTypes.Select(t => t.GetType()));
+        { };
 
-        var typesToMap = new List<Type>
+        if (parameters != null)
         {
-            typeof(TotalRecordCount)
-        };
+            types.Add(typeof(TotalPageRecords));
+            types.Add(typeof(TotalRecordCount));
+            if (parameters.HasTotalCount && parameters.HasPagination)
+            {
+                parameters.SplitOnDapper.Insert(0, "RowNumber");
+            }
+        }
+        
+        types.AddRange(_modelTreeMap.EntityTypes.Select(a => a as Type));
+        var typesToMap = new List<Type>();
 
-        if (parameters.HasTotalCount && parameters.HasPagination)
+        if (parameters == null)
         {
-            parameters.SplitOnDapper.Insert(0, "RowNumber");
+            return ([], 0, 0, 0, 0);
         }
 
-        foreach (var splitOnPart in parameters.SplitOnDapper)
+        foreach (var splitOnPart in parameters.SplitOnTypes)
         {
-            typesToMap.Add(types.FirstOrDefault(t =>
-                t.Name.Matches(splitOnPart.Split('_')[0])));
+            typesToMap.Add(types.First(t =>
+                t.Name.Matches(splitOnPart)));
         }
 
         var splitOn = string.Join(',', parameters.SplitOnDapper);
