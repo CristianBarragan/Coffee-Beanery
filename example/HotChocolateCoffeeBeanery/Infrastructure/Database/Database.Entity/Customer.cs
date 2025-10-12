@@ -22,10 +22,10 @@ public class Customer : Process
 
     public CustomerType? CustomerType { get; set; }
     
-    [LinkKey("ContactPoint","ContactPointId")]
+    [LinkKey("ContactPoint","ContactPointKey")]
     public List<ContactPoint>? ContactPoint { get; set; }
     
-    [LinkKey("CustomerBankingRelationship","CustomerBankingRelationshipId")]
+    [LinkKey("CustomerBankingRelationship","CustomerBankingRelationshipKey")]
     public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
 }
 

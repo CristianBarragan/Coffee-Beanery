@@ -11,7 +11,9 @@ public class SqlQueryStructure
 
     public SqlNode SqlNode { get; set; }
 
-    public List<string> Columns { get; set; }
+    public List<string> Columns { get; set; } = new List<string>();
 
-    public List<string> ParentColumns { get; set; }
+    public List<string> ParentColumns { get; set; } = new List<string>();
+
+    public List<string> SelectColumns { get; set; } = new List<string>();
 }

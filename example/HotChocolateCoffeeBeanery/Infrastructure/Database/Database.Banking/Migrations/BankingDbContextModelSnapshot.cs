@@ -101,6 +101,9 @@ namespace Database.Banking.Migrations
                     b.Property<int?>("AccountId")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("AccountKey")
+                        .HasColumnType("uuid");
+
                     b.Property<decimal?>("Amount")
                         .HasColumnType("numeric");
 
@@ -275,7 +278,7 @@ namespace Database.Banking.Migrations
             modelBuilder.Entity("Database.Entity.CustomerBankingRelationship", b =>
                 {
                     b.HasOne("Database.Entity.Customer", "Customer")
-                        .WithMany("Product")
+                        .WithMany("CustomerBankingRelationship")
                         .HasForeignKey("CustomerId");
 
                     b.Navigation("Customer");
@@ -312,7 +315,7 @@ namespace Database.Banking.Migrations
                 {
                     b.Navigation("ContactPoint");
 
-                    b.Navigation("Product");
+                    b.Navigation("CustomerBankingRelationship");
                 });
 
             modelBuilder.Entity("Database.Entity.CustomerBankingRelationship", b =>

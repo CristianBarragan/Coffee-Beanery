@@ -23,6 +23,30 @@ public static class NodeTreeHelper
             upsertKeys, joinKeys, linkKeys, linkBusinessKeys)!;
     }
 
+    /// <summary>
+    /// Recursively iterate schema creating the parent-child relationships 
+    /// </summary>
+    /// <param name="nodeTrees"></param>
+    /// <param name="nodeFromClass"></param>
+    /// <param name="nodeToClass"></param>
+    /// <param name="name"></param>
+    /// <param name="entityNamespaceName"></param>
+    /// <param name="parentName"></param>
+    /// <param name="mapperConfiguration"></param>
+    /// <param name="nodeId"></param>
+    /// <param name="isModel"></param>
+    /// <param name="models"></param>
+    /// <param name="entities"></param>
+    /// <param name="visitedNode"></param>
+    /// <param name="linkEntityDictionaryTree"></param>
+    /// <param name="linkModelDictionaryTree"></param>
+    /// <param name="upsertKeys"></param>
+    /// <param name="joinKeys"></param>
+    /// <param name="linkKeys"></param>
+    /// <param name="linkBusinessKeys"></param>
+    /// <typeparam name="E"></typeparam>
+    /// <typeparam name="M"></typeparam>
+    /// <returns></returns>
     private static NodeTree? IterateTree<E, M>(Dictionary<string, NodeTree> nodeTrees,
         E? nodeFromClass, M? nodeToClass, string name, string entityNamespaceName, string parentName,
         MapperConfiguration mapperConfiguration, List<KeyValuePair<string, int>> nodeId, bool isModel, 
@@ -31,12 +55,12 @@ public static class NodeTreeHelper
         List<LinkKey>? linkKeys, List<LinkBusinessKey>? linkBusinessKeys)
         where E : class where  M : class
     {
-        if (visitedNode.Any(v => v.Matches(name)))
+        if (visitedNode.Any(v => v.Matches($"{name}")))
         {
             return new  NodeTree();
         }
         
-        visitedNode.Add(name);
+        visitedNode.Add($"{name}");
         
         var nonNullableFromType = Nullable.GetUnderlyingType(nodeFromClass.GetType()) ?? nodeFromClass.GetType();
         var nonNullableToType = Nullable.GetUnderlyingType(nodeToClass.GetType()) ?? nodeToClass.GetType();

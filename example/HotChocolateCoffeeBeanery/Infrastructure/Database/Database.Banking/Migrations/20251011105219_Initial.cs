@@ -115,6 +115,7 @@ namespace Database.Banking.Migrations
                     ContractKey = table.Column<Guid>(type: "uuid", nullable: false),
                     ContractType = table.Column<int>(type: "integer", nullable: true),
                     Amount = table.Column<decimal>(type: "numeric", nullable: true),
+                    AccountKey = table.Column<Guid>(type: "uuid", nullable: true),
                     AccountId = table.Column<int>(type: "integer", nullable: true),
                     CustomerBankingRelationshipKey = table.Column<Guid>(type: "uuid", nullable: true),
                     CustomerBankingRelationshipId = table.Column<int>(type: "integer", nullable: true),

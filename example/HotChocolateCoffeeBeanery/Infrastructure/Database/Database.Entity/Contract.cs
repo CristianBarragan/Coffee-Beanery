@@ -11,15 +11,16 @@ public class Contract : Process
         Schema = Entity.Schema.Lending;
     }
     
-    
     [UpsertKey("Contract","Lending")]
     public Guid ContractKey { get; set; }
 
     public ContractType? ContractType { get; set; }
 
     public decimal? Amount { get; set; }
+    
+    public Guid? AccountKey { get; set; }
 
-    [JoinKey("Account","Id")]
+    [LinkKey("Account","AccountKey")]
     public int? AccountId { get; set; }
 
     public Account? Account { get; set; }
@@ -31,7 +32,7 @@ public class Contract : Process
     [JoinKey("CustomerBankingRelationship","CustomerBankingRelationshipId")]
     public int? CustomerBankingRelationshipId { get; set; }
 
-    [LinkKey("Transaction","TransactionId")]
+    [LinkKey("Transaction","TransactionKey")]
     public List<Transaction>? Transaction { get; set; }
 }
 

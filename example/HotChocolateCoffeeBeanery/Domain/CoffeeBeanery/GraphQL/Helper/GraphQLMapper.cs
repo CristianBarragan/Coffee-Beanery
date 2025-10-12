@@ -15,7 +15,18 @@ public static class GraphQLMapper
     /// Method to get all mappings registered by automapper 
     /// </summary>
     /// <param name="mapper"></param>
-    /// <param name="entity"></param>
+    /// <param name="from"></param>
+    /// <param name="to"></param>
+    /// <param name="isModel"></param>
+    /// <param name="models"></param>
+    /// <param name="entities"></param>
+    /// <param name="entityNamespace"></param>
+    /// <param name="linkEntityDictionaryTree"></param>
+    /// <param name="linkModelDictionaryTree"></param>
+    /// <param name="linkKeys"></param>
+    /// <param name="linkBusinessKeys"></param>
+    /// <typeparam name="E"></typeparam>
+    /// <typeparam name="M"></typeparam>
     /// <returns></returns>
     public static List<FieldMap> GetMappings<E,M>(MapperConfiguration mapper, E from, M to, bool isModel,
         List<string> models, List<string> entities, string entityNamespace, Dictionary<string, SqlNode>? linkEntityDictionaryTree, 
@@ -73,138 +84,36 @@ public static class GraphQLMapper
                 if (!isModel && to.GetType().Namespace.Matches(entityNamespace))
                 {
                     if (linkModelDictionaryTree != null &&
-                        linkModelDictionaryTree.TryGetValue($"{processingFieldMap.DestinationEntity}~{
-                            linkKeyDestinationProperty}", out var valueLinkEntity))
-                    {
-                        valueLinkEntity.IsEnumeration = processingFieldMap.FieldDestinationType.IsEnum;
-                        valueLinkEntity.FromEnumeration = enumDictionaryFrom;
-                        valueLinkEntity.ToEnumeration = enumDictionaryTo;
-                        linkModelDictionaryTree[$"{processingFieldMap.DestinationEntity}~{
-                            linkKeyDestinationProperty}"] = valueLinkEntity;
-                    }
-                    else
+                        !linkModelDictionaryTree.TryGetValue($"{processingFieldMap.DestinationEntity}~{
+                            linkKeyDestinationProperty}", out _))
                     {
                         linkModelDictionaryTree.Add($"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}", 
                             new SqlNode()
                             {
-                                RelationshipKey = $"{processingFieldMap.FieldSourceName}~{linkKeySourceProperty}",
+                                RelationshipKey = $"{processingFieldMap.SourceModel}~{linkKeySourceProperty}",
                                 Column = linkKeySourceProperty,
                                 IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
                                 FromEnumeration = enumDictionaryFrom,
                                 ToEnumeration = enumDictionaryTo
                             });
+
+                        if (linkEntityDictionaryTree != null &&
+                            !linkEntityDictionaryTree.TryGetValue($"{processingFieldMap.SourceModel}~{linkKeySourceProperty}", out _))
+                        {
+                            linkEntityDictionaryTree.Add($"{processingFieldMap.SourceModel}~{linkKeySourceProperty}", 
+                                new SqlNode()
+                                {
+                                    RelationshipKey = $"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}",
+                                    Column = linkKeySourceProperty,
+                                    IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
+                                    FromEnumeration = enumDictionaryFrom,
+                                    ToEnumeration = enumDictionaryTo
+                                });    
+                        }
+                        
+                        
                     }
                 }
-                
-                // if (isModel && !from.GetType().Namespace.Matches(entityNamespace))
-                // {
-                    if (linkEntityDictionaryTree != null &&
-                        linkEntityDictionaryTree.TryGetValue($"{processingFieldMap.FieldSourceName}~{
-                            linkKeySourceProperty}", out var valueLinkModel))
-                    {
-                        valueLinkModel.IsEnumeration = processingFieldMap.FieldDestinationType.IsEnum;
-                        valueLinkModel.FromEnumeration = enumDictionaryFrom;
-                        valueLinkModel.ToEnumeration = enumDictionaryTo;
-                        linkEntityDictionaryTree[$"{processingFieldMap.DestinationEntity}~{
-                            linkKeySourceProperty}"] = valueLinkModel;
-                    }
-                    else
-                    {
-                        linkEntityDictionaryTree.Add($"{processingFieldMap.FieldSourceName}~{linkKeySourceProperty}", 
-                            new SqlNode()
-                            {
-                                RelationshipKey = $"{processingFieldMap.DestinationEntity}~{linkKeySourceProperty}",
-                                Column = linkKeySourceProperty,
-                                IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
-                                FromEnumeration = enumDictionaryFrom,
-                                ToEnumeration = enumDictionaryTo
-                            });
-                    }
-                    
-                    
-                    // if (!linkModelDictionaryTree.ContainsKey(
-                    //         $"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}"))
-                    // {
-                    //     linkEntityDictionaryTree.Add($"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}", 
-                    //         new SqlNode()
-                    //         {
-                    //             RelationshipKey = $"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}",
-                    //             Column = linkKeySourceProperty,
-                    //             IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
-                    //             FromEnumeration = enumDictionaryFrom,
-                    //             ToEnumeration = enumDictionaryTo,
-                    //             Namespace = processingFieldMap.FieldSourceType.Namespace
-                    //         });
-                    // }
-                // }
-                // else
-                // {
-                //     if (!linkModelDictionaryTree.ContainsKey(
-                //             $"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}"))
-                //     {
-                //         linkModelDictionaryTree.Add(
-                //             $"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}",
-                //             new SqlNode()
-                //             {
-                //                 RelationshipKey = $"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}",
-                //                 Column = linkKeySourceProperty,
-                //                 IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
-                //                 FromEnumeration = enumDictionaryFrom,
-                //                 ToEnumeration = enumDictionaryTo,
-                //                 Namespace = processingFieldMap.FieldSourceType.Namespace
-                //             });
-                //     }
-                // }
-                
-                linkKeyDestinationProperty = models.Contains(processingFieldMap.FieldSourceName)
-                    ? $"{processingFieldMap.FieldSourceName}Key" : processingFieldMap.FieldSourceName;
-                
-                linkKeySourceProperty = models.Contains(processingFieldMap.FieldDestinationName)
-                    ? $"{processingFieldMap.FieldDestinationName}Key" : processingFieldMap.FieldDestinationName;
-                
-                // if (linkEntityDictionaryTree != null &&
-                //     linkEntityDictionaryTree.TryGetValue($"{processingFieldMap.SourceModel}~{
-                //         linkKeyDestinationProperty}", out valueLinkEntity))
-                // {
-                //     valueLinkEntity.IsEnumeration = processingFieldMap.FieldSourceType.IsEnum;
-                //     valueLinkEntity.FromEnumeration = enumDictionaryFrom;
-                //     valueLinkEntity.ToEnumeration = enumDictionaryTo;
-                //     linkEntityDictionaryTree[$"{processingFieldMap.SourceModel}~{
-                //         linkKeyDestinationProperty}"] = valueLinkEntity;
-                // }
-                // else if ($"{processingFieldMap.SourceModel}~{linkKeyDestinationProperty}"
-                //          .Matches($"{processingFieldMap.DestinationEntity}~{linkKeySourceProperty}"))
-                // {
-                //     if (!linkModelDictionaryTree.ContainsKey(
-                //             $"{processingFieldMap.SourceModel}~{linkKeyDestinationProperty}"))
-                //     {
-                //         linkEntityDictionaryTree.Add($"{processingFieldMap.SourceModel}~{linkKeyDestinationProperty}", 
-                //             new SqlNode()
-                //             {
-                //                 RelationshipKey = $"{processingFieldMap.DestinationEntity}~{linkKeySourceProperty}",
-                //                 Column = linkKeyDestinationProperty,
-                //                 IsEnumeration = processingFieldMap.FieldDestinationType.IsEnum,
-                //                 FromEnumeration = enumDictionaryFrom,
-                //                 ToEnumeration = enumDictionaryTo
-                //             });
-                //     }
-                // }
-                // else
-                // {
-                //     if (!linkModelDictionaryTree.ContainsKey(
-                //             $"{processingFieldMap.SourceModel}~{linkKeyDestinationProperty}"))
-                //     {
-                //         linkModelDictionaryTree.Add($"{processingFieldMap.SourceModel}~{linkKeyDestinationProperty}", 
-                //             new SqlNode()
-                //             {
-                //                 RelationshipKey = $"{processingFieldMap.SourceModel}~{linkKeySourceProperty}",
-                //                 Column = linkKeyDestinationProperty,
-                //                 IsEnumeration = processingFieldMap.FieldDestinationType.IsEnum,
-                //                 FromEnumeration = enumDictionaryFrom,
-                //                 ToEnumeration = enumDictionaryTo
-                //             });   
-                //     }
-                // }
                 
                 var propertyToAttributeType = to.GetType().GetProperties()
                     .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldSourceName));

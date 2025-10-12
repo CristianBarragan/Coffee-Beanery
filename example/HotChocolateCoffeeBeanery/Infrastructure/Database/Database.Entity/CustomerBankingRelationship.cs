@@ -21,7 +21,7 @@ public class CustomerBankingRelationship : Process
     
     public Customer? Customer { get; set; }
     
-    [LinkKey("Contract","ContractId")]
+    [LinkKey("Contract","ContractKey")]
     public List<Contract>? Contract { get; set; }
 }
 
