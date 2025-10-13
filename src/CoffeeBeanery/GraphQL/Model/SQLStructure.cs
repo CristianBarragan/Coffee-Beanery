@@ -14,9 +14,7 @@ public class SqlStructure
 
     public string SqlQuery { get; set; }
 
-    public List<string> SplitOnDapper { get; set; }
-    
-    public List<string> SplitOnTypes { get; set; }
+    public Dictionary<string, Type> SplitOnDapper { get; set; }
 
     public DynamicParameters Parameters { get; set; }
 }

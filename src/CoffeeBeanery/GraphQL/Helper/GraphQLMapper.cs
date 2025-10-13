@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿using System.Collections;
+using System.Reflection;
+using AutoMapper;
 using CoffeeBeanery.GraphQL.Configuration;
 using CoffeeBeanery.GraphQL.Extension;
 using CoffeeBeanery.GraphQL.Model;

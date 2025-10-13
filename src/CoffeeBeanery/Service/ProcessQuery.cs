@@ -28,34 +28,33 @@ public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
     public async Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>
         ExecuteAsync(SqlStructure parameters, CancellationToken cancellationToken)
     {
-        var types = new List<Type>()
-        { };
+        var splitOnTypes = parameters.SplitOnDapper.Values.Distinct().ToList();
+        var splitOn = parameters.SplitOnDapper.Select(a => a.Key).ToList();
 
-        if (parameters != null)
+        splitOnTypes.Reverse();
+        splitOn.Reverse();
+        
+        if (parameters != null && parameters.HasTotalCount && parameters.HasPagination)
         {
-            types.Add(typeof(TotalPageRecords));
-            types.Add(typeof(TotalRecordCount));
-            if (parameters.HasTotalCount && parameters.HasPagination)
-            {
-                parameters.SplitOnDapper.Insert(0, "RowNumber");
-            }
+            splitOnTypes.Add(typeof(TotalPageRecords));
+            splitOnTypes.Add(typeof(TotalRecordCount));
+            splitOn.Insert(0, "RowNumber");
         }
         
-        types.AddRange(_modelTreeMap.EntityTypes.Select(a => a as Type));
-        var typesToMap = new List<Type>();
+        // types.AddRange(_modelTreeMap.EntityTypes.Select(a => a as Type));
+        // var typesToMap = new List<Type>();
+        //
+        // if (parameters == null)
+        // {
+        //     return ([], 0, 0, 0, 0);
+        // }
 
-        if (parameters == null)
-        {
-            return ([], 0, 0, 0, 0);
-        }
+        // foreach (var splitOnPart in parameters.SplitOnTypes)
+        // {
+        //     typesToMap.Add(types.First(t =>
+        //         t.Name.Matches(splitOnPart)));
+        // }
 
-        foreach (var splitOnPart in parameters.SplitOnTypes)
-        {
-            typesToMap.Add(types.First(t =>
-                t.Name.Matches(splitOnPart)));
-        }
-
-        var splitOn = string.Join(',', parameters.SplitOnDapper);
         var query = parameters.SqlUpsert + " ; " + parameters.SqlQuery;
 
         await using var connection = _dbConnection;
@@ -66,12 +65,12 @@ public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
         {
             var result =
                 await connection.QueryAsync<(int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>(
-                    query, typesToMap.ToArray(), map =>
+                    query, splitOnTypes.ToArray(), map =>
                     {
-                        var set = mappingConfiguration(_models, parameters, map, typesToMap);
+                        var set = mappingConfiguration(_models, parameters, map, splitOnTypes);
                         _models = set.models;
                         return (set.startCursor, set.endCursor, set.totalCount, set.totalPageRecords);
-                    }, splitOn: splitOn, commandType: CommandType.Text);
+                    }, splitOn: string.Join(",", splitOn), commandType: CommandType.Text);
 
             if (result == null || result.Count() == 0)
             {
