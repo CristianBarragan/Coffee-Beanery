@@ -35,13 +35,10 @@ public static class ContractQueryMapping
             }
             else
             {
-                var customer = new Customer();
-                customer.Product = new List<Product>();
                 var product = new Product();
                 product = mapper.Map(contractEntity,
                     product);
-                customer.Product.Add(product);
-                models.Add(customer);
+                ProductQueryMapping.MapFromCustomer(models, product, mapper);
             }
         }
     }

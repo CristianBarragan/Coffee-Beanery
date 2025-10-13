@@ -26,6 +26,19 @@ public class JoinKeyAttribute() : Attribute
     public string Column { get; set; }
 }
 
+public class OneKeyAttribute() : Attribute
+{
+    public OneKeyAttribute(string entity, string column) : this()
+    {
+        Entity = entity;
+        Column = column;
+    }
+    
+    public string Entity { get; set; }
+    
+    public string Column { get; set; }
+}
+
 public class LinkKeyAttribute() : Attribute
 {
     public LinkKeyAttribute(string entity, string column) : this()

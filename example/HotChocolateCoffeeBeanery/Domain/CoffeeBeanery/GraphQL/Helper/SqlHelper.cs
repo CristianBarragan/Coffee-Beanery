@@ -15,7 +15,7 @@ public static class SqlHelper
     /// <param name="sqlOrderStatement"></param>
     /// <param name="pagination"></param>
     /// <param name="hasTotalCount"></param>
-    public static void HandleQueryClause(NodeTree rootTree, StringBuilder sqlQuery, string sqlOrderStatement,
+    public static string HandleQueryClause(NodeTree rootTree, StringBuilder sqlQuery, string sqlOrderStatement,
         Pagination pagination, bool hasTotalCount = false)
     {
         var from = 1;
@@ -81,6 +81,7 @@ public static class SqlHelper
         sqlQuery.Append($" {sql} a ) " +
                         $"SELECT * FROM ( SELECT (SELECT COUNT(DISTINCT \"{rootTree.Name}_{"Id".ToSnakeCase(rootTree.Id)}\") FROM {rootTree.Schema}s) \"RecordCount\", " +
                         $"{totalCount} * FROM {rootTree.Schema}s) a {sqlWhereStatement.Replace('~', 'a')}");
+        return sqlQuery.ToString();
     }
     
     /// <summary>

@@ -28,8 +28,7 @@ public static class AccountQueryMapping
                 else
                 {
                     var product = new Product();
-                    product = mapper.Map(accountEntity,
-                        product);
+                    
                     models[index].Product.Add(product);
                 }
             }
