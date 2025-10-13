@@ -250,37 +250,64 @@ public static class SqlNodeResolverHelper
                     var joinChildKey = String.Empty;
                     var joinParentKey = "\"Id\"";
 
-                    foreach (var childName in child.ChildrenName)
+                    if (child.ChildrenName.Count > 0)
                     {
-                        joinChildKey = childStructure.Columns.FirstOrDefault(c => c.Contains($"\"{childName}Id\""));
+                        foreach (var childName in child.ChildrenName)
+                        {
+                            joinChildKey = childStructure.Columns.FirstOrDefault(c => c.Contains($"\"{childName}Id\""));
 
-                        if (string.IsNullOrEmpty(joinChildKey))
-                        {
-                            joinChildKey = childStructure.Columns.FirstOrDefault(c => c.Contains($"\"{currentTree.Name}Id\""));
+                            if (string.IsNullOrEmpty(joinChildKey))
+                            {
+                                joinChildKey =
+                                    childStructure.Columns.FirstOrDefault(c => c.Contains($"\"{currentTree.Name}Id\""));
+                            }
+
+                            if (string.IsNullOrEmpty(joinChildKey))
+                            {
+                                joinChildKey = childStructure.Columns.FirstOrDefault(c => c.Contains($"\"Id"));
+                                joinParentKey = $"\"{child.Name}Id\"";
+                            }
+
+                            joinChildKey = joinChildKey.Split("AS").Last().Sanitize();
+
+                            queryBuilder += childStructure.SqlNodeType == SqlNodeType.Edge ? " JOIN " : " LEFT JOIN ";
+                            queryBuilder +=
+                                $" ( {childStructure.Query} ) {child.Name} ON {currentTree.Name}.{joinParentKey} = {
+                                    child.Name}.\"{joinChildKey}\"";
+                            currentEntityStructure.SelectColumns.AddRange(
+                                childStructure.ParentColumns.Select(s => s.Replace("~", child.Name)));
+                            currentEntityStructure.ParentColumns.AddRange(childStructure.ParentColumns);
+
+                            if (!splitOnDapper.ContainsKey("Id".ToSnakeCase(child.Id)))
+                            {
+                                splitOnDapper.Add("Id".ToSnakeCase(child.Id),
+                                    entityTypes.FirstOrDefault(e => e.Name.Matches(child.Name)));
+                            }
                         }
-                        
-                        if (string.IsNullOrEmpty(joinChildKey))
-                        {
-                            joinChildKey = childStructure.Columns.FirstOrDefault(c => c.Contains($"\"Id"));
-                            joinParentKey = $"\"{child.Name}Id\"";
-                        }
-                        
+                    }
+                    else
+                    {
+                        joinChildKey = childStructure.Columns.FirstOrDefault(c => c.Contains($"\"Id"));
+                        joinParentKey = $"\"{child.Name}Id\"";
+
                         joinChildKey = joinChildKey.Split("AS").Last().Sanitize();
-                        
+
                         queryBuilder += childStructure.SqlNodeType == SqlNodeType.Edge ? " JOIN " : " LEFT JOIN ";
                         queryBuilder +=
-                            $" ( {childStructure.Query} ) {child.Name} ON {currentTree.Name}.{joinParentKey} = {
-                                child.Name}.\"{joinChildKey}\"";
-                        currentEntityStructure.SelectColumns.AddRange(childStructure.ParentColumns.Select(s => s.Replace("~", child.Name)));
+                            $" ( {childStructure.Query} ) {child.Name} ON {currentTree.Name}.\"Id\" = {
+                                child.Name}.\"{currentTree.Name}{"Id".ToSnakeCase(child.Id)}\"";
+                        currentEntityStructure.SelectColumns.AddRange(
+                            childStructure.ParentColumns.Select(s => s.Replace("~", child.Name)));
                         currentEntityStructure.ParentColumns.AddRange(childStructure.ParentColumns);
 
                         if (!splitOnDapper.ContainsKey("Id".ToSnakeCase(child.Id)))
                         {
-                            splitOnDapper.Add("Id".ToSnakeCase(child.Id), entityTypes.FirstOrDefault(e => e.Name.Matches(child.Name)));    
+                            splitOnDapper.Add("Id".ToSnakeCase(child.Id),
+                                entityTypes.FirstOrDefault(e => e.Name.Matches(child.Name)));
                         }
                     }
                 }
-                
+
                 if (!splitOnDapper.ContainsKey("Id".ToSnakeCase(currentTree.Id)))
                 {
                     splitOnDapper.Add("Id".ToSnakeCase(currentTree.Id), entityTypes.FirstOrDefault(e => e.Name.Matches(currentTree.Name)));    

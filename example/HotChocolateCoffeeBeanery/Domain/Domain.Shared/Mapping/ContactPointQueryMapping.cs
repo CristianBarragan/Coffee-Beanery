@@ -45,33 +45,4 @@ public static class ContactPointQueryMapping
             }
         }
     }
-
-    public static void MapContactPoint(List<ContactPoint> models, object mappedObject, IMapper mapper)
-    {
-        ContactPoint model = null!;
-        if (mappedObject is DatabaseEntity.ContactPoint)
-        {
-            var contactPointModel = mappedObject as DatabaseEntity.ContactPoint;
-
-            var index = models.FindIndex(x => x.CustomerKey == contactPointModel.CustomerKey);
-
-            if (index >= 0)
-            {
-                if (index >= 0)
-                {
-                    models[index] = mapper.Map(contactPointModel,
-                        models[index]);
-                }
-                else
-                {
-                    var contactPoint = new ContactPoint();
-                    contactPoint = mapper.Map(contactPointModel,
-                        contactPoint);
-                    var contactPoints = new List<ContactPoint>();
-                    contactPoints.Add(contactPoint);
-                    models[index] = contactPoint;
-                }
-            }
-        }
-    }
 }

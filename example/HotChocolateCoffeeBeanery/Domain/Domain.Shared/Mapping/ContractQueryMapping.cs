@@ -42,31 +42,4 @@ public static class ContractQueryMapping
             }
         }
     }
-
-    public static void MapProduct(List<Product> models, object mappedObject, IMapper mapper)
-    {
-        Product model = null!;
-        if (mappedObject is DatabaseEntity.Contract)
-        {
-            var contractModel = mappedObject as DatabaseEntity.Contract;
-
-            var index = models.FindIndex(x => x.ContractKey == contractModel.ContractKey);
-
-            if (index >= 0)
-            {
-                if (index >= 0)
-                {
-                    models[index] = mapper.Map(contractModel,
-                        models[index]);
-                }
-                else
-                {
-                    var product = new Product();
-                    product = mapper.Map(contractModel,
-                        product);
-                    models[index] = product;
-                }
-            }
-        }
-    }
 }

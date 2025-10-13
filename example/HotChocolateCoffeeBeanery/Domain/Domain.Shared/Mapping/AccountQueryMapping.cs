@@ -44,31 +44,4 @@ public static class AccountQueryMapping
             }
         }
     }
-
-    public static void MapProduct(List<Product> models, object mappedObject, IMapper mapper)
-    {
-        Product model = null!;
-        if (mappedObject is DatabaseEntity.Account)
-        {
-            var accountModel = mappedObject as DatabaseEntity.Account;
-
-            var index = models.FindIndex(x => x.AccountKey == accountModel.AccountKey);
-
-            if (index >= 0)
-            {
-                if (index >= 0)
-                {
-                    models[index] = mapper.Map(accountModel,
-                        models[index]);
-                }
-                else
-                {
-                    var product = new Product();
-                    product = mapper.Map(accountModel,
-                        product);
-                    models[index] = product;
-                }
-            }
-        }
-    }
 }

@@ -40,31 +40,4 @@ public static class CustomerBankingRelationshipQueryMapping
             }
         }
     }
-
-    public static void MapProduct(List<Product> models, object mappedObject, IMapper mapper)
-    {
-        Product model = null!;
-        if (mappedObject is DatabaseEntity.CustomerBankingRelationship)
-        {
-            var customerBankingRelationshipModel = mappedObject as DatabaseEntity.CustomerBankingRelationship;
-
-            var index = models.FindIndex(x => x.CustomerBankingRelationshipKey == customerBankingRelationshipModel.CustomerBankingRelationshipKey);
-
-            if (index >= 0)
-            {
-                if (index >= 0)
-                {
-                    models[index] = mapper.Map(customerBankingRelationshipModel,
-                        models[index]);
-                }
-                else
-                {
-                    var product = new Product();
-                    product = mapper.Map(customerBankingRelationshipModel,
-                        product);
-                    models[index] = product;
-                }
-            }
-        }
-    }
 }
