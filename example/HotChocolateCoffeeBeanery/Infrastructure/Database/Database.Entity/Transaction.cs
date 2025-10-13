@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using CoffeeBeanery.GraphQL.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -6,21 +6,31 @@ namespace Database.Entity;
 
 public class Transaction : Process
 {
+    public Transaction()
+    {
+        Schema = Entity.Schema.Lending;
+    }
+
+    [UpsertKey("Transaction","Lending")]
     public Guid TransactionKey { get; set; }
 
-    public decimal Amount { get; set; }
+    public decimal? Amount { get; set; }
 
-    public decimal Balance { get; set; }
+    public decimal? Balance { get; set; }
 
-    public int ContractId { get; set; }
+    public Guid? ContractKey { get; set; }
+    
+    public Contract? Contract { get; set; }
 
-    public Contract Contract { get; set; }
+    [JoinKey("Contract","ContractKey")]
+    public int? ContractId { get; set; }
 
-    public int AccountId { get; set; }
+    public Guid? AccountKey { get; set; }
+    
+    public Account? Account { get; set; }
 
-    [NotMapped] public Account Account { get; set; }
-
-    [NotMapped] public Schema Schema { get; set; } = Schema.Lending;
+    [JoinKey("Account","AccountKey")]
+    public int? AccountId { get; set; }
 }
 
 public class TransactionEntityConfiguration : IEntityTypeConfiguration<Transaction>

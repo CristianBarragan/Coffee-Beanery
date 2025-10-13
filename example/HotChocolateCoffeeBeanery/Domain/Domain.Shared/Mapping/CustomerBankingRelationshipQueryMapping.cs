@@ -10,66 +10,33 @@ public static class CustomerBankingRelationshipQueryMapping
     {
         if (mappedObject is DatabaseEntity.CustomerBankingRelationship)
         {
-            var customerBankingRelationshipModel = mappedObject as DatabaseEntity.CustomerBankingRelationship;
+            var customerBankingRelationshipEntity = mappedObject as DatabaseEntity.CustomerBankingRelationship;
 
-            var index = models.FindIndex(x => x.Id == customerBankingRelationshipModel.CustomerId);
-
+            var index = models.Where(c => c.Product != null).ToList().FindIndex(c =>
+                c.Product.Any(cbr => cbr.CustomerBankingRelationshipKey == customerBankingRelationshipEntity.CustomerBankingRelationshipKey));
+            
+            var product = new Product();
+            product = mapper.Map(customerBankingRelationshipEntity,
+                product);
+            
             if (index >= 0)
             {
-                models[index].CustomerBankingRelationship = models[index].CustomerBankingRelationship ?? [];
-                var indexCbs = models[index].CustomerBankingRelationship
-                    .FindIndex(x => x.Id == customerBankingRelationshipModel.Id);
+                models[index].Product = models[index].Product ?? [];
+                var indexCustomerBankingRelationship = models[index].Product
+                    .FindIndex(x => x.CustomerBankingRelationshipKey == customerBankingRelationshipEntity.CustomerBankingRelationshipKey);
 
-                if (indexCbs >= 0)
+                if (indexCustomerBankingRelationship >= 0)
                 {
-                    models[index].CustomerBankingRelationship[indexCbs] = mapper.Map(customerBankingRelationshipModel,
-                        models[index].CustomerBankingRelationship[indexCbs]);
+                    models[index].Product[indexCustomerBankingRelationship] = product;
                 }
                 else
                 {
-                    var customerBankingRelationship = new CustomerBankingRelationship();
-                    customerBankingRelationship = mapper.Map(customerBankingRelationshipModel,
-                        customerBankingRelationship);
-                    models[index].CustomerBankingRelationship.Add(customerBankingRelationship);
+                    models[index].Product.Add(product);
                 }
             }
             else
             {
-                var customer = new Customer();
-                customer.CustomerBankingRelationship = new List<CustomerBankingRelationship>();
-                var customerBankingRelationship = new CustomerBankingRelationship();
-                customerBankingRelationship = mapper.Map(customerBankingRelationshipModel,
-                    customerBankingRelationship);
-                customer.CustomerBankingRelationship.Add(customerBankingRelationship);
-                models.Add(customer);
-            }
-        }
-    }
-
-    public static void MapCustomerBankingRelationship(List<CustomerBankingRelationship> models, object mappedObject,
-        IMapper mapper)
-    {
-        CustomerBankingRelationship model = null!;
-        if (mappedObject is DatabaseEntity.CustomerBankingRelationship)
-        {
-            var customerBankingRelationshipModel = mappedObject as DatabaseEntity.CustomerBankingRelationship;
-
-            var index = models.FindIndex(x => x.Id == customerBankingRelationshipModel.Id);
-
-            if (index >= 0)
-            {
-                if (index >= 0)
-                {
-                    models[index] = mapper.Map(customerBankingRelationshipModel,
-                        models[index]);
-                }
-                else
-                {
-                    var customerBankingRelationship = new CustomerBankingRelationship();
-                    customerBankingRelationship = mapper.Map(customerBankingRelationshipModel,
-                        customerBankingRelationship);
-                    models[index] = customerBankingRelationship;
-                }
+                ProductQueryMapping.MapFromCustomer(models, product, mapper);
             }
         }
     }

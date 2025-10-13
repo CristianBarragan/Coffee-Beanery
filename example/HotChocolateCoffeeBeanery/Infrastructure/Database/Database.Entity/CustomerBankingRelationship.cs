@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using CoffeeBeanery.GraphQL.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -6,19 +6,23 @@ namespace Database.Entity;
 
 public class CustomerBankingRelationship : Process
 {
+    public CustomerBankingRelationship()
+    {
+        Schema = Entity.Schema.Banking;
+    }
+
+    [UpsertKey("CustomerBankingRelationship", "Banking")]
     public Guid CustomerBankingRelationshipKey { get; set; }
 
     public Guid? CustomerKey { get; set; }
 
-    public Guid? ContractKey { get; set; }
-
+    [JoinKey("Customer","Id")]
     public int? CustomerId { get; set; }
-
+    
     public Customer? Customer { get; set; }
-
+    
+    [LinkKey("Contract","ContractKey")]
     public List<Contract>? Contract { get; set; }
-
-    [NotMapped] public Schema Schema { get; set; } = Schema.Banking;
 }
 
 public class CustomerBankingRelationshipEntityConfiguration : IEntityTypeConfiguration<CustomerBankingRelationship>
@@ -38,6 +42,8 @@ public class CustomerBankingRelationshipEntityConfiguration : IEntityTypeConfigu
 
         builder.HasIndex(c => c.CustomerBankingRelationshipKey).IsUnique();
 
+        builder.HasMany(c => c.Contract).WithOne(c => c.CustomerBankingRelationship).HasForeignKey(c => c.CustomerBankingRelationshipId);
+        
         builder.Property(c => c.ProcessedDateTime).HasDefaultValueSql("(now() at time zone 'utc')");
     }
 }

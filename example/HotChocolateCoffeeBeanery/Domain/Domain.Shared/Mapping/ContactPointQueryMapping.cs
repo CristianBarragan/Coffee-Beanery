@@ -12,13 +12,13 @@ public static class ContactPointQueryMapping
         {
             var contactPointModel = mappedObject as DatabaseEntity.ContactPoint;
 
-            var index = models.FindIndex(x => x.Id == contactPointModel.CustomerId);
+            var index = models.FindIndex(x => x.CustomerKey == contactPointModel.CustomerKey);
 
             if (index >= 0)
             {
                 models[index].ContactPoint = models[index].ContactPoint ?? [];
                 var indexCbs = models[index].ContactPoint
-                    .FindIndex(x => x.Id == contactPointModel.Id);
+                    .FindIndex(x => x.ContactPointKey == contactPointModel.ContactPointKey);
 
                 if (indexCbs >= 0)
                 {
@@ -42,35 +42,6 @@ public static class ContactPointQueryMapping
                     contactPoint);
                 customer.ContactPoint.Add(contactPoint);
                 models.Add(customer);
-            }
-        }
-    }
-
-    public static void MapContactPoint(List<ContactPoint> models, object mappedObject, IMapper mapper)
-    {
-        ContactPoint model = null!;
-        if (mappedObject is DatabaseEntity.ContactPoint)
-        {
-            var contactPointModel = mappedObject as DatabaseEntity.ContactPoint;
-
-            var index = models.FindIndex(x => x.Id == contactPointModel.Id);
-
-            if (index >= 0)
-            {
-                if (index >= 0)
-                {
-                    models[index] = mapper.Map(contactPointModel,
-                        models[index]);
-                }
-                else
-                {
-                    var contactPoint = new ContactPoint();
-                    contactPoint = mapper.Map(contactPointModel,
-                        contactPoint);
-                    var contactPoints = new List<ContactPoint>();
-                    contactPoints.Add(contactPoint);
-                    models[index] = contactPoint;
-                }
             }
         }
     }

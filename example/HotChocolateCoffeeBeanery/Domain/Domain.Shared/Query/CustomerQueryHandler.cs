@@ -16,8 +16,8 @@ public class CustomerQueryHandler<M, D, S> : ProcessQuery<M, D, S>, IQuery<SqlSt
 {
     private readonly IMapper _mapper;
 
-    public CustomerQueryHandler(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection, ITreeMap<D, S> treeMap,
-        IMapper mapper) : base(loggerFactory, dbConnection, treeMap)
+    public CustomerQueryHandler(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection, IModelTreeMap<D, S> modelTreeMap,
+        IMapper mapper) : base(loggerFactory, dbConnection, modelTreeMap)
     {
         _mapper = mapper;
     }
@@ -44,17 +44,16 @@ public class CustomerQueryHandler<M, D, S> : ProcessQuery<M, D, S>, IQuery<SqlSt
             {
                 CustomerQueryMapping.MapCustomer(customers, map[i], _mapper);
             }
-            else if (map[i] is DatabaseEntity.CustomerBankingRelationship)
-            {
-                CustomerBankingRelationshipQueryMapping.MapFromCustomer(customers, map[i], _mapper);
-            }
-            else if (map[i] is DatabaseEntity.Contract)
-            {
-                ContractQueryMapping.MapFromCustomer(customers, map[i], _mapper);
-            }
             else if (map[i] is DatabaseEntity.ContactPoint)
             {
                 ContactPointQueryMapping.MapFromCustomer(customers, map[i], _mapper);
+            }
+            else if (map[i] is DatabaseEntity.Transaction)
+            {
+                TransactionQueryMapping.MapFromCustomer(customers, map[i], _mapper);
+            }
+            else {
+                ProductQueryMapping.MapFromCustomer(customers, map[i], _mapper);
             }
         }
 

@@ -18,7 +18,6 @@ public class CustomerMutationResolver : IInputType, IOutputType
     }
 
     [UsePaging]
-    [IsProjected]
     [UseFiltering]
     [UseSorting]
     public async Task<Connection<Customer>> UpsertCustomer(
@@ -28,13 +27,13 @@ public class CustomerMutationResolver : IInputType, IOutputType
         try
         {
             //might be sent by client
-            var cacheKey = string.Empty;
+            var cacheKey = wrapper.CacheKey;
 
-            var set = await service.UpsertProcessAsync<Customer>(cacheKey, resolverContext.Selection, nameof(Wrapper),
-                CancellationToken.None);
+            var set = await service.UpsertProcessAsync<Customer>(cacheKey, resolverContext.Selection, nameof(Customer),
+                nameof(Wrapper), CancellationToken.None);
 
             var connection = ContextResolverHelper.GenerateConnection(
-                set.list.Select(a => new EntityNode<Customer>(a, a.Id.ToString())),
+                set.list.Select(a => new EntityNode<Customer>(a, a.CustomerKey.ToString())),
                 new Pagination()
                 {
                     TotalRecordCount = new TotalRecordCount()

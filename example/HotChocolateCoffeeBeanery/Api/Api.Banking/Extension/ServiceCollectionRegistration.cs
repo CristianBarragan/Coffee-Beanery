@@ -4,10 +4,9 @@ namespace Api.Banking.Extension;
 
 public static class ServiceCollectionRegistration
 {
-    public static IServiceCollection AddBankingServiceCollection(this IServiceCollection services,
-        bool ignoreOtherDomainRelationships)
+    public static IServiceCollection AddBankingServiceCollection(this IServiceCollection services)
     {
-        services.AddBankingDomainModelServiceCollection(ignoreOtherDomainRelationships);
+        services.AddBankingDomainModelServiceCollection();
         return services;
     }
 }

@@ -18,7 +18,6 @@ public class CustomerQueryResolver : IOutputType
     }
 
     [UsePaging]
-    [IsProjected]
     [UseFiltering]
     [UseSorting]
     public async Task<Connection<Customer>> GetCustomer(
@@ -30,13 +29,13 @@ public class CustomerQueryResolver : IOutputType
             //might be sent by client
             var cacheKey = string.Empty;
 
-            var set = await service.QueryProcessAsync<Customer>(cacheKey, resolverContext.Selection, nameof(Wrapper),
-                CancellationToken.None);
+            var set = await service.QueryProcessAsync<Customer>(cacheKey, resolverContext.Selection, nameof(Customer),
+                nameof(Wrapper), CancellationToken.None);
             var recordCount = set.totalCount ?? 0;
             var pageRecords = set.totalPageRecords ?? 0;
 
             var connection = ContextResolverHelper.GenerateConnection(
-                set.list.Select(a => new EntityNode<Customer>(a, a.Id.ToString())),
+                set.list.Select(a => new EntityNode<Customer>(a, a.CustomerKey.ToString())),
                 new Pagination()
                 {
                     TotalRecordCount = new TotalRecordCount()

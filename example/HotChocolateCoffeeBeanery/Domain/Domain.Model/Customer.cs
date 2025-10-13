@@ -1,12 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using CoffeeBeanery.GraphQL.Configuration;
-using HotChocolate;
+﻿using CoffeeBeanery.GraphQL.Configuration;
 
 namespace Domain.Model;
 
-public class Customer : Process
+public class Customer
 {
-    [BusinessKey] public Guid? CustomerKey { get; set; }
+    public Guid? CustomerKey { get; set; }
 
     public string? FirstNaming { get; set; }
 
@@ -16,12 +14,11 @@ public class Customer : Process
 
     public CustomerType? CustomerType { get; set; }
 
+    [LinkBusinessKeyAttribute("Product","ProductKey")]
+    public List<Product>? Product { get; set; }
+
+    [LinkBusinessKeyAttribute("ContactPoint","ContactPointKey")]
     public List<ContactPoint>? ContactPoint { get; set; }
-
-    public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
-
-    [NotMapped, BusinessSchema, GraphQLIgnore]
-    public Schema Schema { get; set; } = Schema.Banking;
 }
 
 public enum CustomerType

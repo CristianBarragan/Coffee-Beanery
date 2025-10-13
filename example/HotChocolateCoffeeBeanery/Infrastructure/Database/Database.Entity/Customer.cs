@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using CoffeeBeanery.GraphQL.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -6,6 +6,12 @@ namespace Database.Entity;
 
 public class Customer : Process
 {
+    public Customer()
+    {
+        Schema = Entity.Schema.Banking;
+    }
+    
+    [UpsertKey("Customer","Banking")]
     public Guid CustomerKey { get; set; }
 
     public string? FirstName { get; set; }
@@ -15,12 +21,12 @@ public class Customer : Process
     public string? FullName { get; set; }
 
     public CustomerType? CustomerType { get; set; }
-
+    
+    [LinkKey("ContactPoint","ContactPointKey")]
     public List<ContactPoint>? ContactPoint { get; set; }
-
+    
+    [LinkKey("CustomerBankingRelationship","CustomerBankingRelationshipKey")]
     public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
-
-    [NotMapped] public Schema Schema { get; set; } = Schema.Banking;
 }
 
 public enum CustomerType

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using CoffeeBeanery.GraphQL.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -6,23 +6,34 @@ namespace Database.Entity;
 
 public class Contract : Process
 {
+    public Contract()
+    {
+        Schema = Entity.Schema.Lending;
+    }
+    
+    [UpsertKey("Contract","Lending")]
     public Guid ContractKey { get; set; }
 
     public ContractType? ContractType { get; set; }
 
     public decimal? Amount { get; set; }
-
+    
     public Guid? AccountKey { get; set; }
 
+    [LinkKey("Account","AccountKey")]
+    public int? AccountId { get; set; }
+
+    public Account? Account { get; set; }
+    
     public Guid? CustomerBankingRelationshipKey { get; set; }
 
-    [NotMapped] public CustomerBankingRelationship? CustomerBankingRelationship { get; set; }
-
+    public CustomerBankingRelationship? CustomerBankingRelationship { get; set; }
+    
+    [JoinKey("CustomerBankingRelationship","CustomerBankingRelationshipId")]
     public int? CustomerBankingRelationshipId { get; set; }
 
-    [NotMapped] public List<Transaction>? Transaction { get; set; }
-
-    [NotMapped] public Schema Schema { get; set; } = Schema.Lending;
+    [LinkKey("Transaction","TransactionKey")]
+    public List<Transaction>? Transaction { get; set; }
 }
 
 public enum ContractType
@@ -48,9 +59,8 @@ public class ContractEntityConfiguration : IEntityTypeConfiguration<Contract>
         builder.HasKey(c => c.Id);
 
         builder.HasIndex(c => c.ContractKey).IsUnique();
-
-        // builder.HasMany(c => c.Transaction).WithOne(c => c.Contract).
-        //     HasForeignKey(t => t.ContractId);
+        
+        builder.HasMany(c => c.Transaction).WithOne(c => c.Contract).HasForeignKey(c => c.ContractId);
 
         builder.Property(c => c.ProcessedDateTime).HasDefaultValueSql("(now() at time zone 'utc')");
     }
