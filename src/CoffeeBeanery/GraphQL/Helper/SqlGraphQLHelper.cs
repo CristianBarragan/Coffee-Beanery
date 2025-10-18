@@ -14,7 +14,7 @@ public static class SqlGraphQLHelper
     /// <param name="value"></param>
     /// <param name="filterCondition"></param>
     /// <returns></returns>
-    public static List<string> ProcessFilter(NodeTree nodeTree, Dictionary<string, SqlNode> linkEntityDictionaryTree,
+    public static List<string> ProcessFilter(NodeTree nodeTree,
         Dictionary<string, SqlNode> linkModelDictionaryTree, string field, string filterType, string value,
         string filterCondition)
     {

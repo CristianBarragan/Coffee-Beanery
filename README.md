@@ -1,4 +1,4 @@
-### Coffee beanery
+### Coffee Beanery
 
 Coffee beanery library is a dynamic parser from GraphQL queries into raw SQL queries; this library will not be shipped as a nuget package since optimization and changes are case by case; this example is using:
 
