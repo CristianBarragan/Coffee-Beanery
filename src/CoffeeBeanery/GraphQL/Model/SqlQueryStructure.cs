@@ -18,4 +18,6 @@ public class SqlQueryStructure
     public List<string> SelectColumns { get; set; } = new List<string>();
 
     public Dictionary<string, string> ChildrenJoinColumns { get; set; } = new Dictionary<string, string>();
+
+    public string WhereClause { get; set; } = string.Empty;
 }

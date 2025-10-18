@@ -8,20 +8,18 @@ using Npgsql;
 
 namespace CoffeeBeanery.Service;
 
-public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
+public class ProcessQuery<M> : IQuery<SqlStructure,
     (List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>
-    where M : class, new() where D : class where S : class
+    where M : class
 {
-    private readonly ILogger<ProcessQuery<M, D, S>> _logger;
+    private readonly ILogger<ProcessQuery<M>> _logger;
     private readonly NpgsqlConnection _dbConnection;
-    private readonly IModelTreeMap<D, S> _modelTreeMap;
     private List<M> _models;
 
-    public ProcessQuery(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection, IModelTreeMap<D, S> modelTreeMap)
+    public ProcessQuery(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection)
     {
-        _logger = loggerFactory.CreateLogger<ProcessQuery<M, D, S>>();
+        _logger = loggerFactory.CreateLogger<ProcessQuery<M>>();
         _dbConnection = dbConnection;
-        _modelTreeMap = modelTreeMap;
         _models = new List<M>();
     }
 
@@ -40,20 +38,6 @@ public class ProcessQuery<M, D, S> : IQuery<SqlStructure,
             splitOnTypes.Add(typeof(TotalRecordCount));
             splitOn.Insert(0, "RowNumber");
         }
-        
-        // types.AddRange(_modelTreeMap.EntityTypes.Select(a => a as Type));
-        // var typesToMap = new List<Type>();
-        //
-        // if (parameters == null)
-        // {
-        //     return ([], 0, 0, 0, 0);
-        // }
-
-        // foreach (var splitOnPart in parameters.SplitOnTypes)
-        // {
-        //     typesToMap.Add(types.First(t =>
-        //         t.Name.Matches(splitOnPart)));
-        // }
 
         var query = parameters.SqlUpsert + " ; " + parameters.SqlQuery;
 
