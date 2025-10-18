@@ -41,7 +41,7 @@ Coffee Beanery provides the following features and can be fully customized
 
 ### Database entity Setup
 
-There are 3 types of anotations
+There are 3 types of annotations
 
 #### Upsert
 Field that will be used to upsert the record
