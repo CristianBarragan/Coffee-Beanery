@@ -140,25 +140,41 @@ public static class ProductQueryMapping
         var index = models.Where(c => c.Product != null).ToList().FindIndex(c =>
             c.Product.Any(cbr => cbr.AccountKey == accountEntity.AccountKey));
             
-        var product = new Product();
-        product = mapper.Map(accountEntity,
-            product);
+        var accountProduct = new Account();
+        accountProduct = mapper.Map(accountEntity,
+            accountProduct);
         
         if (index >= 0)
         {
-            models[index].Product = models[index].Product ?? [];
-            var indexAccount = models[index].Product
+            models[index].Product ??= [];
+            var productIndex = models[index].Product
                 .FindIndex(x => x.AccountKey == accountEntity.AccountKey);
             
-            if (indexAccount >= 0)
+            if (productIndex >= 0)
             {
-                product = models[index].Product[indexAccount];
-                product = mapper.Map(accountEntity,
-                    product);
-                models[index].Product[indexAccount] = product;
+                var accountIndex = models[index].Product[productIndex].Account
+                    .FindIndex(a => a.AccountKey == accountEntity.AccountKey);
+                
+                if (accountIndex >= 0)
+                {
+                    models[index].Product[productIndex].Account[accountIndex] = 
+                        mapper.Map(accountProduct,
+                        models[index].Product[productIndex].Account[accountIndex]);
+                }
+                else
+                {
+                    models[index].Product[productIndex] = mapper.Map(accountEntity,
+                        models[index].Product[productIndex]);
+                    models[index].Product[productIndex].Account.Add(accountProduct); 
+                }
             }
             else
             {
+                var product = new Product();
+                product = mapper.Map(accountEntity,
+                    product);
+                product ??= product;
+                product.Account.Add(accountProduct);
                 models[index].Product.Add(product);
             }
         }
@@ -173,27 +189,34 @@ public static class ProductQueryMapping
 
                 if (productIndex >= 0)
                 {
-                    product = models.FirstOrDefault(c => c.CustomerKey.Value == product.CustomerKey)
+                    var product = models.FirstOrDefault(c => c.CustomerKey.Value == customerModel
+                            .Product[productIndex].CustomerKey)
                         .Product[productIndex];
                     product = mapper.Map(accountEntity,
                         product);
+                    product.Account ??= [];
+                    product.Account.Add(accountProduct);
                     models.FirstOrDefault(c => c.CustomerKey.Value == product.CustomerKey)
                         .Product[productIndex] = product;
                 }
                 else
                 {
-                    customerModel.Product.Add(product);
+                    var product = new Product();
+                    product = mapper.Map(accountEntity,
+                        product);
+                    product ??= product;
+                    product.Account.Add(accountProduct);
+                    models[index].Product.Add(product);
                 }
             }
             else
             {
-                models.Add(new Customer()
-                {
-                    Product = new List<Product>()
-                    {
-                        product
-                    }
-                });
+                var product = new Product();
+                product = mapper.Map(accountEntity,
+                    product);
+                product ??= product;
+                product.Account.Add(accountProduct);
+                models[index].Product.Add(product);
             }
         }
     }

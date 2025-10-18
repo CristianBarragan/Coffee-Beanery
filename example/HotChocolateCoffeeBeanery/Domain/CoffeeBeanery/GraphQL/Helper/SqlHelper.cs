@@ -76,7 +76,7 @@ public static class SqlHelper
             ? $" DENSE_RANK() OVER({sqlOrderStatement}) AS \"RowNumber\","
             : "";
         sqlQuery = ($" {sql} a ) " +
-                    $"SELECT * FROM ( SELECT (SELECT COUNT(DISTINCT \"{rootTree.Name}_{"Id".ToSnakeCase(rootTree.Id)}\") FROM {rootTree.Schema}s) \"RecordCount\", " +
+                    $"SELECT * FROM ( SELECT (SELECT COUNT(DISTINCT \"{"Id".ToSnakeCase(rootTree.Id)}\") FROM {rootTree.Schema}s) \"RecordCount\", " +
                     $"{totalCount} * FROM {rootTree.Schema}s) a {sqlWhereStatement.Replace('~', 'a')}");
         return sqlQuery;
     }

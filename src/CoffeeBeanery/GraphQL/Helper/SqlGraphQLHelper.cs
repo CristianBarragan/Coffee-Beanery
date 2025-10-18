@@ -93,9 +93,12 @@ public static class SqlGraphQLHelper
     /// <param name="field"></param>
     /// <param name="sortClause"></param>
     /// <returns></returns>
-    public static string HandleSort(NodeTree nodeTree, string field, string sortClause)
+    public static string HandleSort(NodeTree nodeTree, string field, string sortClause, Dictionary<string, SqlNode> linkModelDictionaryTree)
     {
-        field = nodeTree.Mapping.First(f => f.FieldSourceName.Matches(field)).FieldDestinationName;
-        return $" ~*~.{field} ORDER BY {sortClause},";
+        if (linkModelDictionaryTree.TryGetValue($"{nodeTree.Name}~{field}", out var sqlNodeTo))
+        {
+            return $" ~*~.{sqlNodeTo.RelationshipKey.Split('~')[1]} ORDER BY {sortClause},";
+        }
+        return string.Empty;
     }
 }
