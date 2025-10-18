@@ -46,8 +46,7 @@ There are 3 types of annotations
 #### Upsert
 Field that will be used to upsert the record
 
-First argument table
-Second argument database schema
+First argument table, Second argument database schema
 
 `[UpsertKey("Transaction","Lending")]`
 
@@ -62,8 +61,7 @@ Note: all joins are done via Ids
 
 - Transaction table (Child)
 
-First argument parent table
-Second argument parent property to be joined
+First argument parent table, Second argument parent property to be joined
 
 `[JoinKey("Account","AccountKey")]`
 
@@ -71,8 +69,7 @@ Second argument parent property to be joined
 
 - Account table Parent
 
-First argument parent table
-Second argument parent property to be joined
+First argument parent table, Second argument parent property to be joined
 
 `public int? Id { get; set; }`
 
@@ -96,8 +93,7 @@ Second argument parent property to be joined
 
 ### Business Model setup
 
-First argument child table
-Second argument child property to be joined (mapped)
+First argument child table, Second argument child property to be joined (mapped)
 
 `[LinkBusinessKey("Transaction","TransactionKey")]`
 
