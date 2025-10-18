@@ -85,7 +85,8 @@ public static class SqlNodeResolverHelper
                 foreach (var orderNode in argument.GetNodes())
                 {
                     hasSorting = true;
-                    sqlOrderStatement = GetFieldsOrdering(modelTreeMap.DictionaryTree, orderNode, rootEntityName);
+                    sqlOrderStatement = GetFieldsOrdering(modelTreeMap.DictionaryTree, orderNode, rootEntityName,
+                        wrapperEntityName, rootEntityName, modelTreeMap.LinkDictionaryTree);
                 }
             }
 
@@ -167,10 +168,6 @@ public static class SqlNodeResolverHelper
             //     cacheReadSession.Upsert(ref cacheKey, ref sqlStament);    
             // }
         }
-        else
-        {
-            rootNodeTree = entityTreeMap.DictionaryTree.Last().Value;
-        }
 
         if (string.IsNullOrEmpty(sqlSelectStatement))
         {
@@ -181,6 +178,7 @@ public static class SqlNodeResolverHelper
 
         if (hasPagination || hasSorting)
         {
+            rootNodeTree = entityTreeMap.DictionaryTree[rootEntityName];
             // Query Where, Sort, and Pagination
             sqlSelectStatement = SqlHelper.HandleQueryClause(rootNodeTree, sqlSelectStatement,
                 sqlOrderStatement, pagination, hasTotalCount);
@@ -845,7 +843,8 @@ public static class SqlNodeResolverHelper
     /// <param name="orderNode"></param>
     /// <param name="entity"></param>
     /// <returns></returns>
-    public static string GetFieldsOrdering(Dictionary<string, NodeTree> trees, ISyntaxNode orderNode, string entity)
+    public static string GetFieldsOrdering(Dictionary<string, NodeTree> trees, ISyntaxNode orderNode, string entity,
+        string wrapperEntity, string rootEntity, Dictionary<string, SqlNode> linkModelDictionaryTree)
     {
         var orderString = string.Empty;
         foreach (var oNode in orderNode.GetNodes())
@@ -862,12 +861,15 @@ public static class SqlNodeResolverHelper
                 if ((column[1].Contains("DESC") || column[1].Contains("ASC")) &&
                     trees.ContainsKey(currentEntity))
                 {
+                    currentEntity = currentEntity.Matches(wrapperEntity) ? rootEntity : currentEntity;
                     var currentNodeTree = trees[currentEntity];
-                    orderString += SqlGraphQLHelper.HandleSort(currentNodeTree, column[0], column[1]);
+                    orderString +=
+                        SqlGraphQLHelper.HandleSort(currentNodeTree, column[0], column[1], linkModelDictionaryTree);
                 }
             }
 
-            orderString += $", {GetFieldsOrdering(trees, oNode, currentEntity)}";
+            orderString +=
+                $", {GetFieldsOrdering(trees, oNode, wrapperEntity, rootEntity, currentEntity, linkModelDictionaryTree)}";
         }
 
         return orderString;
