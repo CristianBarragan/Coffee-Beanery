@@ -136,6 +136,7 @@ public static class SqlHelper
     /// Generate the main upsert without "Join columns [Ids]"
     /// </summary>
     /// <param name="currentTree"></param>
+    /// <param name="trees"></param>
     /// <param name="sqlUpsertStatementNodes"></param>
     /// <param name="whereClause"></param>
     /// <returns></returns>
@@ -191,6 +192,7 @@ public static class SqlHelper
     /// Generate the upsert for "Join columns [Ids]"
     /// </summary>
     /// <param name="currentTree"></param>
+    /// <param name="entityNames"></param>
     /// <param name="trees"></param>
     /// <param name="sqlUpsertStatementNodes"></param>
     /// <param name="whereClause"></param>
