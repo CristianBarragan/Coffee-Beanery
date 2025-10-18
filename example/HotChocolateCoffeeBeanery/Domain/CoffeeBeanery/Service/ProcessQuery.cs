@@ -1,7 +1,6 @@
 ﻿using System.Data;
 using CoffeeBeanery.CQRS;
 using Dapper;
-using CoffeeBeanery.GraphQL.Extension;
 using CoffeeBeanery.GraphQL.Model;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -23,11 +22,13 @@ public class ProcessQuery<M> : IQuery<SqlStructure,
         _models = new List<M>();
     }
 
-    public async Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>
+    public async Task<(List<M> list, int? startCursor, int? endCursor, int? totalCount, 
+            int? totalPageRecords)>
         ExecuteAsync(SqlStructure parameters, CancellationToken cancellationToken)
     {
         var splitOnTypes = parameters.SplitOnDapper.Values.Distinct().ToList();
-        var splitOn = parameters.SplitOnDapper.Select(a => a.Key).ToList();
+        var splitOn = parameters.SplitOnDapper
+            .Select(a => a.Key).ToList();
 
         splitOnTypes.Reverse();
         splitOn.Reverse();
@@ -51,7 +52,7 @@ public class ProcessQuery<M> : IQuery<SqlStructure,
                 await connection.QueryAsync<(int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>(
                     query, splitOnTypes.ToArray(), map =>
                     {
-                        var set = mappingConfiguration(_models, parameters, map, splitOnTypes);
+                        var set = mappingConfiguration(_models, parameters, map);
                         _models = set.models;
                         return (set.startCursor, set.endCursor, set.totalCount, set.totalPageRecords);
                     }, splitOn: string.Join(",", splitOn), commandType: CommandType.Text);
@@ -71,7 +72,8 @@ public class ProcessQuery<M> : IQuery<SqlStructure,
                     ? parameters.Pagination.EndCursor
                     : result.Select(s => s.endCursor).FirstOrDefault(),
                 result.Select(s => s.totalCount).FirstOrDefault(),
-                result.Select(s => s.totalPageRecords).FirstOrDefault());
+                result.Select(s => s.totalPageRecords)
+                    .FirstOrDefault());
         }
         catch (Exception ex)
         {
@@ -83,7 +85,7 @@ public class ProcessQuery<M> : IQuery<SqlStructure,
     }
 
     public virtual (List<M> models, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)
-        mappingConfiguration(List<M> models, SqlStructure sqlStructure, object[] map, List<Type> typesToMap)
+        mappingConfiguration(List<M> models, SqlStructure sqlStructure, object[] map)
     {
         throw new NotImplementedException();
     }

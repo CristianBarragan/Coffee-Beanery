@@ -15,7 +15,7 @@ public class Contract
     
     public Guid? CustomerBankingRelationshipKey { get; set; }
 
-    [LinkBusinessKeyAttribute("Transaction","TransactionKey")]
+    [LinkBusinessKey("Transaction","TransactionKey")]
     public List<Transaction>? Transaction { get; set; }
 }
 

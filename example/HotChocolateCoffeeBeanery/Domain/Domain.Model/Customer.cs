@@ -14,10 +14,10 @@ public class Customer
 
     public CustomerType? CustomerType { get; set; }
 
-    [LinkBusinessKeyAttribute("Product","ProductKey")]
+    [LinkBusinessKey("Product","ProductKey")]
     public List<Product>? Product { get; set; }
 
-    [LinkBusinessKeyAttribute("ContactPoint","ContactPointKey")]
+    [LinkBusinessKey("ContactPoint","ContactPointKey")]
     public List<ContactPoint>? ContactPoint { get; set; }
 }
 

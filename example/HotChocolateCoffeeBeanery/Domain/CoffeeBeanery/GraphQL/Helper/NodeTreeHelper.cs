@@ -10,7 +10,7 @@ namespace CoffeeBeanery.GraphQL.Helper;
 public static class NodeTreeHelper
 {
     public static NodeTree GenerateTree<E, M>(Dictionary<string, NodeTree> nodeTrees,
-        E nodeFromClass, M nodeToClass, string name, string entityNamespaceName,
+        E nodeFromClass, M nodeToClass, string name,
         MapperConfiguration mapperConfiguration,
         List<KeyValuePair<string, int>> nodeId, bool isModel, List<string> entities, List<string> models,
         Dictionary<string, SqlNode>? linkEntityDictionaryTree, Dictionary<string, SqlNode>? linkModelDictionaryTree,
@@ -20,7 +20,7 @@ public static class NodeTreeHelper
     {
         var visitedNode = new List<string>();
         return IterateTree<E, M>(nodeTrees, nodeFromClass, nodeToClass,
-            name, entityNamespaceName, string.Empty, mapperConfiguration, nodeId, isModel,
+            name, string.Empty, mapperConfiguration, nodeId, isModel,
             models, entities, visitedNode, linkEntityDictionaryTree, linkModelDictionaryTree,
             upsertKeys, joinKeys, linkKeys, linkBusinessKeys)!;
     }
@@ -32,7 +32,6 @@ public static class NodeTreeHelper
     /// <param name="nodeFromClass"></param>
     /// <param name="nodeToClass"></param>
     /// <param name="name"></param>
-    /// <param name="entityNamespaceName"></param>
     /// <param name="parentName"></param>
     /// <param name="mapperConfiguration"></param>
     /// <param name="nodeId"></param>
@@ -50,7 +49,7 @@ public static class NodeTreeHelper
     /// <typeparam name="M"></typeparam>
     /// <returns></returns>
     private static NodeTree? IterateTree<E, M>(Dictionary<string, NodeTree> nodeTrees,
-        E? nodeFromClass, M? nodeToClass, string name, string entityNamespaceName, string parentName,
+        E? nodeFromClass, M? nodeToClass, string name, string parentName,
         MapperConfiguration mapperConfiguration, List<KeyValuePair<string, int>> nodeId, bool isModel,
         List<string> models, List<string> entities, List<string> visitedNode,
         Dictionary<string, SqlNode>? linkEntityDictionaryTree,
@@ -96,7 +95,7 @@ public static class NodeTreeHelper
         }
 
         var fromMapping = GraphQLMapper.GetMappings<E, M>(mapperConfiguration,
-            nodeFromClass, nodeToClass, isModel, models, entities, entityNamespaceName, linkEntityDictionaryTree,
+            nodeFromClass, nodeToClass, isModel, models, entities, linkEntityDictionaryTree,
             linkModelDictionaryTree, linkKeys, linkBusinessKeys);
 
         var nodeName = nodeToClass.GetType().Name;
@@ -213,7 +212,7 @@ public static class NodeTreeHelper
             }
 
             tree = IterateTree<E, M>(nodeTrees,
-                nodeFromClass, toVariable, toVariable.GetType().Name, entityNamespaceName, name,
+                nodeFromClass, toVariable, toVariable.GetType().Name, name,
                 mapperConfiguration, nodeId, isModel, models, entities, visitedNode, linkEntityDictionaryTree,
                 linkModelDictionaryTree,
                 upsertKeys, joinKeys, linkKeys, linkBusinessKeys);

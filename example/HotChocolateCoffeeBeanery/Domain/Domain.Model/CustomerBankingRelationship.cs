@@ -10,7 +10,7 @@ public class CustomerBankingRelationship
     
     public Guid? CustomerKey { get; set; }
     
-    [LinkBusinessKeyAttribute("Contract","ContractKey")]
+    [LinkBusinessKey("Contract","ContractKey")]
 
     public List<Contract>? Contract { get; set; }
 }
