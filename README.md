@@ -36,6 +36,72 @@ Coffee Beanery provides the following features and can be fully customized
 - Data and column validations
 - Query cache can be customized in multiple layers
 - Query result handling can be fully customized
+
+## Setup
+
+### Database entity Setup
+
+There are 3 types of anotations
+
+#### Upsert
+Field that will be used to upsert the record
+
+First argument table
+Second argument database schema
+
+`[UpsertKey("Transaction","Lending")]`
+
+`public Guid TransactionKey { get; set; }`
+
+#### JoinKey
+Foreign key to join the child with parent
+
+Note: all joins are done via Ids
+
+##### For one to many relationship:
+
+- Transaction table (Child)
+
+First argument parent table
+Second argument parent property to be joined
+
+`[JoinKey("Account","AccountKey")]`
+
+`public int? AccountId { get; set; }`
+
+- Account table Parent
+
+First argument parent table
+Second argument parent property to be joined
+
+`public int? Id { get; set; }`
+
+`[LinkKey("Transaction","TransactionKey")]`
+
+`public List<Transaction>? Transaction { get; set; }`
+
+##### For one to one relationship
+
+- Owner of the relationship (Parent)
+
+`[JoinKey("Account","Id")]`
+
+`public Contract? Contract { get; set; }`
+
+- Related of the relationship (child)
+
+`[JoinKey("Contract","ContractKey")]`
+
+`public int? ContractId { get; set; }`
+
+### Business Model setup
+
+First argument child table
+Second argument child property to be joined (mapped)
+
+`[LinkBusinessKey("Transaction","TransactionKey")]`
+
+`public List<Transaction>? Transaction { get; set; }`
 	
 ### Queries
 
