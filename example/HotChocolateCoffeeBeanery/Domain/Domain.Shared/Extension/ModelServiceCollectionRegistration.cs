@@ -26,16 +26,16 @@ public static class ModelServiceCollectionRegistration
         services.AddScoped<IProcessService<dynamic, dynamic, dynamic>, ProcessService<dynamic, dynamic, dynamic>>();
         services.AddScoped<IQuery<SqlStructure,
                 (List<dynamic> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>,
-            ProcessQuery<dynamic, dynamic, dynamic>>();
+            ProcessQuery<dynamic>>();
 
         services.AddScoped<IProcessService<Customer, dynamic, dynamic>, ProcessService<Customer, dynamic, dynamic>>();
         services.AddScoped<IQuery<SqlStructure,
                 (List<dynamic> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>,
-            ProcessQuery<dynamic, dynamic, dynamic>>();
+            ProcessQuery<dynamic>>();
 
         services.AddScoped<IQuery<SqlStructure,
                 (List<Customer> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>,
-            CustomerQueryHandler<Customer, dynamic, dynamic>>();
+            CustomerQueryHandler<Customer>>();
 
         return services;
     }
@@ -138,13 +138,13 @@ public static class ModelServiceCollectionRegistration
         
         foreach (var entity in entities)
         {
-            foreach (var joinKey in joinKeys.Where(u => entity.Matches(u.From.Split('~')[0])))
+            foreach (var joinKey in joinKeys.Where(u => entity.Matches(u.To.Split('~')[0])))
             {
                 foreach (var linkEntity in linkEntityDictionaryTree
                              .Where(l => entity
                                  .Matches(l.Key.Split('~')[0])))
                 {
-                    if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.To.Matches(joinKey.To)))
                     {
                         linkEntity.Value.JoinKeys.Add(joinKey);
                     }
@@ -254,7 +254,7 @@ public static class ModelServiceCollectionRegistration
             ProcessService<dynamic, dynamic, dynamic>>();
         services.AddScoped<IQuery<SqlStructure,
                 (List<dynamic> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>,
-            ProcessQuery<dynamic, dynamic, dynamic>>();
+            ProcessQuery<dynamic>>();
 
         return services;
     }

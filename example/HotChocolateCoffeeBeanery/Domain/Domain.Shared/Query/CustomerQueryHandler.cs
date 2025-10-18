@@ -10,14 +10,14 @@ using DatabaseEntity = Database.Entity;
 
 namespace Domain.Shared.Query;
 
-public class CustomerQueryHandler<M, D, S> : ProcessQuery<M, D, S>, IQuery<SqlStructure,
+public class CustomerQueryHandler<M> : ProcessQuery<M>, IQuery<SqlStructure,
     (List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>
-    where M : class, new() where D : class, new() where S : class, new()
+    where M : class
 {
     private readonly IMapper _mapper;
 
-    public CustomerQueryHandler(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection, IModelTreeMap<D, S> modelTreeMap,
-        IMapper mapper) : base(loggerFactory, dbConnection, modelTreeMap)
+    public CustomerQueryHandler(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection,
+        IMapper mapper) : base(loggerFactory, dbConnection)
     {
         _mapper = mapper;
     }
