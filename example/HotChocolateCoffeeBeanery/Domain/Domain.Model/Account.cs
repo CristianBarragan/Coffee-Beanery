@@ -10,6 +10,6 @@ public class Account
 
     public string? AccountName { get; set; }
     
-    [LinkBusinessKeyAttribute("Transaction","TransactionKey")]
+    [LinkBusinessKey("Transaction","TransactionKey")]
     public List<Transaction>? Transaction { get; set; }
 }

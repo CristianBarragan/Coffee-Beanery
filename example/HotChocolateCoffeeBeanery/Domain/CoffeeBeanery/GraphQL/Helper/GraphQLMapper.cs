@@ -27,7 +27,7 @@ public static class GraphQLMapper
     /// <typeparam name="M"></typeparam>
     /// <returns></returns>
     public static List<FieldMap> GetMappings<E, M>(MapperConfiguration mapper, E from, M to, bool isModel,
-        List<string> models, List<string> entities, string entityNamespace,
+        List<string> models, List<string> entities,
         Dictionary<string, SqlNode>? linkEntityDictionaryTree,
         Dictionary<string, SqlNode>? linkModelDictionaryTree,
         List<LinkKey> linkKeys, List<LinkBusinessKey> linkBusinessKeys)
@@ -44,9 +44,6 @@ public static class GraphQLMapper
         {
             foreach (var mapping in mapMapping)
             {
-                var isDestinationEntity = !mapping.TypeMap.DestinationType.Assembly.GetName()
-                    .Name.Matches(to.GetType().Assembly.GetName().Name);
-
                 if (string.IsNullOrEmpty(mapping.GetSourceMemberName()) ||
                     (mappingFields.Any(a => a.FieldDestinationName.Matches(mapping.DestinationName))) ||
                     (mappingFields.Any(a => a.FieldSourceName.Matches(mapping.GetSourceMemberName()))))
@@ -119,7 +116,6 @@ public static class GraphQLMapper
 
                 if (linkModelDictionaryTree.ContainsKey($"{processingFieldMap.DestinationEntity}~{
                     linkKeyDestinationProperty}"))
-                    // model.Value != null)
                 {
                     if (enumDictionary.Count > 0 && isModel)
                     {

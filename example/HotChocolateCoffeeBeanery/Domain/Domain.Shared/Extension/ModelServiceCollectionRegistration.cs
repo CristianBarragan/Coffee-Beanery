@@ -23,18 +23,23 @@ public static class ModelServiceCollectionRegistration
 
         services = AddCache(services);
 
-        services.AddScoped<IProcessService<dynamic, dynamic, dynamic>, ProcessService<dynamic, dynamic, dynamic>>();
+        services.AddScoped<IProcessService<dynamic, dynamic, dynamic>, ProcessService<dynamic, dynamic, 
+            dynamic>>();
         services.AddScoped<IQuery<SqlStructure,
-                (List<dynamic> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>,
+                (List<dynamic> list, int? startCursor, int? endCursor, int? totalCount, int? 
+                totalPageRecords)>,
             ProcessQuery<dynamic>>();
 
-        services.AddScoped<IProcessService<Customer, dynamic, dynamic>, ProcessService<Customer, dynamic, dynamic>>();
+        services.AddScoped<IProcessService<Customer, dynamic, dynamic>, ProcessService<Customer, 
+            dynamic, dynamic>>();
         services.AddScoped<IQuery<SqlStructure,
-                (List<dynamic> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>,
+                (List<dynamic> list, int? startCursor, int? endCursor, int? totalCount, int? 
+                totalPageRecords)>,
             ProcessQuery<dynamic>>();
 
         services.AddScoped<IQuery<SqlStructure,
-                (List<Customer> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>,
+                (List<Customer> list, int? startCursor, int? endCursor, int? totalCount, 
+                int? totalPageRecords)>,
             CustomerQueryHandler<Customer>>();
 
         return services;
@@ -89,7 +94,7 @@ public static class ModelServiceCollectionRegistration
         var modelNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(modelDictionaryTree,
             (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
             (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
-            nameof(DatabaseCommon.Wrapper), typeof(DatabaseCommon.Wrapper).Namespace,
+            nameof(DatabaseCommon.Wrapper),
             mapperConfiguration, modelNodeId, true, entities, models, linkEntityDictionaryTree,
             linkModelDictionaryTree, upsertKeys, joinKeys, linkKeys, linkBusinessKeys);
         
@@ -116,7 +121,7 @@ public static class ModelServiceCollectionRegistration
         var entityNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(entityDictionaryTree,
             (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
             (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
-            nameof(Wrapper), typeof(DatabaseCommon.Wrapper).Namespace,
+            nameof(Wrapper),
             mapperConfiguration, entityNodeId, false, entities, models, linkEntityDictionaryTree,
             linkModelDictionaryTree, upsertKeys, joinKeys, linkKeys, linkBusinessKeys);
 
@@ -176,13 +181,15 @@ public static class ModelServiceCollectionRegistration
         
         foreach (var entity in entities)
         {
-            foreach (var linkBusinessKey in linkBusinessKeys.Where(u => entity.Matches(u.From.Split('~')[0])))
+            foreach (var linkBusinessKey in linkBusinessKeys.Where(u => entity
+                         .Matches(u.From.Split('~')[0])))
             {
                 foreach (var linkEntity in linkEntityDictionaryTree
                              .Where(l => linkBusinessKey.From.Split('~')[0]
                                  .Matches(l.Key.Split('~')[0])))
                 {
-                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(linkBusinessKey.From)))
+                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
+                            linkBusinessKey.From)))
                     {
                         linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
                     }
@@ -201,18 +208,21 @@ public static class ModelServiceCollectionRegistration
         foreach (var linkSqlNode in linkEntityDictionaryTree)
         {
             linkSqlNode.Value.IsModel = !(linkSqlNode.Key.Matches(linkSqlNode.Value.RelationshipKey) &&
-                                          entities.Any(a => a.Matches(linkSqlNode.Key.Split('~')[0])));
+                                          entities.Any(a => a.Matches(linkSqlNode.Key
+                                              .Split('~')[0])));
         }
 
         foreach (var linkedTree in linkEntityDictionaryTree
-                     .Where(e => !entities.Any(a => a.Matches(e.Key.Split('~')[0]))
+                     .Where(e => !entities.Any(a => a.Matches(e.Key
+                         .Split('~')[0]))
                      ))
         {
             linkEntityDictionaryTree.Remove(linkedTree.Key);
         }
         
         foreach (var linkedTree in linkModelDictionaryTree
-                     .Where(e => !models.Any(a => a.Matches(e.Key.Split('~')[0]))
+                     .Where(e => !models.Any(a => a.Matches(e.Key
+                         .Split('~')[0]))
                      ))
         {
             linkModelDictionaryTree.Remove(linkedTree.Key);
@@ -253,7 +263,8 @@ public static class ModelServiceCollectionRegistration
         services.AddScoped<IProcessService<dynamic, dynamic, dynamic>,
             ProcessService<dynamic, dynamic, dynamic>>();
         services.AddScoped<IQuery<SqlStructure,
-                (List<dynamic> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>,
+                (List<dynamic> list, int? startCursor, int? endCursor, int? totalCount, 
+                int? totalPageRecords)>,
             ProcessQuery<dynamic>>();
 
         return services;
