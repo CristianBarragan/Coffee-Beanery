@@ -30,7 +30,7 @@ public static class GraphQLMapper
         List<string> models, List<string> entities,
         Dictionary<string, SqlNode>? linkEntityDictionaryTree,
         Dictionary<string, SqlNode>? linkModelDictionaryTree,
-        List<LinkKey> linkKeys, List<LinkBusinessKey> linkBusinessKeys)
+        List<LinkKey> linkKeys, List<JoinKey> joinKeys, List<JoinOneKey> joinOneKeys, List<LinkBusinessKey> linkBusinessKeys)
         where E : class where M : class
     {
         var configurationProvider = mapper.Internal().GetAllTypeMaps();
@@ -218,11 +218,41 @@ public static class GraphQLMapper
                             var linkKey = new LinkKey()
                             {
                                 From =
-                                    $"{processingFieldMap.SourceModel}~{linkAttribute.ConstructorArguments[1].Value.ToString()}",
+                                    $"{processingFieldMap.SourceModel}~{linkAttribute.ConstructorArguments[1].Value}",
                                 To =
-                                    $"{linkAttribute.ConstructorArguments[0].Value.ToString()}~{linkAttribute.ConstructorArguments[1].Value.ToString()}"
+                                    $"{linkAttribute.ConstructorArguments[0].Value}~{linkAttribute.ConstructorArguments[1].Value}"
                             };
                             linkKeys.Add(linkKey);
+                        }
+                        
+                        var joinAttribute = propertyModelAttributeType.CustomAttributes
+                            .FirstOrDefault(a => a.AttributeType == typeof(JoinKeyAttribute));
+
+                        if (joinKeys != null && joinAttribute != null)
+                        {
+                            var joinKey = new JoinKey()
+                            {
+                                From =
+                                    $"{linkAttribute.ConstructorArguments[0].Value}~{joinAttribute.ConstructorArguments[0].Value}Id",
+                                To =
+                                    $"{joinAttribute.ConstructorArguments[0].Value}~{joinAttribute.ConstructorArguments[1].Value}"
+                            };
+                            joinKeys.Add(joinKey);
+                        }
+                        
+                        var joinOneAttribute = propertyModelAttributeType.CustomAttributes
+                            .FirstOrDefault(a => a.AttributeType == typeof(JoinOneKeyAttribute));
+
+                        if (joinOneKeys != null && joinOneAttribute != null)
+                        {
+                            var joinOneKey = new JoinOneKey()
+                            {
+                                From =
+                                    $"{linkAttribute.ConstructorArguments[0].Value}~{joinOneAttribute.ConstructorArguments[0].Value}Id",
+                                To =
+                                    $"{joinOneAttribute.ConstructorArguments[0].Value}~{joinOneAttribute.ConstructorArguments[1].Value}"
+                            };
+                            joinOneKeys.Add(joinOneKey);
                         }
                     }
                 }

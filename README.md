@@ -61,19 +61,15 @@ Note: all joins are done via Ids
 
 - Transaction table (Child)
 
-First argument parent table, Second argument parent property to be joined
-
-`[JoinKey("Account","AccountKey")]`
-
-`public int? AccountId { get; set; }`
+No setup required
 
 - Account table Parent
 
 First argument parent table, Second argument parent property to be joined
 
-`public int? Id { get; set; }`
-
 `[LinkKey("Transaction","TransactionKey")]`
+
+`[JoinKey("Account","Id")]`
 
 `public List<Transaction>? Transaction { get; set; }`
 
@@ -81,15 +77,19 @@ First argument parent table, Second argument parent property to be joined
 
 - Owner of the relationship (Parent)
 
-`[JoinKey("Account","Id")]`
+`[LinkKey("Account","AccountKey")]`
 
-`public Contract? Contract { get; set; }`
+`[JoinKey("Contract","Id")]`
+
+`public Account? Account { get; set; }`
 
 - Related of the relationship (child)
 
-`[JoinKey("Contract","ContractKey")]`
+`[LinkKey("Contract","ContractKey")]`
 
-`public int? ContractId { get; set; }`
+`[JoinOneKey("Account","Id")]`
+
+`public Contract? Contract { get; set; }`
 
 ### Business Model setup
 

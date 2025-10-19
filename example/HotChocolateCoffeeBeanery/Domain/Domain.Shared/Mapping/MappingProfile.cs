@@ -23,6 +23,31 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ProcessedDateTime, opt => opt.Ignore())
             .ReverseMap();
         
+        CreateMap<Customer, Product>()
+            .EqualityComparison((src, dest) => src.CustomerKey == dest.CustomerKey)
+            .ForMember(dest => dest.CustomerBankingRelationship, opt => opt.MapFrom(ps => ps.Product))
+            .ForMember(dest => dest.CustomerBankingRelationshipKey, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.ContractKey, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.AccountKey, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.AccountName, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.AccountNumber, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.Amount, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.Balance, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.ProductType, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.Contract, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.Account, opt => 
+                opt.Ignore())
+            .ReverseMap();
+        
         CreateMap<Transaction, DataEntity.Transaction>()
             .EqualityComparison((src, dest) => src.TransactionKey == dest.TransactionKey)
             .ForMember(dest => dest.TransactionKey, opt => opt.MapFrom(ps => ps.TransactionKey))
@@ -123,6 +148,19 @@ public class MappingProfile : Profile
                 opt.Ignore())
             .ReverseMap();
         
+        CreateMap<Product, Account>()
+            .EqualityComparison((src, dest) =>
+                src.AccountKey == dest.AccountKey)
+            .ForMember(dest => dest.AccountKey, opt =>
+                opt.MapFrom(a => a.AccountKey))
+            .ForMember(dest => dest.AccountName, opt =>
+                opt.MapFrom(a => a.AccountName))
+            .ForMember(dest => dest.AccountNumber, opt =>
+                opt.MapFrom(a => a.AccountNumber))
+            .ForMember(dest => dest.Transaction, opt =>
+                opt.Ignore())
+            .ReverseMap();
+        
         CreateMap<Account, DataEntity.Transaction>()
             .EqualityComparison((src, dest) =>
                 src.AccountKey == dest.AccountKey)
@@ -149,6 +187,21 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ProcessedDateTime, opt => 
                 opt.Ignore())
             .ForMember(dest => dest.Contract, opt =>
+                opt.Ignore())
+            .ReverseMap();
+        
+        CreateMap<Account, Transaction>()
+            .EqualityComparison((src, dest) =>
+                src.AccountKey == dest.AccountKey)
+            .ForMember(dest => dest.AccountKey, opt =>
+                opt.MapFrom(a => a.AccountKey))
+            .ForMember(dest => dest.TransactionKey, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.Amount, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.Balance, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.ContractKey, opt =>
                 opt.Ignore())
             .ReverseMap();
         

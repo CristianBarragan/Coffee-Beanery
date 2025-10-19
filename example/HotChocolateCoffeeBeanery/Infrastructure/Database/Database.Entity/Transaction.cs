@@ -21,15 +21,13 @@ public class Transaction : Process
     public Guid? ContractKey { get; set; }
     
     public Contract? Contract { get; set; }
-
-    [JoinKey("Contract","ContractKey")]
+    
     public int? ContractId { get; set; }
 
     public Guid? AccountKey { get; set; }
     
     public Account? Account { get; set; }
 
-    [JoinKey("Account","AccountKey")]
     public int? AccountId { get; set; }
 }
 

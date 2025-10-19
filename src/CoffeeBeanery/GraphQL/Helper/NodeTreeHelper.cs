@@ -14,7 +14,7 @@ public static class NodeTreeHelper
         MapperConfiguration mapperConfiguration,
         List<KeyValuePair<string, int>> nodeId, bool isModel, List<string> entities, List<string> models,
         Dictionary<string, SqlNode>? linkEntityDictionaryTree, Dictionary<string, SqlNode>? linkModelDictionaryTree,
-        List<string>? upsertKeys, List<JoinKey>? joinKeys, List<LinkKey>? linkKeys,
+        List<string>? upsertKeys, List<JoinKey>? joinKeys, List<JoinOneKey>? joinOneKeys, List<LinkKey>? linkKeys,
         List<LinkBusinessKey>? linkBusinessKeys)
         where E : class where M : class
     {
@@ -22,7 +22,7 @@ public static class NodeTreeHelper
         return IterateTree<E, M>(nodeTrees, nodeFromClass, nodeToClass,
             name, string.Empty, mapperConfiguration, nodeId, isModel,
             models, entities, visitedNode, linkEntityDictionaryTree, linkModelDictionaryTree,
-            upsertKeys, joinKeys, linkKeys, linkBusinessKeys)!;
+            upsertKeys, joinKeys, joinOneKeys, linkKeys, linkBusinessKeys)!;
     }
 
     /// <summary>
@@ -54,7 +54,7 @@ public static class NodeTreeHelper
         List<string> models, List<string> entities, List<string> visitedNode,
         Dictionary<string, SqlNode>? linkEntityDictionaryTree,
         Dictionary<string, SqlNode>? linkModelDictionaryTree, List<string>? upsertKeys, List<JoinKey>? joinKeys,
-        List<LinkKey>? linkKeys, List<LinkBusinessKey>? linkBusinessKeys)
+        List<JoinOneKey>? joinOneKeys, List<LinkKey>? linkKeys, List<LinkBusinessKey>? linkBusinessKeys)
         where E : class where M : class
     {
         if (visitedNode.Any(v => v.Matches($"{name}")))
@@ -96,7 +96,7 @@ public static class NodeTreeHelper
 
         var fromMapping = GraphQLMapper.GetMappings<E, M>(mapperConfiguration,
             nodeFromClass, nodeToClass, isModel, models, entities, linkEntityDictionaryTree,
-            linkModelDictionaryTree, linkKeys, linkBusinessKeys);
+            linkModelDictionaryTree, linkKeys, joinKeys, joinOneKeys, linkBusinessKeys);
 
         var nodeName = nodeToClass.GetType().Name;
 
@@ -148,25 +148,25 @@ public static class NodeTreeHelper
             }
         }
 
-        toProperty = nodeToClass.GetType()
+        toProperty = nodeFromClass.GetType()
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .FirstOrDefault(t => t.CustomAttributes
                 .Any(a => a.AttributeType == typeof(JoinKeyAttribute)));
 
-        if (toProperty != null && toProperty.CustomAttributes
-                .Any(a => a.AttributeType == typeof(JoinKeyAttribute)))
-        {
-            var attribute =
-                toProperty.CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(JoinKeyAttribute));
-            var joinKey = new JoinKey()
-            {
-                From = $"{nodeToClass.GetType().Name}~{toProperty.Name}",
-                To =
-                    $"{attribute.ConstructorArguments[0].Value.ToString()}~{attribute.ConstructorArguments[1].Value.ToString()}"
-            };
-
-            joinKeys.Add(joinKey);
-        }
+        // if (toProperty != null && toProperty.CustomAttributes
+        //         .Any(a => a.AttributeType == typeof(JoinKeyAttribute)))
+        // {
+        //     var attribute =
+        //         toProperty.CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(JoinKeyAttribute));
+        //     var joinKey = new JoinKey()
+        //     {
+        //         From = $"{nodeToClass.GetType().Name}~{toProperty.Name}",
+        //         To =
+        //             $"{attribute.ConstructorArguments[0].Value.ToString()}~{attribute.ConstructorArguments[1].Value.ToString()}"
+        //     };
+        //
+        //     joinKeys.Add(joinKey);
+        // }
 
         var properties = nodeToClass.GetType()
             .GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
@@ -215,7 +215,7 @@ public static class NodeTreeHelper
                 nodeFromClass, toVariable, toVariable.GetType().Name, name,
                 mapperConfiguration, nodeId, isModel, models, entities, visitedNode, linkEntityDictionaryTree,
                 linkModelDictionaryTree,
-                upsertKeys, joinKeys, linkKeys, linkBusinessKeys);
+                upsertKeys, joinKeys, joinOneKeys, linkKeys, linkBusinessKeys);
 
             if (tree != null && !string.IsNullOrEmpty(tree.Name))
             {
