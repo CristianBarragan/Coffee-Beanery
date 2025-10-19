@@ -15,13 +15,13 @@ public class CustomerBankingRelationship : Process
     public Guid CustomerBankingRelationshipKey { get; set; }
 
     public Guid? CustomerKey { get; set; }
-
-    [JoinKey("Customer","Id")]
+    
     public int? CustomerId { get; set; }
     
     public Customer? Customer { get; set; }
     
     [LinkKey("Contract","ContractKey")]
+    [JoinKey("CustomerBankingRelationship","Id")]
     public List<Contract>? Contract { get; set; }
 }
 

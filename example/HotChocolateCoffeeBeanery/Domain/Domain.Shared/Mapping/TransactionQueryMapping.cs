@@ -74,6 +74,7 @@ public static class TransactionQueryMapping
                 var account = new Account();
                 var transaction = new Transaction();
                 transaction = mapper.Map(transactionEntity, transaction);
+                account = mapper.Map(transaction, account);
                 account.Transaction = account.Transaction ?? [];
                 account.Transaction.Add(transaction);
                 product = mapper.Map(account, product);
@@ -87,9 +88,8 @@ public static class TransactionQueryMapping
                         product
                     }
                 };
-                customer = mapper.Map(product,
-                    customer);
-                customer.Product.Add(product);
+                
+                customer = mapper.Map(product, customer);
                 models.Add(customer);
             }
         }

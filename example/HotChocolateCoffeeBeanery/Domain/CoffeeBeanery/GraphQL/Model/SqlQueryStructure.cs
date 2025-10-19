@@ -20,4 +20,6 @@ public class SqlQueryStructure
     public Dictionary<string, string> ChildrenJoinColumns { get; set; } = new Dictionary<string, string>();
 
     public string WhereClause { get; set; } = string.Empty;
+
+    public string JoinOneKey { get; set; } = string.Empty;
 }

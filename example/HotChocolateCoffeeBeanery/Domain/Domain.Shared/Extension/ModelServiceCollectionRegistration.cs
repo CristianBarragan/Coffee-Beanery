@@ -89,6 +89,7 @@ public static class ModelServiceCollectionRegistration
         var linkKeys = new List<LinkKey>();
         var linkBusinessKeys = new List<LinkBusinessKey>();
         var joinKeys = new List<JoinKey>();
+        var joinOneKeys = new List<JoinOneKey>();
         var upsertKeys = new List<string>();
         
         var modelNodeTree = NodeTreeHelper.GenerateTree<dynamic, dynamic>(modelDictionaryTree,
@@ -96,7 +97,7 @@ public static class ModelServiceCollectionRegistration
             (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
             nameof(DatabaseCommon.Wrapper),
             mapperConfiguration, modelNodeId, true, entities, models, linkEntityDictionaryTree,
-            linkModelDictionaryTree, upsertKeys, joinKeys, linkKeys, linkBusinessKeys);
+            linkModelDictionaryTree, upsertKeys, joinKeys, joinOneKeys, linkKeys, linkBusinessKeys);
         
         foreach (var tree in modelDictionaryTree)
         {
@@ -123,7 +124,7 @@ public static class ModelServiceCollectionRegistration
             (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
             nameof(Wrapper),
             mapperConfiguration, entityNodeId, false, entities, models, linkEntityDictionaryTree,
-            linkModelDictionaryTree, upsertKeys, joinKeys, linkKeys, linkBusinessKeys);
+            linkModelDictionaryTree, upsertKeys, joinKeys, joinOneKeys, linkKeys, linkBusinessKeys);
 
         foreach (var entity in entities)
         {
@@ -143,12 +144,19 @@ public static class ModelServiceCollectionRegistration
         
         foreach (var entity in entities)
         {
-            foreach (var joinKey in joinKeys.Where(u => entity.Matches(u.To.Split('~')[0])))
+            foreach (var joinKey in joinKeys.Where(u => entity.Matches(u.From.Split('~')[0]) ||
+                                                        entity.Matches(u.To.Split('~')[0])))
             {
                 foreach (var linkEntity in linkEntityDictionaryTree
-                             .Where(l => entity
+                             .Where(l => joinKey.From.Split('~')[0]
+                                 .Matches(l.Key.Split('~')[0]) || joinKey.To.Split('~')[0]
                                  .Matches(l.Key.Split('~')[0])))
                 {
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                    
                     if (!linkEntity.Value.JoinKeys.Any(u => u.To.Matches(joinKey.To)))
                     {
                         linkEntity.Value.JoinKeys.Add(joinKey);
@@ -159,7 +167,31 @@ public static class ModelServiceCollectionRegistration
         
         foreach (var entity in entities)
         {
-            foreach (var linkKey in linkKeys.Where(u => entity.Matches(u.From.Split('~')[0])))
+            foreach (var joinOneKey in joinOneKeys.Where(u => entity.Matches(u.From.Split('~')[0]) ||
+                                                        entity.Matches(u.To.Split('~')[0])))
+            {
+                foreach (var joinOneEntity in linkEntityDictionaryTree
+                             .Where(l => joinOneKey.From.Split('~')[0]
+                                 .Matches(l.Key.Split('~')[0]) || joinOneKey.To.Split('~')[0]
+                                 .Matches(l.Key.Split('~')[0])))
+                {
+                    if (!joinOneEntity.Value.JoinOneKeys.Any(u => u.From.Matches(joinOneKey.From)))
+                    {
+                        joinOneEntity.Value.JoinOneKeys.Add(joinOneKey);
+                    }
+                    
+                    if (!joinOneEntity.Value.JoinOneKeys.Any(u => u.To.Matches(joinOneKey.To)))
+                    {
+                        joinOneEntity.Value.JoinOneKeys.Add(joinOneKey);
+                    }
+                }
+            }
+        }
+        
+        foreach (var entity in entities)
+        {
+            foreach (var linkKey in linkKeys.Where(u => entity.Matches(u.From.Split('~')[0]) ||
+                                                        entity.Matches(u.To.Split('~')[0])))
             {
                 foreach (var linkEntity in linkEntityDictionaryTree
                              .Where(l => linkKey.From.Split('~')[0]

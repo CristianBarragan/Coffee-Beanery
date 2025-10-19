@@ -24,6 +24,8 @@ public class SqlNode
     
     public List<JoinKey> JoinKeys { get; set; } = [];
     
+    public List<JoinOneKey> JoinOneKeys { get; set; } = [];
+    
     public List<LinkKey> LinkKeys { get; set; } = [];
     
     public List<LinkBusinessKey> LinkBusinessKeys { get; set; } = [];
@@ -32,6 +34,13 @@ public class SqlNode
 }
 
 public class JoinKey()
+{
+    public string From { get; set; }
+    
+    public string To { get; set; }
+}
+
+public class JoinOneKey()
 {
     public string From { get; set; }
     
