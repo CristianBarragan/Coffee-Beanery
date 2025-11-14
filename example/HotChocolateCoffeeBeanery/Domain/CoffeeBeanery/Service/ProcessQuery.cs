@@ -29,9 +29,6 @@ public class ProcessQuery<M> : IQuery<SqlStructure,
         var splitOnTypes = parameters.SplitOnDapper.Values.Distinct().ToList();
         var splitOn = parameters.SplitOnDapper
             .Select(a => a.Key).ToList();
-
-        splitOnTypes.Reverse();
-        splitOn.Reverse();
         
         if (parameters != null && parameters.HasTotalCount && parameters.HasPagination)
         {
@@ -52,7 +49,7 @@ public class ProcessQuery<M> : IQuery<SqlStructure,
                 await connection.QueryAsync<(int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>(
                     query, splitOnTypes.ToArray(), map =>
                     {
-                        var set = mappingConfiguration(_models, parameters, map);
+                        var set = MappingConfiguration(_models, parameters, map);
                         _models = set.models;
                         return (set.startCursor, set.endCursor, set.totalCount, set.totalPageRecords);
                     }, splitOn: string.Join(",", splitOn), commandType: CommandType.Text);
@@ -85,7 +82,7 @@ public class ProcessQuery<M> : IQuery<SqlStructure,
     }
 
     public virtual (List<M> models, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)
-        mappingConfiguration(List<M> models, SqlStructure sqlStructure, object[] map)
+        MappingConfiguration(List<M> models, SqlStructure sqlStructure, object[] map)
     {
         throw new NotImplementedException();
     }
