@@ -235,6 +235,7 @@ mutation a {
     }
   }
 }
+```
 
 Response sample
 
@@ -256,7 +257,7 @@ Response sample
         }
     }
 }
-
+```
 
 ### [Buy me a Coffee ☕]
 *I would love a 100% colombian coffee!*
