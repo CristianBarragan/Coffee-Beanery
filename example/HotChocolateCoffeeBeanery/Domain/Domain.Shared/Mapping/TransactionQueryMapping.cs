@@ -88,8 +88,6 @@ public static class TransactionQueryMapping
                         product
                     }
                 };
-                
-                customer = mapper.Map(product, customer);
                 models.Add(customer);
             }
         }

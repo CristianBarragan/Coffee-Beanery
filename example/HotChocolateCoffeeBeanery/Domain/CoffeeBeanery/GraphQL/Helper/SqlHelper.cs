@@ -121,7 +121,7 @@ public static class SqlHelper
             }
 
             var upsertingEntity = sqlUpsertStatementNodes.FirstOrDefault(s =>
-                s.Key.Split('~')[0].Matches(processingTree.Name) && !s.Value.JoinKeys
+                s.Key.Split('~')[0].Matches(processingTree.Name) || !s.Value.JoinKeys
                     .Any(a => a.To.Split('~')[0].Matches(processingTree.ParentName)));
             
             if (upsertingEntity.Value != null && upsertingEntity.Value.LinkKeys.Count > 0)
