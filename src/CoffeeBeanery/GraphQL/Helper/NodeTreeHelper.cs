@@ -126,7 +126,7 @@ public static class NodeTreeHelper
         if (toProperty != null && toProperty.CustomAttributes
                 .Any(a => a.AttributeType == typeof(UpsertKeyAttribute)))
         {
-            var schemaValue = toProperty.CustomAttributes.First().ConstructorArguments[1].Value.ToString();
+            var schemaValue = toProperty.CustomAttributes.Last().ConstructorArguments[1].Value.ToString();
             node.Schema = schemaValue;
             node.Mapping.ForEach(f => f.FieldDestinationSchema = schemaValue);
 
@@ -147,26 +147,6 @@ public static class NodeTreeHelper
                     });
             }
         }
-
-        toProperty = nodeFromClass.GetType()
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .FirstOrDefault(t => t.CustomAttributes
-                .Any(a => a.AttributeType == typeof(JoinKeyAttribute)));
-
-        // if (toProperty != null && toProperty.CustomAttributes
-        //         .Any(a => a.AttributeType == typeof(JoinKeyAttribute)))
-        // {
-        //     var attribute =
-        //         toProperty.CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(JoinKeyAttribute));
-        //     var joinKey = new JoinKey()
-        //     {
-        //         From = $"{nodeToClass.GetType().Name}~{toProperty.Name}",
-        //         To =
-        //             $"{attribute.ConstructorArguments[0].Value.ToString()}~{attribute.ConstructorArguments[1].Value.ToString()}"
-        //     };
-        //
-        //     joinKeys.Add(joinKey);
-        // }
 
         var properties = nodeToClass.GetType()
             .GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
