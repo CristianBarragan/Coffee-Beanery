@@ -24,7 +24,7 @@ public class Product
 
     public decimal? Balance { get; set; }
 
-    public ProductType ProductType { get; set; }
+    public ProductType? ProductType { get; set; }
 
     [LinkBusinessKey("CustomerBankingRelationship","CustomerBankingRelationshipKey")]
     public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }

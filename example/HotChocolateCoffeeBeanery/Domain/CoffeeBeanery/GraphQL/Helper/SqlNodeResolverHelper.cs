@@ -102,7 +102,7 @@ public static class SqlNodeResolverHelper
                 var nodeTreeRoot = new NodeTree();
                 nodeTreeRoot.Name = string.Empty;
 
-                GetMutations(modelTreeMap.DictionaryTree, argument.Value.GetNodes().First(a => !a.ToString().Contains("cache")),
+                GetMutations(modelTreeMap.DictionaryTree, argument.Value.GetNodes().First(a => !a.ToString().Contains("cache") && !a.ToString().Contains("model")),
                     entityTreeMap.LinkDictionaryTree, modelTreeMap.LinkDictionaryTree,
                     sqlUpsertStatementNodes, modelTreeMap.DictionaryTree
                         .First(t =>
@@ -166,18 +166,25 @@ public static class SqlNodeResolverHelper
         {
             var childrenSqlStatement = new Dictionary<string, string>(
                 StringComparer.OrdinalIgnoreCase);
+
+            var entityTypes = entityTreeMap.EntityTypes.Select(a => a as Type).ToList(); 
             
-            var isQuery = GenerateQuery(entityTreeMap.DictionaryTree,
-                entityTreeMap.EntityTypes.Select(a => a as Type).ToList(),
+            GenerateQuery(entityTreeMap.DictionaryTree,
+                entityTypes,
                 entityTreeMap.LinkDictionaryTree, 
                 sqlQueryStatement, sqlStatementNodes, sqlWhereStatement, 
                 entityTreeMap.NodeTree.Children[0],
                 childrenSqlStatement, entityTreeMap.EntityNames, sqlQueryStructures, 
                 splitOnDapper, entityOrder, rootEntityName);
 
-            if (isQuery)
+            var queryStructure = sqlQueryStructures.LastOrDefault();
+        
+            sqlSelectStatement = sqlQueryStructures.LastOrDefault().Value.Query;
+
+            if (splitOnDapper.Count == 0)
             {
-                sqlSelectStatement = sqlQueryStructures.LastOrDefault().Value.Query;    
+                splitOnDapper.Add(queryStructure.Value.JoinOneKey, entityTypes
+                    .First(a => a.Name.Matches(queryStructure.Key)));
             }
 
             //Update cache
