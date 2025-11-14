@@ -120,8 +120,15 @@ public static class SqlHelper
                 whereCurrentClause += $" {whereParentClause} {whereCurrentValue.Replace("~", processingTree.Name)}";
             }
 
-            sqlUpsert += GenerateUpsert(processingTree, trees, sqlUpsertStatementNodes, whereCurrentClause);
-
+            var upsertingEntity = sqlUpsertStatementNodes.FirstOrDefault(s =>
+                s.Key.Split('~')[0].Matches(processingTree.Name) && !s.Value.JoinKeys
+                    .Any(a => a.To.Split('~')[0].Matches(processingTree.ParentName)));
+            
+            if (upsertingEntity.Value != null && upsertingEntity.Value.LinkKeys.Count > 0)
+            {
+                sqlUpsert += GenerateUpsert(processingTree, trees, sqlUpsertStatementNodes, whereCurrentClause);    
+            }
+            
             if ((entityNames.Any(e => processingTree.Children.Any(c => c.Name.Matches(e))) ||
                  entityNames.Any(e => e.Matches(processingTree.ParentName))) &&
                 entityNames.Any(e => e.Matches(processingTree.Name)))
