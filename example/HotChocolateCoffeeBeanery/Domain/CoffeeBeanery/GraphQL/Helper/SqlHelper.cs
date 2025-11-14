@@ -136,9 +136,6 @@ public static class SqlHelper
                 sqlSelectUpsert += GenerateSelectUpsert(processingTree, entityNames, trees,
                     sqlUpsertStatementNodes, whereCurrentClause);
             }
-            
-            
-            
         }
 
         return sqlUpsert + " " + sqlSelectUpsert;
@@ -223,7 +220,9 @@ public static class SqlHelper
                         &&
                         !k.Value.LinkBusinessKeys.Any(b => b.From.Matches(k.Key)) &&
                         !k.Value.LinkKeys.Any(b => b.From.Matches(k.Key)) &&
-                        !k.Value.LinkKeys.Any(b => trees.Keys.Any(a => a.Matches(k.Key.Split('~')[1])))).ToList();
+                        !(k.Value.JoinKeys != null && k.Value.JoinKeys.Any(b => b.From.Matches(k.Key))) &&
+                        !k.Value.LinkKeys.Any(b => trees.Keys.Any(a => a.Matches(k.Key.Split('~')[1]))) &&
+                        !(k.Value.JoinKeys != null && k.Value.JoinKeys.Any(b => trees.Keys.Any(a => a.Matches(k.Key.Split('~')[1]))))).ToList();
 
         if (currentColumns.Count == 0 || !currentColumns.LastOrDefault().Value
                 .UpsertKeys.All(c => currentColumns.Any(u => u.Key.Matches(c))))
@@ -273,11 +272,18 @@ public static class SqlHelper
             {
                 continue;
             }
-            
-            columns.AddRange(currentColumns.Where(cc => 
-                !columns.Any(c => c.Key.Matches(cc.Key))));
-            columns.Remove(columns.First(c => c.Key.Split('~')[1].Matches($"{tree.Name}Id")));
 
+            var joinKeys = columns.Where(c => c.Key.Split('~')[1].Matches($"{tree.Name}Id")).ToList();
+            joinKeys.AddRange(columns.Where(c => c.Key.Split('~')[1].Matches($"{tree.Name}Id") || c.Value.Column.Matches($"{tree.Name}Id")));
+            
+            if (joinKeys.Count > 0)
+            {
+                foreach (var joinKey in joinKeys)
+                {
+                    columns.Remove(joinKey);
+                }    
+            }
+            
             var sqlUpsertAux2 = $" INSERT INTO \"{currentTree.Schema}\".\"{currentTree.Name}\" ( " +
                                 $" {string.Join(",", columns.Select(s => $"\"{
                                     s.Value.Column}\"").ToList())} {insertJoin} ) " +
@@ -298,11 +304,6 @@ public static class SqlHelper
 
             sqlUpsertAux2 += $" ) ON CONFLICT" +
                              $" ({string.Join(",", upsertKeys.Select(s => $"\"{s.Split('~')[1]}\""))}) ";
-
-            if (!string.IsNullOrEmpty(whereClause) || !string.IsNullOrEmpty(where))
-            {
-                var f = false;
-            }
 
             if (exclude.Count > 0)
             {
