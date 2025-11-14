@@ -23,7 +23,7 @@ public class CustomerQueryHandler<M> : ProcessQuery<M>, IQuery<SqlStructure,
     }
 
     public override (List<M> models, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)
-        mappingConfiguration(List<M> models, SqlStructure sqlStructure, object[] map)
+        MappingConfiguration(List<M> models, SqlStructure sqlStructure, object[] map)
     {
         var customers = models.OfType<Customer>().ToList();
         var rowNumber = 0;
