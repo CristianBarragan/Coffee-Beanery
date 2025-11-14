@@ -11,4 +11,4 @@ Hot Chocolate Coffee beanery example uses the following libraries and frameworks
 
 #### Testing
 
-WIP - Apidog is used for testing purposes
+Added Customer test - Apidog is used for testing purposes

@@ -15,14 +15,14 @@ Coffee Beanery provides the following features and can be fully customized
 
 - Configuration based and faster development
 - No N+1 problem since the entire query/mutation is batched and materialized by the database engine
-- Framework agnostic
-- Allows business service logic within the GraphQL API project
-- Allows custom mapping between Entity models and Data models
-- Supports subgraph mutations and queries
-- Data annotation based configuration (Data models and Entity models)
-- Leverage to a mapping framework the mapping between Data models and Entity models
+- Complex domain models
+- Business service logic within the GraphQL API project
+- Custom mapping between data entities and domain models
+- Subgraph mutations and queries
+- Data annotation based configuration (Data entities and domain models)
+- Leverage to a mapping framework the mapping between data entities and domain models
 - Leverage generics to generate the column names based on the data entities
-- Supports any GraphQL framework or vanilla .NET API, since it is not tightly couple to a vendor
+- Can be customized and integrate with multiple GraphQL framework/libraries and databases
 - Nodes (Left joins between entities)
 - Edges (Joins between entities)
 - Paging
@@ -119,6 +119,7 @@ Mutations are not cached as they are directly converted and translated during th
 ## Future Features
 
 - Add support to other database providers
+- Allow complex joins between properties (currently supports Id columns)
 
 ## Setup
 
@@ -151,21 +152,112 @@ Contains the custom model and attributes which will be exposed through the API.
 - Contains basic setup for GraphQL API
 - Supports any framework since it is not tightly couple to a vendor
 
-## Tests - WIP
+## Tests
 
+- Customer mutation with query test without any cache level
 
-No cache, 4 parallel threads, and 100 iterations
+10 iterations
+5 datasets each with random data
 
- - Customer 1st Test - 4 random Customers, each of them with 2 Contact Points and 1 CustomerBankingRelationship
+Assertions
 
-<img src="example/HotChocolateCoffeeBeanery/Test/CustomerResult_4_Threads_100_Calls_2025-09-03.png" alt="Customer_4_2_" height="60%" width="100%">
+- CustomerKey 
+- CustomerType
 
-No cache, 4 parallel threads, and 100 iterations
+Result
 
- - Customer Banking Relationship 1st Test - 4 random Customers Banking Relationships, each of them 1 Contract
+<img src="example/HotChocolateCoffeeBeanery/Test/Customer-mutation-test-result.png" alt="Customer_Test" height="60%" width="100%">
 
-<img src="example/HotChocolateCoffeeBeanery/Test/CustomerBankingRelationship_4_Threads_100_Calls_2025-09-03.png" alt="Buy Me A Coffee" height="60%" width="100%">
+Request template
 
+```json
+mutation a {
+  wrapper(
+    wrapper: {
+      customer:
+        {
+        customerKey: "{{CustomerKey1}}"
+        customerType: PERSON
+        firstNaming: "{{FirstNaming1}}"
+        fullNaming: "{{FullNaming1}}"
+        lastNaming: "{{LastNaming1}}"
+        product: {
+          accountKey: "{{AccountKey1}}"
+          accountName: "123AN"
+          accountNumber: "321AN"
+          amount: 100
+          balance: 1200
+          contractKey: "{{ContractKey1}}"
+          productType: CREDIT_CARD
+          customerKey: "{{CustomerKey1}}"
+          customerBankingRelationshipKey: "{{CustomerBankingRelationshipKey1}}"
+          contract: {
+            transaction: {
+              amount: 12
+              accountKey: "{{AccountKey1}}"
+              contractKey: "{{ContractKey1}}"
+              transactionKey: "{{TransactionKey1}}"
+              balance: 1500
+            }
+            contractKey: "{{ContractKey1}}"
+            customerBankingRelationshipKey: "{{CustomerBankingRelationshipKey1}}"
+          }
+          customerBankingRelationship: {
+            contract: {
+              accountKey: "{{AccountKey1}}"
+              amount: 12
+              transaction: {
+                amount: 12
+                accountKey: "{{AccountKey1}}"
+                contractKey: "{{ContractKey1}}"
+                transactionKey: "{{TransactionKey1}}"
+              }
+              customerBankingRelationshipKey: "{{CustomerBankingRelationshipKey1}}"
+              contractKey: "{{ContractKey1}}"
+            }
+            customerBankingRelationshipKey: "{{CustomerBankingRelationshipKey1}}"
+            customerKey: "{{CustomerKey1}}"
+          }
+        }
+      }
+      cacheKey: "2c0c7698-465f-4fbb-a8c1-9614f7ec6c05"
+    }
+    where: { customerKey: { eq: "{{CustomerKey1}}" } }
+  ) {
+    edges {
+      node {
+        customerKey
+        customerType
+        firstNaming
+        fullNaming
+        lastNaming
+      }
+    }
+  }
+}
+```
+
+Response sample
+
+```json
+{
+    "data": {
+        "wrapper": {
+            "edges": [
+                {
+                    "node": {
+                        "customerKey": "2fc26db4-a55d-463c-be7b-b5ad0ec86352",
+                        "customerType": "PERSON",
+                        "firstNaming": "Maverick",
+                        "fullNaming": "Philip Predovic II",
+                        "lastNaming": "Beer"
+                    }
+                }
+            ]
+        }
+    }
+}
+```
 
 ### [Buy me a Coffee ☕]
 *I would love a 100% colombian coffee!*
