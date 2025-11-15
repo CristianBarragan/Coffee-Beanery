@@ -28,6 +28,7 @@ Coffee Beanery provides the following features and can be fully customized
 - Paging
 - Filtering
 - Sorting
+- Select target entity at wrapper entity to signal which is the domain model to query from
 
 
 ## Customizable Features
@@ -174,6 +175,8 @@ Request template
 mutation a {
   wrapper(
     wrapper: {
+      cacheKey: "2c0c7698-465f-4fbb-a8c1-9614f7ec6c05"
+      model: CUSTOMER
       customer:
         {
         customerKey: "{{CustomerKey1}}"
@@ -220,7 +223,6 @@ mutation a {
           }
         }
       }
-      cacheKey: "2c0c7698-465f-4fbb-a8c1-9614f7ec6c05"
     }
     where: { customerKey: { eq: "{{CustomerKey1}}" } }
   ) {
