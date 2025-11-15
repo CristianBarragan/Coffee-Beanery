@@ -30,6 +30,9 @@ public class CustomerQueryHandler<M> : ProcessQuery<M>, IQuery<SqlStructure,
         var totalCount = 0;
         var pageRecords = 0;
 
+        //TODO and Fix direct mapping between mapped object and M object instead of
+        //these switch is/as conversions
+        
         for (int i = 0; i < map.Length; i++)
         {
             if (map[i] is TotalPageRecords)

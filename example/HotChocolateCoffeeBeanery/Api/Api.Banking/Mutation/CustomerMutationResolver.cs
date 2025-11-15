@@ -16,7 +16,7 @@ public class CustomerMutationResolver : IInputType, IOutputType
     {
         _logger = logger;
     }
-
+    
     [UsePaging]
     [UseFiltering]
     [UseSorting]
@@ -26,11 +26,8 @@ public class CustomerMutationResolver : IInputType, IOutputType
     {
         try
         {
-            //might be sent by client
-            var cacheKey = wrapper.CacheKey;
-
-            var set = await service.UpsertProcessAsync<Customer>(cacheKey, resolverContext.Selection, wrapper.Model.ToString(),
-                nameof(Wrapper), CancellationToken.None);
+            var set = await service.UpsertProcessAsync<Customer>(wrapper.CacheKey, resolverContext.Selection, 
+                wrapper.Model.ToString(), nameof(Wrapper), CancellationToken.None);
 
             var connection = ContextResolverHelper.GenerateConnection(
                 set.list.Select(a => new EntityNode<Customer>(a, a.CustomerKey.ToString())),
