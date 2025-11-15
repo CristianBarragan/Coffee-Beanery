@@ -49,7 +49,7 @@ public static class SqlNodeResolverHelper
             whereFields, sqlWhereStatement, graphQlSelection.SyntaxNode.Arguments
                 .FirstOrDefault(a => a.Name.Value.Matches("where")),
             modelTreeMap.DictionaryTree.Last().Value.Name, rootEntityName, wrapperEntityName,
-            Entity.ClauseTypes, permissions);
+            string.Empty, Entity.ClauseTypes, permissions);
 
         //Arguments
         foreach (var argument in graphQlSelection.SyntaxNode.Arguments
@@ -957,18 +957,23 @@ public static class SqlNodeResolverHelper
     /// <param name="dictionary"></param>
     /// <param name="key"></param>
     /// <param name="values"></param>
-    private static void AddToDictionary(Dictionary<string, string> dictionary, string key, 
-        List<string> values)
+    private static void AddToDictionary(Dictionary<string, string> dictionary, 
+        List<string> values, string field, Dictionary<string, NodeTree> trees)
     {
-        foreach (var value in values)
+        var entitiesWithColumn = trees.Values.Where(a => a.Mapping.Any(b => b.FieldDestinationName.Matches(field))).ToList();
+
+        foreach (var entity in entitiesWithColumn)
         {
-            if (!dictionary.TryGetValue(key, out var _))
+            foreach (var value in values)
             {
-                dictionary.Add(key, value);
-            }
-            else
-            {
-                dictionary[key] += " AND " + value;
+                if (!dictionary.TryGetValue(entity.Name, out var _))
+                {
+                    dictionary.Add(entity.Name, value);
+                }
+                else
+                {
+                    dictionary[entity.Name] += " " + value;
+                }
             }
         }
     }
@@ -1039,6 +1044,7 @@ public static class SqlNodeResolverHelper
         Dictionary<string, SqlNode> linkModelDictionaryTree, List<string> whereFields,
         Dictionary<string, string> sqlWhereStatement,
         ISyntaxNode whereNode, string entityName, string rootEntityName, string wrapperEntityName,
+        string clauseCondition,
         List<string> clauseType,
         Dictionary<string, List<string>> permission = null)
     {
@@ -1055,8 +1061,7 @@ public static class SqlNodeResolverHelper
             }
 
             var currentEntity = entityName;
-            var clauseCondition = string.Empty;
-
+            
             currentEntity = trees.Keys.FirstOrDefault(e => e.ToString()
                 .Matches(wNode.ToString().Split(":")[0]));
 
@@ -1068,7 +1073,7 @@ public static class SqlNodeResolverHelper
             if (whereNode.ToString().TrimStart(' ').StartsWith("and:") ||
                 whereNode.ToString().TrimStart(' ').StartsWith("or:"))
             {
-                clauseCondition = whereNode.ToString().Split("{")[0];
+                clauseCondition = whereNode.ToString().Split("{")[0].Replace(":", "").ToUpper();
             }
 
             if (wNode.ToString().Contains("{") && wNode.ToString().Contains(":") &&
@@ -1110,7 +1115,7 @@ public static class SqlNodeResolverHelper
                                     .ProcessFilter(currentNodeTree, linkEntityDictionaryTree,
                                     field, "=", 
                                     clauseValue, clauseCondition);
-                                AddToDictionary(sqlWhereStatement, currentEntity, clause);
+                                AddToDictionary(sqlWhereStatement, clause, field, trees);
                                 break;
                             }
                             case "neq":
@@ -1118,7 +1123,7 @@ public static class SqlNodeResolverHelper
                                 var clause = SqlGraphQLHelper
                                     .ProcessFilter(currentNodeTree, linkEntityDictionaryTree, 
                                         field, "<>", clauseValue, clauseCondition);
-                                AddToDictionary(sqlWhereStatement, currentEntity, clause);
+                                AddToDictionary(sqlWhereStatement, clause, field, trees);
                                 break;
                             }
                             case "in":
@@ -1129,18 +1134,20 @@ public static class SqlNodeResolverHelper
                                 var clause = SqlGraphQLHelper
                                     .ProcessFilter(currentNodeTree, linkEntityDictionaryTree,
                                     field, "in", clauseValue, clauseCondition);
-                                AddToDictionary(sqlWhereStatement, currentEntity, clause);
+                                AddToDictionary(sqlWhereStatement, clause, field, trees);
                                 break;
                             }
                         }
+                        
+                        clauseCondition = string.Empty;
                     }
                 }
             }
-
+            
             GetFieldsWhere(trees, linkEntityDictionaryTree, linkModelDictionaryTree, whereFields, 
                 sqlWhereStatement,
                 wNode,
-                currentEntity, rootEntityName, wrapperEntityName, clauseType, permission);
+                currentEntity, rootEntityName, wrapperEntityName, clauseCondition, clauseType, permission);
         }
     }
 }
