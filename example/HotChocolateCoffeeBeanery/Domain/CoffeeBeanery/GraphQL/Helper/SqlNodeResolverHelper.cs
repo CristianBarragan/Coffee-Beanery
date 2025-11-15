@@ -102,15 +102,19 @@ public static class SqlNodeResolverHelper
                 var nodeTreeRoot = new NodeTree();
                 nodeTreeRoot.Name = string.Empty;
 
-                GetMutations(modelTreeMap.DictionaryTree, argument.Value.GetNodes().First(a => !a.ToString().Contains("cache") && !a.ToString().Contains("model")),
-                    entityTreeMap.LinkDictionaryTree, modelTreeMap.LinkDictionaryTree,
-                    sqlUpsertStatementNodes, modelTreeMap.DictionaryTree
-                        .First(t =>
-                        t.Key.Matches(rootEntityName)).Value, string.Empty,
-                    new NodeTree(), models, modelTreeMap.EntityNames, visitedModels);
+                foreach (var mutationNode in argument.Value.GetNodes()
+                             .First(a => !a.ToString().Contains("cache") && !a.ToString().Contains("model")).GetNodes().ToList().First(a => a.ToString().Contains("{")).GetNodes().ToList())
+                {
+                    GetMutations(modelTreeMap.DictionaryTree, mutationNode,
+                        entityTreeMap.LinkDictionaryTree, modelTreeMap.LinkDictionaryTree,
+                        sqlUpsertStatementNodes, modelTreeMap.DictionaryTree
+                            .First(t =>
+                                t.Key.Matches(rootEntityName)).Value, string.Empty,
+                        new NodeTree(), models, modelTreeMap.EntityNames, visitedModels);
 
-                sqlUpsertStatement = SqlHelper.GenerateUpsertStatements(entityTreeMap.DictionaryTree,
-                    sqlUpsertStatementNodes, modelTreeMap.EntityNames, sqlWhereStatement);
+                    sqlUpsertStatement += " " + SqlHelper.GenerateUpsertStatements(entityTreeMap.DictionaryTree,
+                        sqlUpsertStatementNodes, modelTreeMap.EntityNames, sqlWhereStatement);
+                }
             }
         }
 
