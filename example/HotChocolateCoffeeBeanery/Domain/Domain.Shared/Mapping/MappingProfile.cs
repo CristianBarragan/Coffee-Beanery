@@ -145,20 +145,122 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Contract, opt =>
                 opt.Ignore())
             .ForMember(dest => dest.Transaction, opt =>
-                opt.Ignore())
-            .ReverseMap();
+                opt.Ignore());
         
-        CreateMap<Product, Account>()
+        CreateMap<DataEntity.Account, Product>()
             .EqualityComparison((src, dest) =>
                 src.AccountKey == dest.AccountKey)
+            .ForMember(dest => dest.Account, opt =>
+                opt.Ignore())
             .ForMember(dest => dest.AccountKey, opt =>
                 opt.MapFrom(a => a.AccountKey))
             .ForMember(dest => dest.AccountName, opt =>
                 opt.MapFrom(a => a.AccountName))
             .ForMember(dest => dest.AccountNumber, opt =>
                 opt.MapFrom(a => a.AccountNumber))
-            .ForMember(dest => dest.Transaction, opt =>
+            .ForMember(dest => dest.Amount, opt =>
                 opt.Ignore())
+            .ForMember(dest => dest.Balance, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.ContractKey, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.Contract, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.CustomerBankingRelationshipKey, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.CustomerBankingRelationship, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.CustomerKey, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.ProductType, opt =>
+                opt.Ignore())
+            .ReverseMap();
+        
+        CreateMap<DataEntity.Transaction, Product>()
+            .EqualityComparison((src, dest) =>
+                src.AccountKey == dest.AccountKey)
+            .ForMember(dest => dest.Account, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.AccountKey, opt =>
+                opt.MapFrom(a => a.AccountKey))
+            .ForMember(dest => dest.AccountName, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.AccountNumber, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.Amount, opt =>
+                opt.MapFrom(a => a.Amount))
+            .ForMember(dest => dest.Balance, opt =>
+                opt.MapFrom(a => a.Balance))
+            .ForMember(dest => dest.ContractKey, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.Contract, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.CustomerBankingRelationshipKey, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.CustomerBankingRelationship, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.CustomerKey, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.ProductType, opt =>
+                opt.Ignore())
+            .ReverseMap();
+        
+        CreateMap<DataEntity.CustomerBankingRelationship, Product>()
+            .EqualityComparison((src, dest) =>
+                src.CustomerBankingRelationshipKey == dest.CustomerBankingRelationshipKey)
+            .ForMember(dest => dest.Account, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.AccountKey, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.AccountName, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.AccountNumber, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.Amount, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.Balance, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.ContractKey, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.Contract, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.CustomerBankingRelationshipKey, opt =>
+                opt.MapFrom(a => a.CustomerBankingRelationshipKey))
+            .ForMember(dest => dest.CustomerBankingRelationship, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.CustomerKey, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.ProductType, opt =>
+                opt.Ignore())
+            .ReverseMap();
+        
+        CreateMap<DataEntity.Contract, Product>()
+            .EqualityComparison((src, dest) =>
+                src.ContractKey == dest.ContractKey)
+            .ForMember(dest => dest.Account, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.AccountKey, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.AccountName, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.AccountNumber, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.Amount, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.Balance, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.ContractKey, opt =>
+                opt.MapFrom(a => a.ContractKey))
+            .ForMember(dest => dest.Contract, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.CustomerBankingRelationshipKey, opt =>
+                opt.MapFrom(a => a.CustomerBankingRelationshipKey))
+            .ForMember(dest => dest.CustomerBankingRelationship, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.CustomerKey, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.ProductType, opt =>
+                opt.MapFrom(a => a.ContractType))
             .ReverseMap();
         
         CreateMap<Account, DataEntity.Transaction>()
