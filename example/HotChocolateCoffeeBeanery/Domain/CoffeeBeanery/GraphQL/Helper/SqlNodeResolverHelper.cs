@@ -127,15 +127,16 @@ public static class SqlNodeResolverHelper
                         new NodeTree(), models, modelTreeMap.EntityNames, visitedModels);
                 }
 
-                sqlUpsertStatement += " " + SqlHelper.GenerateUpsertStatements(entityTreeMap.DictionaryTree,
-                    sqlUpsertStatementNodes, modelTreeMap.DictionaryTree[rootEntityName], modelTreeMap.EntityNames, sqlWhereStatement, new List<string>());
-
                 var generatedQuery = new List<string>();
-                foreach (var entity in entityTreeMap.DictionaryTree)
-                {
-                    sqlUpsertStatement += " " + SqlHelper.GenerateSelectUpsert(entity.Value, entityTreeMap.EntityNames,
-                        entityTreeMap.DictionaryTree, sqlUpsertStatementNodes, sqlWhereStatement, new List<string>(), rootEntityName, generatedQuery);
-                }
+                sqlUpsertStatement += " " + SqlHelper.GenerateUpsertStatements(entityTreeMap.DictionaryTree, entityTreeMap.LinkDictionaryTree, rootEntityName,
+                    wrapperEntityName, generatedQuery, sqlUpsertStatementNodes, modelTreeMap.DictionaryTree[rootEntityName], modelTreeMap.EntityNames, sqlWhereStatement, new List<string>());
+
+                // var generatedQuery = new List<string>();
+                // foreach (var entity in entityTreeMap.DictionaryTree.Reverse())
+                // {
+                //     sqlUpsertStatement += " ; " + SqlHelper.GenerateSelectUpsert(entity.Value, entityTreeMap.LinkDictionaryTree, entityTreeMap.EntityNames,
+                //         entityTreeMap.DictionaryTree, sqlUpsertStatementNodes, sqlWhereStatement, new List<string>(), rootEntityName, generatedQuery, wrapperEntityName);
+                // }
             }
         }
 
@@ -192,25 +193,30 @@ public static class SqlNodeResolverHelper
             var childrenSqlStatement = new Dictionary<string, string>(
                 StringComparer.OrdinalIgnoreCase);
 
-            var entityTypes = entityTreeMap.EntityTypes.Select(a => a as Type).ToList(); 
-            
-            GenerateQuery(entityTreeMap.DictionaryTree,
-                entityTypes,
-                entityTreeMap.LinkDictionaryTree, 
-                sqlQueryStatement, sqlStatementNodes, sqlWhereStatement, 
-                entityTreeMap.NodeTree.Children[0],
-                childrenSqlStatement, entityTreeMap.EntityNames, sqlQueryStructures, 
-                splitOnDapper, entityOrder, rootEntityName);
+            var entityTypes = entityTreeMap.EntityTypes.Select(a => a as Type).ToList();
 
-            var queryStructure = sqlQueryStructures.LastOrDefault();
-        
-            sqlSelectStatement = sqlQueryStructures.FirstOrDefault().Value.Query;
-
-            if (splitOnDapper.Count == 0)
+            foreach (var _ in entityTreeMap.EntityTypes)
             {
-                splitOnDapper.Add(queryStructure.Value.JoinOneKey, entityTypes
-                    .First(a => a.Name.Matches(queryStructure.Key)));
+                GenerateQuery(entityTreeMap.DictionaryTree,
+                    entityTypes,
+                    entityTreeMap.LinkDictionaryTree, 
+                    sqlQueryStatement, sqlStatementNodes, sqlWhereStatement, 
+                    entityTreeMap.NodeTree.Children[0],
+                    childrenSqlStatement, entityTreeMap.EntityNames, sqlQueryStructures, 
+                    splitOnDapper, entityOrder, rootEntityName);
+
+                var queryStructure = sqlQueryStructures.LastOrDefault();
+        
+                sqlSelectStatement = sqlQueryStructures.FirstOrDefault().Value.Query;
+
+                if (splitOnDapper.Count == 0)
+                {
+                    splitOnDapper.Add(queryStructure.Value.JoinOneKey, entityTypes
+                        .First(a => a.Name.Matches(queryStructure.Key)));
+                }    
             }
+            
+            
 
             //Update cache
             // if (!isCached)
@@ -225,7 +231,7 @@ public static class SqlNodeResolverHelper
         {
             var kv = splitOnDapper.FirstOrDefault(t => t.Value.Name.Matches(key));
 
-            if (kv.Value != null)
+            if (kv.Value != null && !splitOnDapperOrdered.ContainsKey(kv.Key))
             {
                 splitOnDapperOrdered.Add(kv.Key, kv.Value);    
             }

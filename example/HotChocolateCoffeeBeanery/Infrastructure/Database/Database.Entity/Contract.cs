@@ -22,8 +22,6 @@ public class Contract : Process
     
     public int? AccountId { get; set; }
 
-    [LinkKey("Account","AccountKey")]
-    [JoinKey("Contract","Id")]
     public Account? Account { get; set; }
     
     public Guid? CustomerBankingRelationshipKey { get; set; }
