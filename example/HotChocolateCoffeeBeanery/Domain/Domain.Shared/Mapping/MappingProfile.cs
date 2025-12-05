@@ -330,6 +330,8 @@ public class MappingProfile : Profile
                 opt.Ignore())
             .ForMember(dest => dest.Id, opt => 
                 opt.Ignore())
+            .ForMember(dest => dest.Transaction, opt => 
+                opt.Ignore())
             .ForMember(dest => dest.Schema, opt => 
                 opt.Ignore())
             .ForMember(dest => dest.ProcessedDateTime, opt => 

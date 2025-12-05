@@ -128,7 +128,7 @@ public static class SqlNodeResolverHelper
                 }
 
                 var generatedQuery = new List<string>();
-                sqlUpsertStatement += " " + SqlHelper.GenerateUpsertStatements(entityTreeMap.DictionaryTree, entityTreeMap.LinkDictionaryTree, rootEntityName,
+                sqlUpsertStatement += " ; " + SqlHelper.GenerateUpsertStatements(entityTreeMap.DictionaryTree, entityTreeMap.LinkDictionaryTree, rootEntityName,
                     wrapperEntityName, generatedQuery, sqlUpsertStatementNodes, modelTreeMap.DictionaryTree[rootEntityName], modelTreeMap.EntityNames, sqlWhereStatement, new List<string>());
 
                 // var generatedQuery = new List<string>();
