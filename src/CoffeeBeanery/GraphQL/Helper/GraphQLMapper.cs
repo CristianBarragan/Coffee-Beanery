@@ -248,9 +248,16 @@ public static class GraphQLMapper
                             var joinOneKey = new JoinOneKey()
                             {
                                 From =
-                                    $"{linkAttribute.ConstructorArguments[0].Value}~{joinOneAttribute.ConstructorArguments[0].Value}Id",
+                                    $"{propertyModelAttributeType.CustomAttributes
+                                        .LastOrDefault(a => a.AttributeType == typeof(JoinOneKeyAttribute)).ConstructorArguments[0].Value}~{
+                                        propertyModelAttributeType.CustomAttributes
+                                        .LastOrDefault(a => a.AttributeType == typeof(JoinOneKeyAttribute)).ConstructorArguments[1].Value}"
+                                    ,
                                 To =
-                                    $"{joinOneAttribute.ConstructorArguments[0].Value}~{joinOneAttribute.ConstructorArguments[1].Value}"
+                                    $"{propertyModelAttributeType.CustomAttributes
+                                        .FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute)).ConstructorArguments[0].Value}~{
+                                        propertyModelAttributeType.CustomAttributes
+                                        .FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute)).ConstructorArguments[1].Value}"
                             };
                             joinOneKeys.Add(joinOneKey);
                         }
