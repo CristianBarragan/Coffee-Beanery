@@ -280,12 +280,21 @@ public static class SqlHelper
                 !joinOneKey.From.Split('~')[1].Matches($"{currentTree.Name}Id"))
             {
                 var columns = columnsQuery.ToList();
+                var column = columns.FirstOrDefault();
+
+                if (columns.Count <= 1 && (column.Value != null || column.Value == null) && column.Value.UpsertKeys
+                        .Any(a => a.Split('~')[1].Matches(column.Value.Column)))
+                {
+                    continue;
+                }
+                
                 columns.Add(new KeyValuePair<string, SqlNode>(joinOneKey.From, currentColumns.Last().Value));
                 
                 var parentColumns = sqlUpsertStatementNodes
-                    .Where(k => trees[currentTree.ParentName].Mapping.Any(f => f
-                                                                                   .FieldDestinationName.Matches(k.Key.Split('~')[1]) &&
-                                                                               !entityNames.Any(e => e.Matches(k.Key.Split('~')[1])))).ToList();
+                    .Where(k => trees[currentTree.ParentName]
+                        .Mapping.Any(f => f
+                        .FieldDestinationName.Matches(k.Key.Split('~')[1]) &&
+                            !entityNames.Any(e => e.Matches(k.Key.Split('~')[1])))).ToList();
                 
                 sqlUpsertAux += GenerateCommand(columns, trees, currentTree, sqlWhereStatement, parentColumns, entityNames);
                 
