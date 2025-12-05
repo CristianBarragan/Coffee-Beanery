@@ -123,9 +123,9 @@ public static class ModelServiceCollectionRegistration
             (dynamic)Activator.CreateInstance(typeof(Wrapper))!,
             (dynamic)Activator.CreateInstance(typeof(DatabaseCommon.Wrapper))!,
             nameof(Wrapper),
-            mapperConfiguration, entityNodeId, false, entities, models, linkEntityDictionaryTree,
-            linkModelDictionaryTree, upsertKeys, joinKeys, joinOneKeys, linkKeys, linkBusinessKeys);
-
+            mapperConfiguration, entityNodeId, false, entities, models, linkModelDictionaryTree,
+            linkEntityDictionaryTree, upsertKeys, joinKeys, joinOneKeys, linkKeys, linkBusinessKeys);
+        
         foreach (var entity in entities)
         {
             foreach (var upsertKey in upsertKeys.Where(u => entity.Matches(u.Split('~')[0])))
@@ -244,21 +244,58 @@ public static class ModelServiceCollectionRegistration
                                               .Split('~')[0])));
         }
 
-        foreach (var linkedTree in linkEntityDictionaryTree
-                     .Where(e => !entities.Any(a => a.Matches(e.Key
-                         .Split('~')[0]))
-                     ))
-        {
-            linkEntityDictionaryTree.Remove(linkedTree.Key);
-        }
+        // foreach (var linkedTree in linkEntityDictionaryTree
+        //              .Where(e => !entities.Any(a => a.Matches(e.Key
+        //                  .Split('~')[0]))
+        //              ))
+        // {
+        //     linkEntityDictionaryTree.Remove(linkedTree.Key);
+        // }
         
-        foreach (var linkedTree in linkModelDictionaryTree
-                     .Where(e => !models.Any(a => a.Matches(e.Key
-                         .Split('~')[0]))
-                     ))
-        {
-            linkModelDictionaryTree.Remove(linkedTree.Key);
-        }
+        // foreach (var linkedTree in linkModelDictionaryTree
+        //              .Where(e => !models.Any(a => a.Matches(e.Key
+        //                  .Split('~')[0]))
+        //              ))
+        // {
+        //     linkModelDictionaryTree.Remove(linkedTree.Key);
+        // }
+
+        var customModels = models.Where(a => !entities.Contains(a)).ToList();
+        
+        //Link all entity columns of custom models
+
+        // foreach (var customModelCreating in customModels)
+        // {
+        //     foreach (var customModel in linkModelDictionaryTree.Where(k => entities.Contains(k.Key.Split("~")[1]) &&
+        //                                                                    customModelCreating.Matches(k.Key.Split("~")[0])).ToList())
+        //     {
+        //         foreach (var field in entityDictionaryTree[customModel.Key.Split("~")[1]].Mapping)
+        //         {
+        //             var modelCustomerSqlNode = linkEntityDictionaryTree[$"{customModel.Key.Split("~")[1]}~{field.FieldDestinationName}"];
+        //             modelCustomerSqlNode.RelationshipKey = $"{customModelCreating}~{field.FieldDestinationName}";
+        //             modelCustomerSqlNode.Column = field.FieldDestinationName;
+        //             if (!linkEntityDictionaryTree.ContainsKey($"{customModelCreating}~{field.FieldDestinationName}"))
+        //             {
+        //                 linkEntityDictionaryTree.Add($"{customModelCreating}~{field.FieldDestinationName}", customModel.Value); 
+        //             }
+        //             
+        //             if (!linkModelDictionaryTree.ContainsKey($"{customModelCreating}~{field.FieldDestinationName}"))
+        //             {
+        //                 modelCustomerSqlNode.RelationshipKey = $"{customModelCreating}~{field.FieldDestinationName}";
+        //                 linkModelDictionaryTree.Add($"{customModelCreating}~{field.FieldDestinationName}", customModel.Value); 
+        //             }
+        //         }
+        //         
+        //         // foreach (var entityModel in linkEntityDictionaryTree.Where(k => k.Key.Split('~')[0]
+        //         //              .Matches(customModel.Key).ToList())
+        //         // {
+        //         // var entityModelToClone = linkModelDictionaryTree.FirstOrDefault(e => e.Key.Matches(customModel.Key));
+        //         // customModel.Value.RelationshipKey = $"{customModelCreating}~{customModel.Key.Split('~')[1]}";
+        //
+        //         
+        //         // }
+        //     }
+        // }
         
         var entityTreeMap = new EntityTreeMap<dynamic, dynamic>()
         {

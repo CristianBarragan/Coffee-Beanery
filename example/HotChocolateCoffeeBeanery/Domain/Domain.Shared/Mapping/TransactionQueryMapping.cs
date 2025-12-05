@@ -28,19 +28,20 @@ public static class TransactionQueryMapping
 
                     if (accountIndex >= 0)
                     {
-                        var transactionIndex = models[index].Product[indexProduct].Account[accountIndex].Transaction.FindIndex(t => t.TransactionKey == transactionEntity.TransactionKey);
-
+                        // var transactionIndex = models[index].Product[indexProduct].Account[accountIndex].Transaction.FindIndex(t => t.TransactionKey == transactionEntity.TransactionKey);
+                        var transactionIndex = 0;
+                        
                         if (transactionIndex >= 0)
                         {
-                            var transaction = models[index].Product[indexProduct].Account[accountIndex].Transaction[transactionIndex];
-                            transaction = mapper.Map(transactionEntity, transaction);
-                            models[index].Product[indexProduct].Account[accountIndex].Transaction[transactionIndex] =  transaction;
+                            // var transaction = models[index].Product[indexProduct].Account[accountIndex].Transaction[transactionIndex];
+                            // transaction = mapper.Map(transactionEntity, transaction);
+                            // models[index].Product[indexProduct].Account[accountIndex].Transaction[transactionIndex] =  transaction;
                         }
                         else
                         {
                             var transaction = new Transaction();
                             transaction = mapper.Map(transactionEntity, transaction);
-                            models[index].Product[indexProduct].Account[accountIndex].Transaction.Add(transaction);
+                            // models[index].Product[indexProduct].Account[accountIndex].Transaction.Add(transaction);
                         }
                     }
                     else
@@ -49,7 +50,7 @@ public static class TransactionQueryMapping
                         account = mapper.Map(transactionEntity, account);
                         var transaction = new Transaction();
                         transaction = mapper.Map(transactionEntity, transaction);
-                        account.Transaction.Add(transaction);
+                        // account.Transaction.Add(transaction);
                         models[index].Product[indexProduct].Account.Add(account);
                     }
                 }
@@ -60,8 +61,8 @@ public static class TransactionQueryMapping
                     account = mapper.Map(transactionEntity, account);
                     var transaction = new Transaction();
                     transaction = mapper.Map(transactionEntity, transaction);
-                    account.Transaction = account.Transaction ?? [];
-                    account.Transaction.Add(transaction);
+                    // account.Transaction = account.Transaction ?? [];
+                    // account.Transaction.Add(transaction);
                     product.Account = product.Account ?? [];
                     product.Account.Add(account);
                     models[index].Product = models[index].Product ?? [];
@@ -75,8 +76,8 @@ public static class TransactionQueryMapping
                 var transaction = new Transaction();
                 transaction = mapper.Map(transactionEntity, transaction);
                 account = mapper.Map(transaction, account);
-                account.Transaction = account.Transaction ?? [];
-                account.Transaction.Add(transaction);
+                // account.Transaction = account.Transaction ?? [];
+                // account.Transaction.Add(transaction);
                 product = mapper.Map(account, product);
                 product.Account = product.Account ?? [];
                 product.Account.Add(account);

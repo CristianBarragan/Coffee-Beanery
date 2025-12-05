@@ -73,8 +73,6 @@ public static class SqlGraphQLHelper
                     {
                         var valAux = val.Sanitize().Replace("(", "").Replace(")", "").ToUpperCamelCase();
                         inValues += $"'{(string.IsNullOrEmpty(enumeration) ? valAux : enumeration)}'" + ",";
-                        conditions.Add(
-                            $" {filterCondition} ~.\"{sqlNodeTo.Column}\" = '{(string.IsNullOrEmpty(enumeration) ? valAux : enumeration)}'");
                     }
 
                     conditions.Add(

@@ -18,7 +18,7 @@ public class Account : Process
 
     public string? AccountName { get; set; }
     
-    [LinkKey("Contract","ContractKey")]
+    [LinkKey("Contract","Id")]
     [JoinOneKey("Account","Id")]
     public Contract? Contract { get; set; }
     

@@ -52,21 +52,43 @@ public static class ProductQueryMapping
         }
         else
         {
-            var customer = models.FirstOrDefault(c => c.CustomerKey.Value == customerBankingRelationshipEntity.CustomerKey);
-
+            var customer = models.FirstOrDefault();
+            
             if (customer != null)
             {
-                customer.Product.Add(product);
+                customer.Product = new List<Product>()
+                {
+                    product
+                };
             }
             else
             {
-                models.Add(new Customer()
+                if (customer.CustomerKey == null)
                 {
-                    Product = new List<Product>()
+                    customer.CustomerKey = customerBankingRelationshipEntity.CustomerKey;
+                }
+                else
+                {
+                    customer = models.FirstOrDefault(c => c.CustomerKey.Value == customerBankingRelationshipEntity.CustomerKey);
+                }
+
+                if (customer != null)
+                {
+                    customer.Product = new List<Product>()
                     {
                         product
-                    }
-                });
+                    };
+                }
+                else
+                {
+                    models.Add(new Customer()
+                    {
+                        Product = new List<Product>()
+                        {
+                            product
+                        }
+                    });    
+                }
             }
         }
     }
