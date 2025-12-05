@@ -76,17 +76,7 @@ First argument parent table, Second argument parent property to be joined
 
 ##### For one to one relationship
 
-- Owner of the relationship (Parent)
-
-`[LinkKey("Account","AccountKey")]`
-
-`[JoinKey("Contract","Id")]`
-
-`public Account? Account { get; set; }`
-
-- Related of the relationship (child)
-
-`[LinkKey("Contract","ContractKey")]`
+`[LinkKey("Contract","Id")]`
 
 `[JoinOneKey("Account","Id")]`
 
