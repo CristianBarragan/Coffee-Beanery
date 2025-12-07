@@ -77,11 +77,4 @@ public class ProcessService<M, D, S>
     {
         return await ExecuteStatementAsync<M>(cacheKey, graphQlSelection, rootName, wrapperName, cancellationToken);
     }
-
-    public async Task<ProcessQueryParameters> HandleQuery<M>(SqlStructure sqlStructure,
-        CancellationToken cancellationToken)
-        where M : class
-    {
-        throw new NotImplementedException();
-    }
 }

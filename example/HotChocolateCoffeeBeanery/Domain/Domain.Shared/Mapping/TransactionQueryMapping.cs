@@ -15,11 +15,13 @@ public static class TransactionQueryMapping
             var index = models.Where(c => c.Product != null).ToList().FindIndex(c =>
                 c.Product.Any(cbr => cbr.AccountKey == transactionEntity.AccountKey));
             
+            //TODO fix mapping
+            
             if (index >= 0)
             {
                 models[index].Product = models[index].Product ?? [];
                 var indexProduct = models[index].Product
-                    .FindIndex(x => x.Account.Any(a => a.AccountKey == transactionEntity.AccountKey));
+                    .FindIndex(x => x.CustomerKey == transactionEntity.AccountKey);
             
                 if (indexProduct >= 0)
                 {

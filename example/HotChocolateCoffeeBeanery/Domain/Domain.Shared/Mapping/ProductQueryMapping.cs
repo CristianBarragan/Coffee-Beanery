@@ -237,8 +237,12 @@ public static class ProductQueryMapping
                 product = mapper.Map(accountEntity,
                     product);
                 product ??= product;
+                product.Account = new List<Account>();
                 product.Account.Add(accountProduct);
-                models[index].Product.Add(product);
+                var model = new Customer();
+                model.Product = new List<Product>();
+                model.Product.Add(product);
+                models.Add(model);
             }
         }
     }

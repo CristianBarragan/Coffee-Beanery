@@ -13,7 +13,12 @@ public static class NodeTreeHelper
         E nodeFromClass, M nodeToClass, string name,
         MapperConfiguration mapperConfiguration,
         List<KeyValuePair<string, int>> nodeId, bool isModel, List<string> entities, List<string> models,
-        Dictionary<string, SqlNode>? linkEntityDictionaryTree, Dictionary<string, SqlNode>? linkModelDictionaryTree,
+        Dictionary<string, SqlNode>? linkEntityDictionaryTreeNode,
+        Dictionary<string, SqlNode>? linkModelDictionaryTreeNode,
+        Dictionary<string, SqlNode>? linkEntityDictionaryTreeEdge,
+        Dictionary<string, SqlNode>? linkModelDictionaryTreeEdge,
+        Dictionary<string, SqlNode>? linkEntityDictionaryTreeMutation,
+        Dictionary<string, SqlNode>? linkModelDictionaryTreeMutation,
         List<string>? upsertKeys, List<JoinKey>? joinKeys, List<JoinOneKey>? joinOneKeys, List<LinkKey>? linkKeys,
         List<LinkBusinessKey>? linkBusinessKeys)
         where E : class where M : class
@@ -21,7 +26,13 @@ public static class NodeTreeHelper
         var visitedNode = new List<string>();
         return IterateTree<E, M>(nodeTrees, nodeFromClass, nodeToClass,
             name, string.Empty, mapperConfiguration, nodeId, isModel,
-            models, entities, visitedNode, linkEntityDictionaryTree, linkModelDictionaryTree,
+            models, entities, visitedNode, 
+            linkEntityDictionaryTreeNode,
+            linkModelDictionaryTreeNode,
+            linkEntityDictionaryTreeEdge,
+            linkModelDictionaryTreeEdge,
+            linkEntityDictionaryTreeMutation,
+            linkModelDictionaryTreeMutation,
             upsertKeys, joinKeys, joinOneKeys, linkKeys, linkBusinessKeys)!;
     }
 
@@ -52,8 +63,12 @@ public static class NodeTreeHelper
         E? nodeFromClass, M? nodeToClass, string name, string parentName,
         MapperConfiguration mapperConfiguration, List<KeyValuePair<string, int>> nodeId, bool isModel,
         List<string> models, List<string> entities, List<string> visitedNode,
-        Dictionary<string, SqlNode>? linkEntityDictionaryTree,
-        Dictionary<string, SqlNode>? linkModelDictionaryTree, List<string>? upsertKeys, List<JoinKey>? joinKeys,
+        Dictionary<string, SqlNode>? linkEntityDictionaryTreeNode,
+        Dictionary<string, SqlNode>? linkModelDictionaryTreeNode,
+        Dictionary<string, SqlNode>? linkEntityDictionaryTreeEdge,
+        Dictionary<string, SqlNode>? linkModelDictionaryTreeEdge,
+        Dictionary<string, SqlNode>? linkEntityDictionaryTreeMutation,
+        Dictionary<string, SqlNode>? linkModelDictionaryTreeMutation, List<string>? upsertKeys, List<JoinKey>? joinKeys,
         List<JoinOneKey>? joinOneKeys, List<LinkKey>? linkKeys, List<LinkBusinessKey>? linkBusinessKeys)
         where E : class where M : class
     {
@@ -84,9 +99,23 @@ public static class NodeTreeHelper
             nodeId.Add(new KeyValuePair<string, int>(nodeToClass!.GetType().Name!, nodeId.Count + 1));
         }
 
-        if (!linkEntityDictionaryTree.ContainsKey($"{nodeToClass.GetType().Name}~Id"))
+        if (!linkEntityDictionaryTreeNode.ContainsKey($"{nodeToClass.GetType().Name}~Id"))
         {
-            linkEntityDictionaryTree.Add($"{nodeToClass.GetType().Name}~Id",
+            linkEntityDictionaryTreeNode.Add($"{nodeToClass.GetType().Name}~Id",
+                new SqlNode()
+                {
+                    Column = "Id",
+                    Namespace = nodeToClass.GetType().Namespace
+                });
+            
+            linkEntityDictionaryTreeEdge.Add($"{nodeToClass.GetType().Name}~Id",
+                new SqlNode()
+                {
+                    Column = "Id",
+                    Namespace = nodeToClass.GetType().Namespace
+                });
+            
+            linkEntityDictionaryTreeMutation.Add($"{nodeToClass.GetType().Name}~Id",
                 new SqlNode()
                 {
                     Column = "Id",
@@ -95,8 +124,9 @@ public static class NodeTreeHelper
         }
 
         var fromMapping = GraphQLMapper.GetMappings<E, M>(mapperConfiguration,
-            nodeFromClass, nodeToClass, isModel, models, entities, linkEntityDictionaryTree,
-            linkModelDictionaryTree, linkKeys, joinKeys, joinOneKeys, linkBusinessKeys);
+            nodeFromClass, nodeToClass, isModel, models, entities, linkEntityDictionaryTreeNode,
+            linkModelDictionaryTreeNode, linkEntityDictionaryTreeEdge, linkModelDictionaryTreeEdge, 
+            linkEntityDictionaryTreeMutation, linkModelDictionaryTreeMutation, linkKeys, joinKeys, joinOneKeys, linkBusinessKeys);
 
         var nodeName = nodeToClass.GetType().Name;
 
@@ -137,9 +167,23 @@ public static class NodeTreeHelper
 
             upsertKeys.Add($"{entity}~{column}");
 
-            if (!linkEntityDictionaryTree.ContainsKey($"{entity}~{column}"))
+            if (!linkEntityDictionaryTreeNode.ContainsKey($"{entity}~{column}"))
             {
-                linkEntityDictionaryTree.Add($"{entity}~{column}",
+                linkEntityDictionaryTreeNode.Add($"{entity}~{column}",
+                    new SqlNode()
+                    {
+                        Column = column,
+                        Namespace = nodeToClass.GetType().Namespace
+                    });
+                
+                linkEntityDictionaryTreeEdge.Add($"{entity}~{column}",
+                    new SqlNode()
+                    {
+                        Column = column,
+                        Namespace = nodeToClass.GetType().Namespace
+                    });
+                
+                linkEntityDictionaryTreeMutation.Add($"{entity}~{column}",
                     new SqlNode()
                     {
                         Column = column,
@@ -193,8 +237,13 @@ public static class NodeTreeHelper
 
             tree = IterateTree<E, M>(nodeTrees,
                 nodeFromClass, toVariable, toVariable.GetType().Name, name,
-                mapperConfiguration, nodeId, isModel, models, entities, visitedNode, linkEntityDictionaryTree,
-                linkModelDictionaryTree,
+                mapperConfiguration, nodeId, isModel, models, entities, visitedNode,
+                linkEntityDictionaryTreeNode,
+                linkModelDictionaryTreeNode,
+                linkEntityDictionaryTreeEdge,
+                linkModelDictionaryTreeEdge,
+                linkEntityDictionaryTreeMutation,
+                linkModelDictionaryTreeMutation,
                 upsertKeys, joinKeys, joinOneKeys, linkKeys, linkBusinessKeys);
 
             if (tree != null && !string.IsNullOrEmpty(tree.Name))

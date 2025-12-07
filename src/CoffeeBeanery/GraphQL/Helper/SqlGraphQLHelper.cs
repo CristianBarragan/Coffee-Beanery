@@ -15,7 +15,7 @@ public static class SqlGraphQLHelper
     /// <param name="filterCondition"></param>
     /// <returns></returns>
     public static List<string> ProcessFilter(NodeTree nodeTree,
-        Dictionary<string, SqlNode> linkModelDictionaryTree, string field, string filterType, string value,
+        Dictionary<string, SqlNode> linkModelDictionaryTreeNode, string field, string filterType, string value,
         string filterCondition)
     {
         var enumeration = string.Empty;
@@ -27,7 +27,7 @@ public static class SqlGraphQLHelper
             return conditions;
         }
 
-        if (linkModelDictionaryTree.TryGetValue($"{nodeTree.Name}~{field}", out var sqlNodeTo))
+        if (linkModelDictionaryTreeNode.TryGetValue($"{nodeTree.Name}~{field}", out var sqlNodeTo))
         {
             if (sqlNodeTo.FromEnumeration.TryGetValue(value,
                     out var enumValue))
