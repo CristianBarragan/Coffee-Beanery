@@ -273,14 +273,6 @@ public static class SqlHelper
             if (!joinOneKey.From.Split('~')[0].Matches(currentTree.Name))
             {
                 var columns = columnsQuery.ToList();
-                // var column = columns.FirstOrDefault();
-        
-                // if (columns.Count <= 1 && (column.Value != null || column.Value == null) && column.Value.UpsertKeys
-                //         .Any(a => a.Split('~')[1].Matches(column.Value.Column)))
-                // {
-                //     continue;
-                // }
-                
                 columns.Add(new KeyValuePair<string, SqlNode>(joinOneKey.From, currentColumns.Last().Value));
                 
                 var parentColumns = sqlUpsertStatementNodes
