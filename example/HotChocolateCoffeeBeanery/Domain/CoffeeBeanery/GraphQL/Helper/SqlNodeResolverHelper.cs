@@ -4,7 +4,6 @@ using CoffeeBeanery.GraphQL.Extension;
 using HotChocolate.Language;
 using CoffeeBeanery.GraphQL.Model;
 using FASTER.core;
-using HotChocolate.Data.Projections;
 using HotChocolate.Execution.Processing;
 
 namespace CoffeeBeanery.GraphQL.Helper;
@@ -514,10 +513,6 @@ public static class SqlNodeResolverHelper
                             $"~.\"{joinKeys[i].To.ToSnakeCase(currentTree.Id)}\" AS \"{joinKeys[i]
                                 .To.ToSnakeCase(currentTree.Id)}\"");
                     }
-                    currentColumns.Add(new KeyValuePair<string, SqlNode>(joinKeys[i].To.ToSnakeCase(currentTree.Id),
-                        childQuery.Value.SqlNode));
-                    currentColumns.Add(new KeyValuePair<string, SqlNode>(joinKeys[i].From.ToSnakeCase(currentTree.Id),
-                        childQuery.Value.SqlNode));
                 }
             }
 
@@ -935,7 +930,10 @@ public static class SqlNodeResolverHelper
         bool isEdge)
     {
         foreach (var entity in linkEntityDictionaryTree
-                     .Where(v => sqlNode.Column.Matches(v.Value.Column)))
+                     .Where(v => (sqlNode.Column.Matches(v.Value.Column) || 
+                            sqlNode.UpsertKeys.Any(y => v.Key.Split('~')[1].Matches(y.Split("~")[1])) ||
+                                 sqlNode.JoinOneKeys.Any(y => v.Key.Split('~')[1].Matches(y.From.Split("~")[1]))) ||
+                               sqlNode.JoinOneKeys.Any(y => v.Key.Split('~')[1].Matches(y.To.Split("~")[1]))))
         {
             if (sqlStatementNodes.ContainsKey(entity.Key) &&
                 entities.Contains(entity.Key.Split("~")[0]) && entity.Value.SqlNodeType ==

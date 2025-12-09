@@ -45,9 +45,10 @@ public static class TransactionQueryMapping
                         contract.ContractKey = transactionEntity?.ContractKey;
                         contract.Transaction = [];
                         contract.Transaction.Add(mapper.Map<Transaction>(transactionEntity));
-
+                        
                         existingProduct.Contract ??= [];
                         existingProduct.Contract.Add(contract);
+                        existingCustomer.Product[productIndex] = existingProduct;
                     }
 
                     var existingAccount = existingProduct.Account?
@@ -57,7 +58,7 @@ public static class TransactionQueryMapping
                     {
                         if (existingAccount.Transaction?.TransactionKey != null)
                         {
-                            mapper.Map(existingAccount.Transaction, transactionEntity);
+                            mapper.Map(transactionEntity, existingAccount.Transaction);
                         }
                         else
                         {
@@ -72,9 +73,8 @@ public static class TransactionQueryMapping
 
                         existingProduct.Account ??= [];
                         existingProduct.Account.Add(account);
+                        existingCustomer.Product[productIndex] = existingProduct;
                     }
-                    
-                    existingCustomer.Product[productIndex] = existingProduct;
                 }
                 else
                 {

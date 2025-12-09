@@ -76,7 +76,17 @@ public class CustomerQueryHandler<M> : ProcessQuery<M>, IQuery<SqlStructure,
                 product = result.existingProduct;
             }
         }  
-        customers.Add(customer);
+        
+        var existingCustomerIndex = customers.FindIndex(c => c.CustomerKey == customer?.CustomerKey);
+        if (existingCustomerIndex >= 0)
+        {
+            customers[existingCustomerIndex] = customer;
+        }
+        else
+        {
+            customers.Add(customer);    
+        }
+        
         dynamic list = customers;
         return (list, sqlStructure.Pagination?.StartCursor, sqlStructure.Pagination?.EndCursor, 
             totalCount, pageRecords);
