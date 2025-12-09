@@ -6,93 +6,127 @@ namespace Domain.Shared.Mapping;
 
 public static class TransactionQueryMapping
 {
-    public static void MapFromCustomer(List<Customer> models, object mappedObject, IMapper mapper)
+    public static (Customer existingCustomer, Product existingProduct)  MapFromCustomer(
+        object mappedObject, IMapper mapper, Customer? existingCustomer, Product? existingProduct)
     {
         if (mappedObject is DatabaseEntity.Transaction)
         {
             var transactionEntity = mappedObject as DatabaseEntity.Transaction;
             
-            var index = models.Where(c => c.Product != null).ToList().FindIndex(c =>
-                c.Product.Any(cbr => cbr.AccountKey == transactionEntity.AccountKey));
-            
-            //TODO fix mapping
-            
-            if (index >= 0)
+            if (existingCustomer?.CustomerKey != null)
             {
-                models[index].Product = models[index].Product ?? [];
-                var indexProduct = models[index].Product
-                    .FindIndex(x => x.CustomerKey == transactionEntity.AccountKey);
-            
-                if (indexProduct >= 0)
+                if (existingProduct?.CustomerKey != null)
                 {
-                    var product = models[index].Product[indexProduct];
-                    var accountIndex = product.Account.FindIndex(a => a.AccountKey == transactionEntity.AccountKey);
+                    var productIndex = existingCustomer.Product.FindIndex(a => a.CustomerKey == existingProduct?.CustomerKey);
+                    
+                    var existingContract = existingProduct.Contract?
+                        .FirstOrDefault(c => c.ContractKey == transactionEntity?.ContractKey);
 
-                    if (accountIndex >= 0)
+                    if (existingContract?.ContractKey != null)
                     {
-                        // var transactionIndex = models[index].Product[indexProduct].Account[accountIndex].Transaction.FindIndex(t => t.TransactionKey == transactionEntity.TransactionKey);
-                        var transactionIndex = 0;
-                        
-                        if (transactionIndex >= 0)
+                        existingContract.Transaction ??= new List<Transaction>();
+                        var existingTransaction = existingContract?.Transaction.FirstOrDefault(t =>
+                            t.ContractKey != null &&
+                            t.ContractKey == transactionEntity?.ContractKey);
+
+                        if (existingTransaction?.TransactionKey != null)
                         {
-                            // var transaction = models[index].Product[indexProduct].Account[accountIndex].Transaction[transactionIndex];
-                            // transaction = mapper.Map(transactionEntity, transaction);
-                            // models[index].Product[indexProduct].Account[accountIndex].Transaction[transactionIndex] =  transaction;
+                            mapper.Map(transactionEntity, existingTransaction);
                         }
                         else
                         {
-                            var transaction = new Transaction();
-                            transaction = mapper.Map(transactionEntity, transaction);
-                            // models[index].Product[indexProduct].Account[accountIndex].Transaction.Add(transaction);
+                            var transaction = mapper.Map<Transaction>(transactionEntity);
+                            existingContract!.Transaction.Add(transaction);
+                        }
+                    }
+                    else
+                    {
+                        var contract = new Contract();
+                        contract.ContractKey = transactionEntity?.ContractKey;
+                        contract.Transaction = [];
+                        contract.Transaction.Add(mapper.Map<Transaction>(transactionEntity));
+
+                        existingProduct.Contract ??= [];
+                        existingProduct.Contract.Add(contract);
+                    }
+
+                    var existingAccount = existingProduct.Account?
+                        .FirstOrDefault(c => c.AccountKey == transactionEntity?.AccountKey);
+
+                    if (existingAccount?.AccountKey != null)
+                    {
+                        if (existingAccount.Transaction?.TransactionKey != null)
+                        {
+                            mapper.Map(existingAccount.Transaction, transactionEntity);
+                        }
+                        else
+                        {
+                            existingAccount.Transaction = mapper.Map<Transaction>(transactionEntity);
                         }
                     }
                     else
                     {
                         var account = new Account();
-                        account = mapper.Map(transactionEntity, account);
-                        var transaction = new Transaction();
-                        transaction = mapper.Map(transactionEntity, transaction);
-                        // account.Transaction.Add(transaction);
-                        models[index].Product[indexProduct].Account.Add(account);
+                        account.AccountKey = transactionEntity?.AccountKey;
+                        account.Transaction = mapper.Map<Transaction>(transactionEntity);
+
+                        existingProduct.Account ??= [];
+                        existingProduct.Account.Add(account);
                     }
+                    
+                    existingCustomer.Product[productIndex] = existingProduct;
                 }
                 else
                 {
-                    var product = new Product();
+                    existingProduct = new Product();
+                    existingProduct.ContractKey = transactionEntity?.ContractKey;
+                    existingProduct.AccountKey = transactionEntity?.AccountKey;
+                
                     var account = new Account();
-                    account = mapper.Map(transactionEntity, account);
-                    var transaction = new Transaction();
-                    transaction = mapper.Map(transactionEntity, transaction);
-                    // account.Transaction = account.Transaction ?? [];
-                    // account.Transaction.Add(transaction);
-                    product.Account = product.Account ?? [];
-                    product.Account.Add(account);
-                    models[index].Product = models[index].Product ?? [];
-                    models[index].Product.Add(product);
+                    account.AccountKey = transactionEntity?.AccountKey;
+                    account.Transaction = mapper.Map<Transaction>(transactionEntity);
+                
+                    var contract = new Contract();
+                    contract.ContractKey = transactionEntity?.ContractKey;
+                    contract.Transaction = [];
+                    contract.Transaction.Add(mapper.Map<Transaction>(transactionEntity));
+                
+                    existingProduct.Account = [];
+                    existingProduct.Account.Add(account);
+                    existingProduct.Contract = [];
+                    existingProduct.Contract.Add(contract);
+
+                    existingCustomer.Product ??= [];
+                    existingCustomer.Product.Add(existingProduct);
                 }
             }
             else
             {
-                var product = new Product();
-                var account = new Account();
-                var transaction = new Transaction();
-                transaction = mapper.Map(transactionEntity, transaction);
-                account = mapper.Map(transaction, account);
-                // account.Transaction = account.Transaction ?? [];
-                // account.Transaction.Add(transaction);
-                product = mapper.Map(account, product);
-                product.Account = product.Account ?? [];
-                product.Account.Add(account);
+                existingCustomer = new Customer();
+                existingCustomer.Product = [];
                 
-                var customer = new Customer()
-                {
-                    Product = new List<Product>()
-                    {
-                        product
-                    }
-                };
-                models.Add(customer);
+                existingProduct = new Product();
+                existingProduct.ContractKey = transactionEntity?.ContractKey;
+                existingProduct.AccountKey = transactionEntity?.AccountKey;
+                
+                var account = new Account();
+                account.AccountKey = transactionEntity?.AccountKey;
+                account.Transaction = mapper.Map<Transaction>(transactionEntity);
+                
+                var contract = new Contract();
+                contract.ContractKey = transactionEntity?.ContractKey;
+                contract.Transaction = [];
+                contract.Transaction.Add(mapper.Map<Transaction>(transactionEntity));
+                
+                existingProduct.Account = [];
+                existingProduct.Account.Add(account);
+                existingProduct.Contract = [];
+                existingProduct.Contract.Add(contract);
+                existingProduct.CustomerKey = existingCustomer?.CustomerKey;
+                existingCustomer?.Product.Add(existingProduct);
             }
         }
+
+        return (existingCustomer, existingProduct);
     }
 }

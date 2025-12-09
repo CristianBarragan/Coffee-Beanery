@@ -29,9 +29,8 @@ public class CustomerQueryHandler<M> : ProcessQuery<M>, IQuery<SqlStructure,
         var rowNumber = 0;
         var totalCount = 0;
         var pageRecords = 0;
-
-        //TODO and Fix direct mapping between mapped object and M object instead of
-        //these switch is/as conversions
+        var customer = new Customer();
+        var product = new Product();
         
         for (int i = 0; i < map.Length; i++)
         {
@@ -45,21 +44,39 @@ public class CustomerQueryHandler<M> : ProcessQuery<M>, IQuery<SqlStructure,
             }
             else if (map[i] is DatabaseEntity.Customer)
             {
-                CustomerQueryMapping.MapCustomer(customers, map[i], _mapper);
+                customer = CustomerQueryMapping.MapCustomer(customers, map[i], _mapper);
             }
             else if (map[i] is DatabaseEntity.ContactPoint)
             {
-                ContactPointQueryMapping.MapFromCustomer(customers, map[i], _mapper);
+                customer = ContactPointQueryMapping.MapFromCustomer(map[i], _mapper, customer);
+            }
+            else if (map[i] is DatabaseEntity.CustomerBankingRelationship)
+            {
+                var result = CustomerBankingRelationshipQueryMapping
+                    .MapFromCustomer(map[i], _mapper, customer, product);
+                customer = result.existingCustomer;
+                product = result.existingProduct;
+            }
+            else if (map[i] is DatabaseEntity.Contract)
+            {
+                var result = ContractQueryMapping.MapFromCustomer(map[i], _mapper, customer, product);
+                customer = result.existingCustomer;
+                product = result.existingProduct;
+            }
+            else if (map[i] is DatabaseEntity.Account)
+            {
+                var result = AccountQueryMapping.MapFromCustomer(map[i], _mapper, customer, product);
+                customer = result.existingCustomer;
+                product = result.existingProduct;
             }
             else if (map[i] is DatabaseEntity.Transaction)
             {
-                TransactionQueryMapping.MapFromCustomer(customers, map[i], _mapper);
+                var result = TransactionQueryMapping.MapFromCustomer(map[i], _mapper, customer, product);
+                customer = result.existingCustomer;
+                product = result.existingProduct;
             }
-            else {
-                ProductQueryMapping.MapFromCustomer(customers, map[i], _mapper);
-            }
-        }
-
+        }  
+        customers.Add(customer);
         dynamic list = customers;
         return (list, sqlStructure.Pagination?.StartCursor, sqlStructure.Pagination?.EndCursor, 
             totalCount, pageRecords);

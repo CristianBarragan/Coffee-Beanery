@@ -6,26 +6,27 @@ namespace Domain.Shared.Mapping;
 
 public static class CustomerQueryMapping
 {
-    public static void MapCustomer(List<Customer> customers, object mappedObject, IMapper mapper)
+    public static Customer MapCustomer(List<Customer> customers, object mappedObject, IMapper mapper)
     {
-        Customer customer = null!;
+        Customer existingCustomer = null;
         if (mappedObject is DatabaseEntity.Customer)
         {
             var customerDb = mappedObject as DatabaseEntity.Customer;
 
-            var index = customers.FindIndex(x => x.CustomerKey == customerDb.CustomerKey);
+            existingCustomer = customers.FirstOrDefault(x => x.CustomerKey == customerDb?.CustomerKey);
 
-            if (index >= 0)
+            if (existingCustomer?.CustomerKey != null)
             {
-                customer = customers[index];
-                customer = mapper.Map(customerDb, customer);
-                customers[index] = customer;
+                existingCustomer = mapper.Map(customerDb, existingCustomer);
             }
             else
             {
-                customer = mapper.Map(customerDb, customer);
+                var customer = mapper.Map<Customer>(customerDb);
                 customers.Add(customer);
+                existingCustomer = customer;
             }
         }
+
+        return existingCustomer;
     }
 }
