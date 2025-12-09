@@ -6,40 +6,42 @@ namespace Domain.Shared.Mapping;
 
 public static class ContractQueryMapping
 {
-    public static void MapFromCustomer(List<Customer> models, object mappedObject, IMapper mapper)
+    public static (Customer existingCustomer, Product existingProduct) MapFromCustomer(
+        object mappedObject, IMapper mapper, Customer? existingCustomer, Product? existingProduct)
     {
         if (mappedObject is DatabaseEntity.Contract)
         {
             var contractEntity = mappedObject as DatabaseEntity.Contract;
-
-            var index = models.Where(c => c.Product != null).ToList().FindIndex(c =>
-                c.Product.Any(cbr => cbr.ContractKey == contractEntity.ContractKey));
             
-            if (index >= 0)
+            if (existingCustomer?.CustomerKey != null)
             {
-                models[index].Product = models[index].Product ?? [];
-                var indexContract = models[index].Product
-                    .FindIndex(x => x.ContractKey == contractEntity.ContractKey);
-
-                if (indexContract >= 0)
+                existingCustomer.Product ??= [];
+                
+                if (existingProduct?.CustomerKey != null)
                 {
-                    mapper.Map(contractEntity, models[indexContract]);
+                    mapper.Map(contractEntity, existingProduct);
+                    var productIndex = existingCustomer.Product.FindIndex(a => a.CustomerKey == existingProduct?.CustomerKey);
+                    existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                    existingCustomer.Product[productIndex] = existingProduct;
                 }
                 else
                 {
-                    var product = new Product();
-                    product = mapper.Map(contractEntity,
-                        product);
-                    models[index].Product.Add(product);
+                    existingProduct = mapper.Map<Product>(contractEntity);
+                    existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                    existingCustomer.Product.Add(existingProduct);
                 }
             }
             else
             {
-                var product = new Product();
-                product = mapper.Map(contractEntity,
-                    product);
-                ProductQueryMapping.MapFromCustomer(models, product, mapper);
+                existingCustomer = new Customer();
+                existingCustomer.Product = [];
+                
+                existingProduct = mapper.Map<Product>(contractEntity);
+                existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                existingCustomer.Product.Add(existingProduct);
             }
         }
+
+        return (existingCustomer, existingProduct);
     }
 }

@@ -30,7 +30,6 @@ public class ProcessQuery<M> : IQuery<SqlStructure,
         var splitOnTypes = parameters.SplitOnDapper.Values.Distinct().ToList();
         var splitOn = parameters.SplitOnDapper
             .Select(a => a.Key).ToList();
-        splitOn.RemoveAt(0);
         
         if (parameters != null && parameters.HasTotalCount && parameters.HasPagination)
         {

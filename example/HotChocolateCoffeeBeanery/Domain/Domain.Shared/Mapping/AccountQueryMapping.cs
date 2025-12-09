@@ -6,42 +6,40 @@ namespace Domain.Shared.Mapping;
 
 public static class AccountQueryMapping
 {
-    public static void MapFromCustomer(List<Customer> models, object mappedObject, IMapper mapper)
+    public static (Customer existingCustomer, Product existingProduct) MapFromCustomer(
+        object mappedObject, IMapper mapper, Customer? existingCustomer, Product? existingProduct)
     {
         if (mappedObject is DatabaseEntity.Account)
         {
             var accountEntity = mappedObject as DatabaseEntity.Account;
-
-            var index = models.Where(c => c.Product != null).ToList().FindIndex(c =>
-                c.Product.Any(cbr => cbr.AccountKey == accountEntity.AccountKey));
             
-            if (index >= 0)
+            if (existingCustomer?.CustomerKey != null)
             {
-                models[index].Product = models[index].Product ?? [];
-                var indexAccount = models[index].Product
-                    .FindIndex(x => x.AccountKey == accountEntity.AccountKey);
-
-                if (indexAccount >= 0)
+                if (existingProduct?.CustomerKey != null)
                 {
-                    mapper.Map(accountEntity, models[indexAccount]);
+                    mapper.Map(accountEntity, existingProduct);
+                    var productIndex = existingCustomer.Product?.FindIndex(a => a.CustomerKey == existingProduct?.CustomerKey);
+                    existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                    existingCustomer.Product ??= [];
+                    existingCustomer.Product[productIndex!.Value] = existingProduct;
                 }
                 else
                 {
-                    var product = new Product();
-                    
-                    models[index].Product.Add(product);
+                    existingProduct = mapper.Map<Product>(accountEntity);
+                    existingCustomer.Product ??= [];
+                    existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                    existingCustomer.Product.Add(existingProduct);
                 }
             }
             else
             {
-                var customer = new Customer();
-                customer.Product = new List<Product>();
-                var product = new Product();
-                product = mapper.Map(accountEntity,
-                    product);
-                customer.Product.Add(product);
-                models.Add(customer);
+                existingCustomer ??= new Customer();
+                existingProduct = mapper.Map<Product>(accountEntity);
+                existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                existingCustomer.Product ??= [];
+                existingCustomer.Product.Add(existingProduct);
             }
         }
+        return (existingCustomer, existingProduct);
     }
 }

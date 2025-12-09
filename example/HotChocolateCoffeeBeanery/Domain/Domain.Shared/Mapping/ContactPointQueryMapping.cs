@@ -6,43 +6,40 @@ namespace Domain.Shared.Mapping;
 
 public static class ContactPointQueryMapping
 {
-    public static void MapFromCustomer(List<Customer> models, object mappedObject, IMapper mapper)
+    public static Customer MapFromCustomer(object mappedObject, IMapper mapper, Customer? existingCustomer)
     {
         if (mappedObject is DatabaseEntity.ContactPoint)
         {
-            var contactPointModel = mappedObject as DatabaseEntity.ContactPoint;
+            var contactPointEntity = mappedObject as DatabaseEntity.ContactPoint;
 
-            var index = models.FindIndex(x => x.CustomerKey == contactPointModel.CustomerKey);
-
-            if (index >= 0)
+            if (existingCustomer?.ContactPoint != null)
             {
-                models[index].ContactPoint = models[index].ContactPoint ?? [];
-                var indexCbs = models[index].ContactPoint
-                    .FindIndex(x => x.ContactPointKey == contactPointModel.ContactPointKey);
-
-                if (indexCbs >= 0)
+                existingCustomer.ContactPoint ??= [];
+                
+                var existingContactPoint = existingCustomer.ContactPoint.FirstOrDefault(a => a.ContactPointKey == contactPointEntity!.ContactPointKey);
+                
+                if (existingContactPoint?.CustomerKey != null)
                 {
-                    models[index].ContactPoint[indexCbs] = mapper.Map(contactPointModel,
-                        models[index].ContactPoint[indexCbs]);
+                    mapper.Map(contactPointEntity, existingContactPoint);
                 }
                 else
                 {
                     var contactPoint = new ContactPoint();
-                    contactPoint = mapper.Map(contactPointModel,
-                        contactPoint);
-                    models[index].ContactPoint.Add(contactPoint);
+                    contactPoint = mapper.Map<ContactPoint>(contactPoint);
+                    existingCustomer.ContactPoint.Add(contactPoint);
                 }
             }
             else
             {
-                var customer = new Customer();
-                customer.ContactPoint = new List<ContactPoint>();
+                existingCustomer = new Customer();
+                existingCustomer.ContactPoint = [];
                 var contactPoint = new ContactPoint();
-                contactPoint = mapper.Map(contactPointModel,
+                contactPoint = mapper.Map(contactPointEntity,
                     contactPoint);
-                customer.ContactPoint.Add(contactPoint);
-                models.Add(customer);
+                existingCustomer.ContactPoint.Add(contactPoint);
             }
         }
+
+        return existingCustomer;
     }
 }
