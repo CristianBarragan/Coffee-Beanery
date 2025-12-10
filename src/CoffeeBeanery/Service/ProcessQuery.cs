@@ -30,7 +30,6 @@ public class ProcessQuery<M> : IQuery<SqlStructure,
         var splitOnTypes = parameters.SplitOnDapper.Values.Distinct().ToList();
         var splitOn = parameters.SplitOnDapper
             .Select(a => a.Key).ToList();
-        splitOn.RemoveAt(0);
         
         if (parameters != null && parameters.HasTotalCount && parameters.HasPagination)
         {
@@ -56,13 +55,13 @@ public class ProcessQuery<M> : IQuery<SqlStructure,
                         return (set.startCursor, set.endCursor, set.totalCount, set.totalPageRecords);
                     }, splitOn: string.Join(",", splitOn), transaction: dbTransaction, commandType: CommandType.Text);
 
+            await dbTransaction.CommitAsync(cancellationToken);
+            
             if (result == null || result.Count() == 0)
             {
                 return ([], 0, 0, 0, 0);
             }
             
-            await dbTransaction.CommitAsync(cancellationToken);
-
             return (_models,
                 parameters.Pagination.StartCursor > 0
                     ? parameters.Pagination.StartCursor
