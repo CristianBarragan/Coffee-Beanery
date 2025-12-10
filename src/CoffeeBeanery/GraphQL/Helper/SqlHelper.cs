@@ -103,7 +103,7 @@ public static class SqlHelper
         {
             return string.Empty;
         }
-
+        
         entitiesProcessed.Add(currentTree.Name);
 
         var processingTree = currentTree;
@@ -130,24 +130,33 @@ public static class SqlHelper
         var upsertingEntity = sqlUpsertStatementNodes.FirstOrDefault(s =>
             s.Key.Split('~')[0].Matches(processingTree.Name) || !s.Value.JoinKeys
                 .Any(a => a.To.Split('~')[0].Matches(processingTree.ParentName)));
-            
-        if (upsertingEntity.Value != null && upsertingEntity.Value.LinkKeys.Count > 0)
+        
+        var sql = string.Empty;
+        
+        if (upsertingEntity.Value != null)
         {
-            generatedQuery.Add(GenerateUpsert(processingTree, trees, sqlUpsertStatementNodes, whereCurrentClause, entityNames)); 
-            sqlUpsertBuilder.Append(generatedQuery.Last());    
+            sql = GenerateUpsert(processingTree, trees, sqlUpsertStatementNodes, whereCurrentClause, entityNames);
+            
+            if (!string.IsNullOrEmpty(sql))
+            {
+                generatedQuery.Add(sql); 
+                sqlUpsertBuilder.Append(generatedQuery.Last());
+                sqlUpsertBuilder.Insert(0, " ; " + sql);
+                sqlSelectUpsertBuilder.Insert(0, " ; " + GenerateSelectUpsert(processingTree, sqlNodes, entityNames,
+                    trees, sqlUpsertStatementNodes, sqlWhereStatement, new List<string>(), rootEntityName, generatedQuery, 
+                    wrapperEntityName));
+            }
         }
         
         foreach (var childTree in trees.Where(t => 
                      entityNames.Contains(t.Key.Split('~')[0])))
         {
-            sqlUpsertBuilder.Insert(0, " ; " + GenerateUpsertStatements(trees, sqlNodes, rootEntityName, wrapperEntityName, generatedQuery,
+            GenerateUpsertStatements(trees, sqlNodes, rootEntityName, wrapperEntityName, generatedQuery,
                 sqlUpsertStatementNodes, childTree.Value,
-                entityNames, sqlWhereStatement, entitiesProcessed, sqlUpsertBuilder, sqlSelectUpsertBuilder));
-            
-            sqlSelectUpsertBuilder.Append(" ; " + GenerateSelectUpsert(processingTree, sqlNodes, entityNames,
-                trees, sqlUpsertStatementNodes, sqlWhereStatement, new List<string>(), rootEntityName, generatedQuery, 
-                wrapperEntityName));
+                entityNames, sqlWhereStatement, entitiesProcessed,
+                sqlUpsertBuilder, sqlSelectUpsertBuilder);
         }
+        
         return sqlUpsert;
     }
 
@@ -173,8 +182,8 @@ public static class SqlHelper
                         ! k.Value.LinkKeys.Any(b => trees.Keys.Any(a => a.Matches(k.Key.Split('~')[1])))).ToList();
         
         if (currentColumns.Count == 0 ||
-            !currentColumns.LastOrDefault().Value.UpsertKeys
-                .Any(u => currentColumns.Any(c => u.Matches(c.Key))))
+            !currentColumns.Any(a => a.Value.UpsertKeys
+                .Any(u => currentColumns.Any(c => u.Matches(c.Key)))))
         {
             return sqlUpsertAux;
         }
@@ -183,7 +192,8 @@ public static class SqlHelper
                         $" {string.Join(",", currentColumns.Select(s => $"\"{s.Value.RelationshipKey.Split('~')[1]}\"").ToList())}) VALUES ({
                             string.Join(",", currentColumns.Select(s => $"'{s.Value.Value}'").ToList())}) " +
                         $" ON CONFLICT" +
-                        $" ({string.Join(",", currentColumns.LastOrDefault().Value.UpsertKeys
+                        $" ({string.Join(",", currentColumns.FirstOrDefault(a => a.Value.UpsertKeys
+                                .Any(u => currentColumns.Any(c => u.Matches(c.Key)))).Value.UpsertKeys
                             .Where(u => currentColumns.Any(c => u.Matches(c.Key)))
                             .Select(s => $"\"{s.Split('~')[1]}\"").ToList())}) ";
 

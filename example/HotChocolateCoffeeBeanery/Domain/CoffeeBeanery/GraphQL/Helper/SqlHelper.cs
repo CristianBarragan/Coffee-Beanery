@@ -182,8 +182,8 @@ public static class SqlHelper
                         ! k.Value.LinkKeys.Any(b => trees.Keys.Any(a => a.Matches(k.Key.Split('~')[1])))).ToList();
         
         if (currentColumns.Count == 0 ||
-            !currentColumns.LastOrDefault().Value.UpsertKeys
-                .Any(u => currentColumns.Any(c => u.Matches(c.Key))))
+            !currentColumns.Any(a => a.Value.UpsertKeys
+                .Any(u => currentColumns.Any(c => u.Matches(c.Key)))))
         {
             return sqlUpsertAux;
         }
@@ -192,7 +192,8 @@ public static class SqlHelper
                         $" {string.Join(",", currentColumns.Select(s => $"\"{s.Value.RelationshipKey.Split('~')[1]}\"").ToList())}) VALUES ({
                             string.Join(",", currentColumns.Select(s => $"'{s.Value.Value}'").ToList())}) " +
                         $" ON CONFLICT" +
-                        $" ({string.Join(",", currentColumns.LastOrDefault().Value.UpsertKeys
+                        $" ({string.Join(",", currentColumns.FirstOrDefault(a => a.Value.UpsertKeys
+                                .Any(u => currentColumns.Any(c => u.Matches(c.Key)))).Value.UpsertKeys
                             .Where(u => currentColumns.Any(c => u.Matches(c.Key)))
                             .Select(s => $"\"{s.Split('~')[1]}\"").ToList())}) ";
 
