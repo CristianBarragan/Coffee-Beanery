@@ -22,12 +22,14 @@ public static class ContractQueryMapping
                     mapper.Map(contractEntity, existingProduct);
                     var productIndex = existingCustomer.Product.FindIndex(a => a.CustomerKey == existingProduct?.CustomerKey);
                     existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                    mapper.Map(contractEntity, existingProduct);
                     existingCustomer.Product[productIndex] = existingProduct;
                 }
                 else
                 {
                     existingProduct = mapper.Map<Product>(contractEntity);
                     existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                    mapper.Map(contractEntity, existingProduct);
                     existingCustomer.Product.Add(existingProduct);
                 }
             }
@@ -38,6 +40,7 @@ public static class ContractQueryMapping
                 
                 existingProduct = mapper.Map<Product>(contractEntity);
                 existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                mapper.Map(contractEntity, existingProduct);
                 existingCustomer.Product.Add(existingProduct);
             }
         }

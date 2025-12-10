@@ -35,7 +35,7 @@ public class CustomerQueryResolver : IOutputType
             var pageRecords = set.totalPageRecords ?? 0;
 
             var connection = ContextResolverHelper.GenerateConnection(
-                set.list.Select(a => new EntityNode<Customer>(a, a.CustomerKey.ToString())),
+                set.list.Select(a => new EntityNode<Customer>(a, Guid.NewGuid().ToString())),
                 new Pagination()
                 {
                     TotalRecordCount = new TotalRecordCount()

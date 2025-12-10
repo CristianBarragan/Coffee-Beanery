@@ -21,6 +21,7 @@ public static class AccountQueryMapping
                     var productIndex = existingCustomer.Product?.FindIndex(a => a.CustomerKey == existingProduct?.CustomerKey);
                     existingProduct.CustomerKey = existingCustomer.CustomerKey;
                     existingCustomer.Product ??= [];
+                    mapper.Map(accountEntity, existingProduct);
                     existingCustomer.Product[productIndex!.Value] = existingProduct;
                 }
                 else
@@ -28,6 +29,7 @@ public static class AccountQueryMapping
                     existingProduct = mapper.Map<Product>(accountEntity);
                     existingCustomer.Product ??= [];
                     existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                    mapper.Map(accountEntity, existingProduct);
                     existingCustomer.Product.Add(existingProduct);
                 }
             }
@@ -37,6 +39,7 @@ public static class AccountQueryMapping
                 existingProduct = mapper.Map<Product>(accountEntity);
                 existingProduct.CustomerKey = existingCustomer.CustomerKey;
                 existingCustomer.Product ??= [];
+                mapper.Map(accountEntity, existingProduct);
                 existingCustomer.Product.Add(existingProduct);
             }
         }

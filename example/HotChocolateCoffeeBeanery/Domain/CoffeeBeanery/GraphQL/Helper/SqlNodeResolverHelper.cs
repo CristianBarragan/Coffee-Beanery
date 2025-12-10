@@ -108,8 +108,7 @@ public static class SqlNodeResolverHelper
                 var sqlUpsertBuilder = new StringBuilder();
                 var sqlSelectUpsertBuilder = new StringBuilder();
 
-                if (mutationNodeToProcess.GetNodes()
-                        .ToList()[1].GetNodes().Count() > 1)
+                if (mutationNodeToProcess.GetNodes().ToList()[1].ToString().StartsWith("["))
                 {
                     foreach (var mutationNode in mutationNodeToProcess.GetNodes().ToList()[1].GetNodes())
                     {
@@ -119,7 +118,7 @@ public static class SqlNodeResolverHelper
                                 .First(t =>
                                     t.Key.Matches(rootEntityName)).Value, string.Empty,
                             new NodeTree(), models, modelTreeMap.EntityNames, visitedModels);
-
+                        
                         SqlHelper.GenerateUpsertStatements(entityTreeMap.DictionaryTree, entityTreeMap.LinkDictionaryTreeMutation, rootEntityName,
                             wrapperEntityName, generatedQuery, sqlUpsertStatementNodes, modelTreeMap.DictionaryTree[rootEntityName], modelTreeMap.EntityNames,
                             sqlWhereStatement, new List<string>(),
@@ -128,19 +127,18 @@ public static class SqlNodeResolverHelper
                 }
                 else
                 {
-                    GetMutations(modelTreeMap.DictionaryTree, argument.Value,
+                    GetMutations(modelTreeMap.DictionaryTree, mutationNodeToProcess,
                         entityTreeMap.LinkDictionaryTreeMutation, modelTreeMap.LinkDictionaryTreeMutation,
                         sqlUpsertStatementNodes, modelTreeMap.DictionaryTree
                             .First(t =>
                                 t.Key.Matches(rootEntityName)).Value, string.Empty,
                         new NodeTree(), models, modelTreeMap.EntityNames, visitedModels);
-
+                    
                     SqlHelper.GenerateUpsertStatements(entityTreeMap.DictionaryTree, entityTreeMap.LinkDictionaryTreeMutation, rootEntityName,
                         wrapperEntityName, generatedQuery, sqlUpsertStatementNodes, modelTreeMap.DictionaryTree[rootEntityName], modelTreeMap.EntityNames,
                         sqlWhereStatement, new List<string>(),
                         sqlUpsertBuilder, sqlSelectUpsertBuilder);
                 }
-
                 sqlUpsertStatement = sqlUpsertBuilder.ToString() + " ; " + sqlSelectUpsertBuilder.ToString();
             }
         }
@@ -208,7 +206,7 @@ public static class SqlNodeResolverHelper
                 childrenSqlStatement, entityTreeMap.EntityNames, sqlQueryStructures,
                 splitOnDapper, entityOrder, rootEntityName);
 
-            var queryStructure = sqlQueryStructures.LastOrDefault();
+            var queryStructure = sqlQueryStructures.FirstOrDefault();
 
             sqlSelectStatement = sqlQueryStructures.FirstOrDefault().Value.Query;
 
@@ -285,6 +283,20 @@ public static class SqlNodeResolverHelper
     /// <param name="entityNames"></param>
     /// <param name="sqlQueryStructures"></param>
     /// <param name="splitOnDapper"></param>
+    /// <summary>
+    /// Recursive method to visit every entity that needs to be added into the SQL query statement
+    /// </summary>
+    /// <param name="entityTrees"></param>
+    /// <param name="entityTypes"></param>
+    /// <param name="linkEntityDictionaryTree"></param>
+    /// <param name="sqlQueryStatement"></param>
+    /// <param name="sqlStatementNodes"></param>
+    /// <param name="sqlWhereStatement"></param>
+    /// <param name="currentTree"></param>
+    /// <param name="childrenSqlStatement"></param>
+    /// <param name="entityNames"></param>
+    /// <param name="sqlQueryStructures"></param>
+    /// <param name="splitOnDapper"></param>
     private static bool
         GenerateQuery(Dictionary<string, NodeTree> entityTrees,
             List<Type> entityTypes,
@@ -308,7 +320,7 @@ public static class SqlNodeResolverHelper
 
         currentTree = entityTrees[currentTree.Name];
         entityOrder.Add(currentTree.Name);
-
+        
         foreach (var child in currentTree.Children)
         {
             if (currentTree.ChildrenName.Any(k => k.Matches(child.Name)))
@@ -627,9 +639,8 @@ public static class SqlNodeResolverHelper
             &&
             currentJoinOneKeys[0].From.Split('~')[0].Matches(currentTree.Name))
         {
-            var oneKey = currentColumns.LastOrDefault().Value
-                .JoinOneKeys[0];
-
+            var oneKey = currentJoinOneKeys.FirstOrDefault();
+            
             joinOneKey = $"{currentTree.Name}.\"{oneKey.To.Split('~')[1]}\" AS \"{oneKey.To.Split('~')[0]}{oneKey
                 .To.Split('~')[1].ToSnakeCase(currentTree.Id)}\"";
             var joinOneKeyParent = $"~.\"{oneKey.To.Split('~')[1].ToSnakeCase(currentTree.Id)}\" AS \"{oneKey
@@ -728,10 +739,13 @@ public static class SqlNodeResolverHelper
         {
             var currentModel = visitedModels.LastOrDefault();
 
-            if (linkEntityDictionaryTree.TryGetValue($"{currentTree.Name}~{node.ToString()}",
+            if (linkEntityDictionaryTree.TryGetValue($"{currentTree.Name}~{previousNode.Split(':')[0]}",
                     out var sqlNodeFrom) ||
-                linkEntityDictionaryTree.TryGetValue($"{currentModel}~{node.ToString()}",
-                    out sqlNodeFrom))
+                linkEntityDictionaryTree.TryGetValue($"{currentModel}~{previousNode.Split(':')[0]}",
+                    out sqlNodeFrom) ||
+                 linkEntityDictionaryTree.TryGetValue($"{previousNode.Split(':')[0]}~{node.ToString()}",
+                     out sqlNodeFrom)
+                )
             {
                 if (linkModelDictionaryTree.TryGetValue(sqlNodeFrom.RelationshipKey,
                         out var sqlNodeTo))
@@ -740,11 +754,11 @@ public static class SqlNodeResolverHelper
 
                     if (previousNode.Split(':').Length == 2)
                     {
-                        if (sqlNodeFrom.FromEnumeration.TryGetValue(
+                        if (sqlNodeTo.FromEnumeration.TryGetValue(
                                 previousNode.Split(':')[1].Sanitize().Replace("_", ""),
                                 out var enumValue))
                         {
-                            var toEnum = sqlNodeTo.ToEnumeration
+                            var toEnum = sqlNodeTo.FromEnumeration
                                 .FirstOrDefault(e =>
                                 e.Value.Matches(enumValue)).Value;
                             sqlNodeTo.Value = toEnum;
@@ -831,16 +845,16 @@ public static class SqlNodeResolverHelper
         {
             entity.Value.Value = sqlNode.Value;
             entity.Value.SqlNodeType = SqlNodeType.Mutation;
-            if (sqlStatementNodes.ContainsKey(entity.Key) &&
-                entities.Contains(entity.Key.Split("~")[0]))
+            if (sqlStatementNodes.ContainsKey(entity.Value.RelationshipKey) &&
+                entities.Contains(entity.Value.RelationshipKey.Split("~")[0]))
             {
-                sqlStatementNodes[entity.Key] = entity.Value;
+                sqlStatementNodes[entity.Value.RelationshipKey] = entity.Value;
             }
 
-            if (!sqlStatementNodes.ContainsKey(entity.Key) &&
-                entities.Contains(entity.Key.Split("~")[0]))
+            if (!sqlStatementNodes.ContainsKey(entity.Value.RelationshipKey) &&
+                entities.Contains(entity.Value.RelationshipKey.Split("~")[0]))
             {
-                sqlStatementNodes.Add(entity.Key, entity.Value);
+                sqlStatementNodes.Add(entity.Value.RelationshipKey, entity.Value);
             }
         }
     }
@@ -870,14 +884,16 @@ public static class SqlNodeResolverHelper
         {
             var currentModel = visitedModels.LastOrDefault();
 
-            if (linkModelDictionaryTree.TryGetValue($"{currentTree.Name}~{node.ToString()}",
+            if (linkEntityDictionaryTree.TryGetValue($"{currentTree.Name}~{node.ToString()}",
                     out var sqlNodeFrom) ||
-                linkModelDictionaryTree.TryGetValue($"{currentModel}~{node.ToString()}",
-                    out sqlNodeFrom))
+                linkEntityDictionaryTree.TryGetValue($"{currentModel}~{node.ToString()}",
+                    out sqlNodeFrom)
+               )
             {
-                if (linkEntityDictionaryTree.TryGetValue(sqlNodeFrom.RelationshipKey,
+                if (linkModelDictionaryTree.TryGetValue(sqlNodeFrom.RelationshipKey,
                         out var sqlNodeTo))
                 {
+                    
                     AddField(linkEntityDictionaryTree, sqlStatementNodes, entities,
                         sqlNodeTo, isEdge);
 
@@ -935,18 +951,18 @@ public static class SqlNodeResolverHelper
                                  sqlNode.JoinOneKeys.Any(y => v.Key.Split('~')[1].Matches(y.From.Split("~")[1]))) ||
                                sqlNode.JoinOneKeys.Any(y => v.Key.Split('~')[1].Matches(y.To.Split("~")[1]))))
         {
-            if (sqlStatementNodes.ContainsKey(entity.Key) &&
-                entities.Contains(entity.Key.Split("~")[0]) && entity.Value.SqlNodeType ==
-                SqlNodeType.Edge)
+            entity.Value.Value = sqlNode.Value;
+            entity.Value.SqlNodeType = SqlNodeType.Mutation;
+            if (sqlStatementNodes.ContainsKey(entity.Value.RelationshipKey) &&
+                entities.Contains(entity.Value.RelationshipKey.Split("~")[0]))
             {
-                sqlStatementNodes[entity.Key] = entity.Value;
+                sqlStatementNodes[entity.Value.RelationshipKey] = entity.Value;
             }
 
-            if (!sqlStatementNodes.ContainsKey(entity.Key) &&
-                entities.Contains(entity.Key.Split("~")[0]))
+            if (!sqlStatementNodes.ContainsKey(entity.Value.RelationshipKey) &&
+                entities.Contains(entity.Value.RelationshipKey.Split("~")[0]))
             {
-                entity.Value.SqlNodeType = isEdge ? SqlNodeType.Edge : SqlNodeType.Node;
-                sqlStatementNodes.Add(entity.Key, entity.Value);
+                sqlStatementNodes.Add(entity.Value.RelationshipKey, entity.Value);
             }
         }
     }

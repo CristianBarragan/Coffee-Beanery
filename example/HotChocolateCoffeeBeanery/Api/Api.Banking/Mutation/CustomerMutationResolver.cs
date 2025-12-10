@@ -30,7 +30,7 @@ public class CustomerMutationResolver : IInputType, IOutputType
                 wrapper.Model.ToString(), nameof(Wrapper), CancellationToken.None);
 
             var connection = ContextResolverHelper.GenerateConnection(
-                set.list.Select(a => new EntityNode<Customer>(a, a.CustomerKey.ToString())),
+                set.list.Select(a => new EntityNode<Customer>(a, wrapper.CacheKey.ToString())),
                 new Pagination()
                 {
                     TotalRecordCount = new TotalRecordCount()

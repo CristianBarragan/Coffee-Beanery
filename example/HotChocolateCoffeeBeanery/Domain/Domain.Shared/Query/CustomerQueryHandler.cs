@@ -84,7 +84,7 @@ public class CustomerQueryHandler<M> : ProcessQuery<M>, IQuery<SqlStructure,
         }
         else
         {
-            customers.Add(customer);    
+            customers.Add(customer);
         }
         
         dynamic list = customers;

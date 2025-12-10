@@ -147,6 +147,24 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Transaction, opt =>
                 opt.Ignore());
         
+        
+
+        CreateMap<Product, DataEntity.Transaction>()
+            .EqualityComparison((src, dest) =>
+                src.AccountKey == dest.AccountKey)
+            .ForMember(dest => dest.AccountKey, opt =>
+                opt.MapFrom(a => a.AccountKey))
+            .ForMember(dest => dest.Balance, opt =>
+                opt.MapFrom(a => a.Balance))
+            .ForMember(dest => dest.Id, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.Schema, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.ProcessedDateTime, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.Contract, opt =>
+                opt.Ignore());
+        
         CreateMap<DataEntity.Account, Product>()
             .EqualityComparison((src, dest) =>
                 src.AccountKey == dest.AccountKey)
