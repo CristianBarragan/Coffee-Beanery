@@ -36,11 +36,18 @@ public static class AccountQueryMapping
             else
             {
                 existingCustomer ??= new Customer();
-                existingProduct = mapper.Map<Product>(accountEntity);
-                existingProduct.CustomerKey = existingCustomer.CustomerKey;
-                existingCustomer.Product ??= [];
-                mapper.Map(accountEntity, existingProduct);
-                existingCustomer.Product.Add(existingProduct);
+
+                if (existingProduct == null)
+                {
+                    existingProduct = mapper.Map<Product>(accountEntity);
+                    existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                    existingCustomer.Product ??= [];
+                    existingCustomer.Product.Add(existingProduct);
+                }
+                else
+                {
+                    mapper.Map(accountEntity, existingProduct);
+                }
             }
         }
         return (existingCustomer, existingProduct);

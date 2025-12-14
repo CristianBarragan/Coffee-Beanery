@@ -232,7 +232,7 @@ public static class GraphQLMapper
                             var joinKey = new JoinKey()
                             {
                                 From =
-                                    $"{linkAttribute.ConstructorArguments[0].Value}~{joinAttribute.ConstructorArguments[0].Value}Id",
+                                    $"{processingFieldMap.SourceModel}~{joinAttribute.ConstructorArguments[1].Value}",
                                 To =
                                     $"{joinAttribute.ConstructorArguments[0].Value}~{joinAttribute.ConstructorArguments[1].Value}"
                             };
