@@ -145,7 +145,7 @@ Contains the custom model and attributes which will be exposed through the API.
 
 ## Tests
 
-<img src="example/HotChocolateCoffeeBeanery/Test/Tests_Results.png" alt="Test_Results" height="60%" width="100%">
+<img src="https://github.com/CristianBarragan/Coffee-Beanery/blob/main/example/HotChocolateCoffeeBeanery/Test/Test_Results.png" alt="Test_Results" height="60%" width="100%">
 
 ### [Buy me a Coffee ☕]
 *I would love a 100% colombian coffee!*
