@@ -1,6 +1,8 @@
 ### Coffee Beanery
 
-Coffee beanery library is a dynamic parser from GraphQL queries into raw SQL queries; this library will not be shipped as a nuget package since optimization and changes are case by case; this example is using:
+Coffee beanery library is a dynamic parser from GraphQL queries into raw SQL queries; the translation happens on the fly and all the features are available out of the box and it only requires the mapping between models and entities.
+
+The example does not need anything else but cloning and run it. Uses the following libraries to achieve all the features listed below:
 
 - Dapper
 - Hot Chocolate
