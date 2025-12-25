@@ -1,6 +1,10 @@
 ### Coffee Beanery
 
-Coffee beanery library is a dynamic parser from GraphQL queries into raw SQL queries; the translation happens on the fly and all the features are available out of the box and it only requires the mapping between models and entities.
+Coffee beanery is a dynamic parser from GraphQL queries into raw SQL queries; the translation happens on the fly and all the features are available out of the box. 
+
+It only requires mappings between models and entities and a few annotations to signal the framework about the relationship between models or entities.
+
+Also, the feature to have the means for using business transactions and add custom business code within the api. Makes a unique opportunity to do any integration possible.
 
 Running example
 
@@ -152,6 +156,23 @@ Contains the custom model and attributes which will be exposed through the API.
 ## Tests
 
 <img src="https://github.com/CristianBarragan/Coffee-Beanery/blob/main/example/HotChocolateCoffeeBeanery/Test/Test_Results.png" alt="Test_Results" height="60%" width="100%">
+
+## Multiple architecture options
+
+## Stitching
+Stitching frameworks like Apollo of Fusion can be used to integrate multiple graphQL api. 
+
+keeping cache can be challenging specially when multiple process are happening in the background.
+
+From the example viewpoint each database schema can be split into microservices. And then stitching each context together
+
+## Database Replication
+
+A readonly replica can be used to join every context together. And then make queries against the replica without N+1 problems.
+
+## Hybrid
+
+To take advantage of each approach. A mix can be used. Stitching for mutations and replica for querying.
 
 ### [Buy me a Coffee ☕]
 *I would love a 100% colombian coffee!*
