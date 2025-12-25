@@ -2,7 +2,15 @@
 
 Coffee beanery library is a dynamic parser from GraphQL queries into raw SQL queries; the translation happens on the fly and all the features are available out of the box and it only requires the mapping between models and entities.
 
-The example does not need anything else but cloning and run it. Uses the following libraries to achieve all the features listed below:
+Running example
+
+1. Clone repository
+2. Run entity framework migrations
+3. Compile and run api project
+3. Use nitro IDE to create any type of graphql operation.
+4. Validate data persistance and query result.
+
+The following libraries are used to achieve all the features listed below:
 
 - Dapper
 - Hot Chocolate
@@ -11,27 +19,23 @@ The example does not need anything else but cloning and run it. Uses the followi
 - PostgreSQL
 - FasterKV
 
-Coffee Beanery provides the following features and can be fully customized
-
 ## Current Features
 
-- Configuration based and faster development
+- Configuration based for faster development.
 - No N+1 problem since the entire query/mutation is batched and materialized by the database engine
 - Complex domain models
-- Business service logic within the GraphQL API project
-- Custom mapping between data entities and domain models
-- Subgraph mutations and queries
-- Data annotation based configuration (Data entities and domain models)
+- Hability to add any additional business logic or integration within the GraphQL API project.
+- Custom and complex mapping between data entities and domain models
+- Allows subgraph mutations and queries using the same endpoint and wrapper object.
+- Data annotation based for creating relationships between Data entities and domain models.
 - Leverage to a mapping framework the mapping between data entities and domain models
-- Leverage generics to generate the column names based on the data entities
-- Can be customized and integrate with multiple GraphQL framework/libraries and databases
-- Nodes (Left joins between entities)
-- Edges (Joins between entities)
-- Paging
-- Filtering
-- Sorting
-- Select target entity at wrapper entity to signal which is the domain model to query from
-
+- Leverage generics to generate the column names based on the data entities.
+- Can be customized and integrate with multiple GraphQL framework / libraries and databases.
+- Node types are translated into Left joins between entities.
+- Edge types are translated into joins between entities.
+- Paging support
+- Filtering support
+- Sorting support
 
 ## Customizable Features
 
