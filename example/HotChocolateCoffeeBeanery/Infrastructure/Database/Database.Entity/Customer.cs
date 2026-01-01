@@ -29,6 +29,22 @@ public class Customer : Process
     [LinkKey("CustomerBankingRelationship","CustomerBankingRelationshipKey")]
     [JoinKey("Customer","Id")]
     public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
+    
+    public Guid? OuterCustomerCustomerRelationshipCustomerKey { get; set; }
+    
+    public int? OuterCustomerCustomerRelationshipCustomerId { get; set; }
+    
+    // [LinkKey("CustomerCustomerRelationshipCustomer","OuterCustomerCustomerRelationshipCustomerKey")]
+    // [JoinKey("Customer","Id")]
+    public List<CustomerCustomerRelationshipCustomer>? OuterCustomerCustomerRelationshipCustomer { get; set; }
+    
+    public Guid? InnerCustomerCustomerRelationshipCustomerKey { get; set; }
+    
+    public int? InnerCustomerCustomerRelationshipCustomerId { get; set; }
+    
+    // [LinkKey("CustomerCustomerRelationshipCustomer","InnerCustomerCustomerRelationshipCustomerKey")]
+    // [JoinKey("Customer","Id")]
+    public List<CustomerCustomerRelationshipCustomer>? InnerCustomerCustomerRelationshipCustomer { get; set; }
 }
 
 public enum CustomerType
@@ -57,6 +73,10 @@ public class CustomerEntityConfiguration : IEntityTypeConfiguration<Customer>
         builder.HasMany(c => c.ContactPoint).WithOne(c => c.Customer).HasForeignKey(c => c.CustomerId);
 
         builder.HasMany(c => c.CustomerBankingRelationship).WithOne(c => c.Customer).HasForeignKey(c => c.CustomerId);
+
+        builder.HasMany(c => c.OuterCustomerCustomerRelationshipCustomer).WithOne(c => c.OuterCustomer).HasForeignKey(c => c.OuterCustomerId);
+        
+        builder.HasMany(c => c.InnerCustomerCustomerRelationshipCustomer).WithOne(c => c.InnerCustomer).HasForeignKey(c => c.InnerCustomerId);
 
         builder.Property(c => c.ProcessedDateTime).HasDefaultValueSql("(now() at time zone 'utc')");
     }

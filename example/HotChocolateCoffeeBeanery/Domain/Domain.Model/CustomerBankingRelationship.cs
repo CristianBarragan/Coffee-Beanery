@@ -12,5 +12,5 @@ public class CustomerBankingRelationship
     
     [LinkBusinessKey("Contract","ContractKey")]
 
-    public List<Contract>? Contract { get; set; }
+    public Contract? Contract { get; set; }
 }

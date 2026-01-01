@@ -6,43 +6,43 @@ namespace Domain.Shared.Mapping;
 
 public static class AccountQueryMapping
 {
-    public static (Customer existingCustomer, Product existingProduct) MapFromCustomer(
-        object mappedObject, IMapper mapper, Customer? existingCustomer, Product? existingProduct)
+    public static (CustomerCustomerEdge existingCustomerCustomerEdge, Product existingProduct) MapFromCustomer(
+        object mappedObject, IMapper mapper, CustomerCustomerEdge? existingCustomerCustomerEdge, Product? existingProduct)
     {
         if (mappedObject is DatabaseEntity.Account)
         {
             var accountEntity = mappedObject as DatabaseEntity.Account;
             
-            if (existingCustomer?.CustomerKey != null)
+            if (existingCustomerCustomerEdge?.InnerCustomer.CustomerKey != null)
             {
                 if (existingProduct?.CustomerKey != null)
                 {
                     mapper.Map(accountEntity, existingProduct);
-                    var productIndex = existingCustomer.Product?.FindIndex(a => a.CustomerKey == existingProduct?.CustomerKey);
-                    existingProduct.CustomerKey = existingCustomer.CustomerKey;
-                    existingCustomer.Product ??= [];
+                    var productIndex = existingCustomerCustomerEdge?.InnerCustomer.Product?.FindIndex(a => a.CustomerKey == existingProduct?.CustomerKey);
+                    existingProduct.CustomerKey = existingCustomerCustomerEdge?.InnerCustomer.CustomerKey;
+                    existingCustomerCustomerEdge.InnerCustomer.Product ??= [];
                     mapper.Map(accountEntity, existingProduct);
-                    existingCustomer.Product[productIndex!.Value] = existingProduct;
+                    existingCustomerCustomerEdge.InnerCustomer.Product[productIndex!.Value] = existingProduct;
                 }
                 else
                 {
                     existingProduct = mapper.Map<Product>(accountEntity);
-                    existingCustomer.Product ??= [];
-                    existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                    existingCustomerCustomerEdge.InnerCustomer.Product ??= [];
+                    existingProduct.CustomerKey = existingCustomerCustomerEdge.InnerCustomer.CustomerKey;
                     mapper.Map(accountEntity, existingProduct);
-                    existingCustomer.Product.Add(existingProduct);
+                    existingCustomerCustomerEdge.InnerCustomer.Product.Add(existingProduct);
                 }
             }
             else
             {
-                existingCustomer ??= new Customer();
+                existingCustomerCustomerEdge.InnerCustomer ??= new Customer();
 
                 if (existingProduct == null)
                 {
                     existingProduct = mapper.Map<Product>(accountEntity);
-                    existingProduct.CustomerKey = existingCustomer.CustomerKey;
-                    existingCustomer.Product ??= [];
-                    existingCustomer.Product.Add(existingProduct);
+                    existingProduct.CustomerKey = existingCustomerCustomerEdge.InnerCustomer.CustomerKey;
+                    existingCustomerCustomerEdge.InnerCustomer.Product ??= [];
+                    existingCustomerCustomerEdge.InnerCustomer.Product.Add(existingProduct);
                 }
                 else
                 {
@@ -50,6 +50,6 @@ public static class AccountQueryMapping
                 }
             }
         }
-        return (existingCustomer, existingProduct);
+        return (default, existingProduct);
     }
 }

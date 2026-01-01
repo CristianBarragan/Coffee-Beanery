@@ -15,7 +15,6 @@ example/HotChocolateCoffeeBeanery/Domain/Domain.Model/obj/*
 example/HotChocolateCoffeeBeanery/Domain/Domain.Shared/bin/*
 example/HotChocolateCoffeeBeanery/Domain/Domain.Shared/obj/*
 example/HotChocolateCoffeeBeanery/HotChocolateCoffeeBeanery.sln.DotSettings.user
-example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Banking/*
 example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Banking/obj/*
 example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Common/bin/*
 example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Common/obj/*

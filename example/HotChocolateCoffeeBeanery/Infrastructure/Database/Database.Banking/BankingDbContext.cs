@@ -9,6 +9,10 @@ namespace Database.Banking
         {
         }
 
+        public DbSet<CustomerCustomerRelationshipCustomer> CustomerCustomerRelationshipCustomer { get; set; }
+        
+        public DbSet<CustomerCustomerRelationship> CustomerCustomerRelationship { get; set; }
+
         public DbSet<Customer> Customer { get; set; }
 
         public DbSet<ContactPoint> ContactPoint { get; set; }
@@ -24,6 +28,10 @@ namespace Database.Banking
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.ApplyConfiguration(new CustomerCustomerRelationshipEntityConfiguration(Schema.Banking.ToString()));
+            
+            modelBuilder.ApplyConfiguration(new CustomerCustomerRelationshipCustomerEntityConfiguration(Schema.Banking.ToString()));
 
             modelBuilder.ApplyConfiguration(new CustomerEntityConfiguration(Schema.Banking.ToString()));
 

@@ -4,16 +4,16 @@ using DatabaseEntity = Database.Entity;
 
 namespace Domain.Shared.Mapping;
 
-public static class CustomerQueryMapping
+public static class CustomerCustomerRelationshipQueryMapping
 {
-    public static CustomerCustomerEdge MapCustomer(List<CustomerCustomerEdge> customerCustomerEdges, object mappedObject, IMapper mapper)
+    public static CustomerCustomerEdge MapCustomerCustomerRelationship(List<CustomerCustomerEdge> customerCustomerEdges, object mappedObject, IMapper mapper)
     {
         Customer existingCustomer = null;
         if (mappedObject is DatabaseEntity.Customer)
         {
             var customerDb = mappedObject as DatabaseEntity.Customer;
 
-            existingCustomer = customerCustomerEdges.FirstOrDefault(x => x.InnerCustomer.CustomerKey == customerDb?.CustomerKey).InnerCustomer;
+            existingCustomer = customerCustomerEdges.First(x => x.OuterCustomerKey == customerDb?.CustomerKey).InnerCustomer;
 
             if (existingCustomer?.CustomerKey != null)
             {
@@ -28,5 +28,6 @@ public static class CustomerQueryMapping
         }
 
         return default;
+        // return existingCustomer;
     }
 }

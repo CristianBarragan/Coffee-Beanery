@@ -27,13 +27,13 @@ public class Product
     public ProductType? ProductType { get; set; }
 
     [LinkBusinessKey("CustomerBankingRelationship","CustomerBankingRelationshipKey")]
-    public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
+    public CustomerBankingRelationship? CustomerBankingRelationship { get; set; }
     
     [LinkBusinessKey("Contract","ContractKey")]
-    public List<Contract>? Contract { get; set; }
+    public Contract? Contract { get; set; }
 
     [LinkBusinessKey("Account","AccountKey")]
-    public List<Account>? Account { get; set; }
+    public Account? Account { get; set; }
 }
 
 public enum ProductType

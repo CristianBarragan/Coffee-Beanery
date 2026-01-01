@@ -57,19 +57,19 @@ public static class GraphQLMapper
 
                 var processingFieldMap = new FieldMap()
                 {
-                    FieldSourceName = mapping.GetSourceMemberName(),
-                    FieldSourceType = mapping.TypeMap.SourceType,
-                    SourceModel = mapping.TypeMap.SourceType.Name,
-                    FieldDestinationName = mapping.DestinationName,
-                    FieldDestinationType = mapping.TypeMap.DestinationType,
-                    DestinationEntity = mapping.TypeMap.DestinationType.Name
+                    FieldSourceName = mapping.TypeMap.SourceType == to.GetType() ? 
+                        mapping.GetSourceMemberName() : mapping.DestinationName,
+                    FieldSourceType = mapping.TypeMap.SourceType == to.GetType() ? 
+                        mapping.TypeMap.SourceType : mapping.TypeMap.DestinationType,
+                    SourceModel = mapping.TypeMap.SourceType == to.GetType() ? 
+                        mapping.TypeMap.SourceType.Name : mapping.TypeMap.DestinationType.Name,
+                    FieldDestinationName = mapping.TypeMap.SourceType != to.GetType() ? 
+                        mapping.GetSourceMemberName() : mapping.DestinationName,
+                    FieldDestinationType = mapping.TypeMap.SourceType != to.GetType() ? 
+                        mapping.TypeMap.SourceType : mapping.TypeMap.DestinationType,
+                    DestinationEntity = mapping.TypeMap.SourceType != to.GetType() ? 
+                        mapping.TypeMap.SourceType.Name : mapping.TypeMap.DestinationType.Name
                 };
-
-                if (processingFieldMap.FieldDestinationName.Matches("CustomerType") ||
-                    processingFieldMap.FieldSourceName.Matches("CustomerType"))
-                {
-                    var a = true;
-                }
 
                 if (mappingFields.Any(a => a.FieldDestinationName.Matches(processingFieldMap.FieldDestinationName) &&
                                            a.FieldSourceName.Matches(processingFieldMap.FieldSourceName)))
@@ -80,14 +80,6 @@ public static class GraphQLMapper
                 mappingFields!.Add(processingFieldMap);
 
                 var enumDictionary = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-
-                var linkKeyDestinationProperty = models.Contains(processingFieldMap.FieldDestinationName)
-                    ? $"{processingFieldMap.FieldDestinationName}Key"
-                    : processingFieldMap.FieldDestinationName;
-
-                var linkKeySourceProperty = models.Contains(processingFieldMap.FieldSourceName)
-                    ? $"{processingFieldMap.FieldSourceName}Key"
-                    : processingFieldMap.FieldSourceName;
 
                 var propertyToAttributeType = to.GetType().GetProperties()
                     .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldSourceName));
@@ -114,78 +106,90 @@ public static class GraphQLMapper
                         }
                     }
                 }
-
-                var propertyFromAttributeType = from.GetType().GetProperties()
-                    .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldSourceName));
-
-                if (!models.Contains(linkKeyDestinationProperty) && !models.Contains(linkKeySourceProperty))
-                {
-                    AddDictionaryValue(linkModelDictionaryTreeEdge,
-                        $"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}",
-                        new SqlNode()
-                        {
-                            RelationshipKey = $"{processingFieldMap.SourceModel}~{linkKeySourceProperty}",
-                            Column = linkKeySourceProperty,
-                            IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
-                            FromEnumeration = enumDictionary,
-                            SqlNodeType = SqlNodeType.Edge
-                        });
-                    
-                    AddDictionaryValue(linkModelDictionaryTreeNode,
-                        $"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}",
-                        new SqlNode()
-                        {
-                            RelationshipKey = $"{processingFieldMap.SourceModel}~{linkKeySourceProperty}",
-                            Column = linkKeySourceProperty,
-                            IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
-                            FromEnumeration = enumDictionary,
-                            SqlNodeType = SqlNodeType.Node
-                        });
-                    
-                    AddDictionaryValue(linkModelDictionaryTreeMutation,
-                        $"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}",
-                        new SqlNode()
-                        {
-                            RelationshipKey = $"{processingFieldMap.SourceModel}",
-                            Column = linkKeySourceProperty,
-                            IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
-                            FromEnumeration = enumDictionary,
-                            SqlNodeType = SqlNodeType.Mutation
-                        });
-                }
                 
-                if (!entities.Contains(linkKeyDestinationProperty) && !entities.Contains(linkKeySourceProperty))
-                {
-                    AddDictionaryValue(linkEntityDictionaryTreeEdge, $"{processingFieldMap.SourceModel}~{linkKeySourceProperty}",
-                        new SqlNode()
-                        {
-                            RelationshipKey = $"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}",
-                            Column = linkKeySourceProperty,
-                            IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
-                            ToEnumeration = enumDictionary,
-                            SqlNodeType = SqlNodeType.Edge
-                        });
-                    
-                    AddDictionaryValue(linkEntityDictionaryTreeNode, $"{processingFieldMap.SourceModel}~{linkKeySourceProperty}",
-                        new SqlNode()
-                        {
-                            RelationshipKey = $"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}",
-                            Column = linkKeySourceProperty,
-                            IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
-                            ToEnumeration = enumDictionary,
-                            SqlNodeType = SqlNodeType.Node
-                        });
-                    
-                    AddDictionaryValue(linkEntityDictionaryTreeMutation, $"{processingFieldMap.SourceModel}~{linkKeySourceProperty}",
-                        new SqlNode()
-                        {
-                            RelationshipKey = $"{processingFieldMap.DestinationEntity}~{linkKeyDestinationProperty}",
-                            Column = linkKeySourceProperty,
-                            IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
-                            ToEnumeration = enumDictionary,
-                            SqlNodeType = SqlNodeType.Mutation
-                        });
-                }
+                AddDictionaryValue(linkModelDictionaryTreeEdge,
+                    $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
+                    new SqlNode()
+                    {
+                        RelationshipKey = $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
+                        Column = processingFieldMap.FieldSourceName,
+                        Entity = processingFieldMap.SourceModel,
+                        IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
+                        IsGraph = to.GetType().BaseType.Name.Matches("GraphProcess"),
+                        FromEnumeration = enumDictionary,
+                        SqlNodeType = SqlNodeType.Edge,
+                        Namespace = processingFieldMap.FieldSourceType.Namespace
+                    });
+                
+                AddDictionaryValue(linkModelDictionaryTreeNode,
+                    $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
+                    new SqlNode()
+                    {
+                        RelationshipKey = $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
+                        Column = processingFieldMap.FieldSourceName,
+                        Entity = processingFieldMap.SourceModel,
+                        IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
+                        IsGraph = to.GetType().BaseType.Name.Matches("GraphProcess"),
+                        FromEnumeration = enumDictionary,
+                        SqlNodeType = SqlNodeType.Node,
+                        Namespace = processingFieldMap.FieldSourceType.Namespace
+                    });
+                
+                AddDictionaryValue(linkModelDictionaryTreeMutation,
+                    $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
+                    new SqlNode()
+                    {
+                        RelationshipKey = $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
+                        Column = processingFieldMap.FieldSourceName,
+                        Entity = processingFieldMap.SourceModel,
+                        IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
+                        IsGraph = to.GetType().BaseType.Name.Matches("GraphProcess"),
+                        FromEnumeration = enumDictionary,
+                        SqlNodeType = SqlNodeType.Mutation,
+                        Namespace = processingFieldMap.FieldSourceType.Namespace
+                    });
+                
+                AddDictionaryValue(linkEntityDictionaryTreeEdge, 
+                    $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
+                    new SqlNode()
+                    {
+                        RelationshipKey = $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
+                        Column = processingFieldMap.FieldDestinationName,
+                        Entity = processingFieldMap.DestinationEntity,
+                        IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
+                        IsGraph = to.GetType().BaseType.Name.Matches("GraphProcess"),
+                        ToEnumeration = enumDictionary,
+                        SqlNodeType = SqlNodeType.Edge,
+                        Namespace = processingFieldMap.FieldDestinationType.Namespace
+                    });
+                
+                AddDictionaryValue(linkEntityDictionaryTreeNode, 
+                    $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
+                    new SqlNode()
+                    {
+                        RelationshipKey = $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
+                        Column = processingFieldMap.FieldDestinationName,
+                        Entity = processingFieldMap.DestinationEntity,
+                        IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
+                        IsGraph = to.GetType().BaseType.Name.Matches("GraphProcess"),
+                        ToEnumeration = enumDictionary,
+                        SqlNodeType = SqlNodeType.Node,
+                        Namespace = processingFieldMap.FieldDestinationType.Namespace
+                    });
+                
+                AddDictionaryValue(linkEntityDictionaryTreeMutation, 
+                    $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
+                    new SqlNode()
+                    {
+                        RelationshipKey = $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
+                        Column = processingFieldMap.FieldDestinationName,
+                        Entity = processingFieldMap.DestinationEntity,
+                        IsEnumeration = processingFieldMap.FieldSourceType.IsEnum,
+                        IsGraph = to.GetType().BaseType.Name.Matches("GraphProcess"),
+                        ToEnumeration = enumDictionary,
+                        SqlNodeType = SqlNodeType.Mutation,
+                        Namespace = processingFieldMap.FieldDestinationType.Namespace
+                    });
 
                 if (propertyToAttributeType != null)
                 {
@@ -208,8 +212,14 @@ public static class GraphQLMapper
                             };
                             linkBusinessKeys.Add(linkBusinessKey);
                         }
+                    }
+                    
+                    var propertyEntityAttributeType = to.GetType().GetProperties()
+                        .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldDestinationName));
 
-                        var linkAttribute = propertyModelAttributeType.CustomAttributes
+                    if (propertyEntityAttributeType != null)
+                    {
+                        var linkAttribute = propertyEntityAttributeType.CustomAttributes
                             .FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute));
 
                         if (linkKeys != null && linkAttribute != null)
@@ -224,7 +234,7 @@ public static class GraphQLMapper
                             linkKeys.Add(linkKey);
                         }
                         
-                        var joinAttribute = propertyModelAttributeType.CustomAttributes
+                        var joinAttribute = propertyEntityAttributeType.CustomAttributes
                             .FirstOrDefault(a => a.AttributeType == typeof(JoinKeyAttribute));
 
                         if (joinKeys != null && joinAttribute != null)
@@ -239,7 +249,7 @@ public static class GraphQLMapper
                             joinKeys.Add(joinKey);
                         }
                         
-                        var joinOneAttribute = propertyModelAttributeType.CustomAttributes
+                        var joinOneAttribute = propertyEntityAttributeType.CustomAttributes
                             .FirstOrDefault(a => a.AttributeType == typeof(JoinOneKeyAttribute));
 
                         if (joinOneKeys != null && joinOneAttribute != null)
@@ -247,15 +257,15 @@ public static class GraphQLMapper
                             var joinOneKey = new JoinOneKey()
                             {
                                 From =
-                                    $"{propertyModelAttributeType.CustomAttributes
+                                    $"{propertyEntityAttributeType.CustomAttributes
                                         .LastOrDefault(a => a.AttributeType == typeof(JoinOneKeyAttribute)).ConstructorArguments[0].Value}~{
-                                        propertyModelAttributeType.CustomAttributes
+                                        propertyEntityAttributeType.CustomAttributes
                                         .LastOrDefault(a => a.AttributeType == typeof(JoinOneKeyAttribute)).ConstructorArguments[1].Value}"
                                     ,
                                 To =
-                                    $"{propertyModelAttributeType.CustomAttributes
+                                    $"{propertyEntityAttributeType.CustomAttributes
                                         .FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute)).ConstructorArguments[0].Value}~{
-                                        propertyModelAttributeType.CustomAttributes
+                                        propertyEntityAttributeType.CustomAttributes
                                         .FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute)).ConstructorArguments[1].Value}"
                             };
                             joinOneKeys.Add(joinOneKey);
@@ -279,40 +289,40 @@ public static class GraphQLMapper
                     continue;
                 }
 
-                var entityVariable = (E)Activator.CreateInstance(entityNodeType);
-                propertyFromAttributeType = entityVariable.GetType().GetProperties()
-                    .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldSourceName));
-
-                if (propertyFromAttributeType == null)
-                {
-                    entityVariable = (E)Activator.CreateInstance(entityNodeType);
-                    propertyFromAttributeType = entityVariable.GetType().GetProperties()
-                        .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldDestinationName));
-                }
-
-                if (propertyFromAttributeType != null)
-                {
-                    var propertyEntityAttributeType = from.GetType().GetProperties()
-                        .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldDestinationName));
-
-                    if (propertyEntityAttributeType != null)
-                    {
-                        var linkAttribute = propertyEntityAttributeType.CustomAttributes
-                            .FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute));
-
-                        if (linkKeys != null && linkAttribute != null)
-                        {
-                            var linkKey = new LinkKey()
-                            {
-                                From =
-                                    $"{processingFieldMap.SourceModel}~{linkAttribute.ConstructorArguments[1].Value.ToString()}",
-                                To =
-                                    $"{linkAttribute.ConstructorArguments[0].Value.ToString()}~{linkAttribute.ConstructorArguments[1].Value.ToString()}"
-                            };
-                            linkKeys.Add(linkKey);
-                        }
-                    }
-                }
+                // var entityVariable = (E)Activator.CreateInstance(entityNodeType);
+                // propertyFromAttributeType = entityVariable.GetType().GetProperties()
+                //     .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldSourceName));
+                //
+                // if (propertyFromAttributeType == null)
+                // {
+                //     entityVariable = (E)Activator.CreateInstance(entityNodeType);
+                //     propertyFromAttributeType = entityVariable.GetType().GetProperties()
+                //         .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldDestinationName));
+                // }
+                //
+                // if (propertyFromAttributeType != null)
+                // {
+                //     var propertyEntityAttributeType = from.GetType().GetProperties()
+                //         .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldDestinationName));
+                //
+                //     if (propertyEntityAttributeType != null)
+                //     {
+                //         var linkAttribute = propertyEntityAttributeType.CustomAttributes
+                //             .FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute));
+                //
+                //         if (linkKeys != null && linkAttribute != null)
+                //         {
+                //             var linkKey = new LinkKey()
+                //             {
+                //                 From =
+                //                     $"{processingFieldMap.SourceModel}~{linkAttribute.ConstructorArguments[1].Value.ToString()}",
+                //                 To =
+                //                     $"{linkAttribute.ConstructorArguments[0].Value.ToString()}~{linkAttribute.ConstructorArguments[1].Value.ToString()}"
+                //             };
+                //             linkKeys.Add(linkKey);
+                //         }
+                //     }
+                // }
             }
         }
 

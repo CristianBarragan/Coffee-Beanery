@@ -64,8 +64,8 @@ public class Program
         builder.Services.AddGraphQLServer()
             .AddQueryType(d =>
             {
-                d.Field("customer")
-                    .ResolveWith<CustomerQueryResolver>(r => r.GetCustomer(default, default,
+                d.Field("CustomerCustomerEdge")
+                    .ResolveWith<CustomerCustomerEdgeQueryResolver>(r => r.GetCustomerCustomerEdge(default, default,
                         default));
             })
             .AddMutationType(d =>
@@ -74,7 +74,7 @@ public class Program
 
                 d.Field("wrapper")
                     .Argument("wrapper", d => d.Type<CustomerInputType>())
-                    .ResolveWith<CustomerMutationResolver>(r => r.UpsertCustomer(default, default, default));
+                    .ResolveWith<CustomerCustomerEdgeMutationResolver>(r => r.UpsertCustomerCustomerEdge(default, default, default));
             })
             .SetPagingOptions(new PagingOptions() { DefaultPageSize = 10, IncludeTotalCount = true })
             .AddFiltering()

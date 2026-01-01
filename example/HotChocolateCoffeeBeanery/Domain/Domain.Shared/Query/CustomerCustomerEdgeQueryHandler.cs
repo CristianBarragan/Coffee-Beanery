@@ -10,13 +10,13 @@ using DatabaseEntity = Database.Entity;
 
 namespace Domain.Shared.Query;
 
-public class CustomerQueryHandler<M> : ProcessQuery<M>, IQuery<SqlStructure,
+public class CustomerCustomerEdgeQueryHandler<M> : ProcessQuery<M>, IQuery<SqlStructure,
     (List<M> list, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)>
     where M : class
 {
     private readonly IMapper _mapper;
 
-    public CustomerQueryHandler(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection,
+    public CustomerCustomerEdgeQueryHandler(ILoggerFactory loggerFactory, NpgsqlConnection dbConnection,
         IMapper mapper) : base(loggerFactory, dbConnection)
     {
         _mapper = mapper;
@@ -25,11 +25,11 @@ public class CustomerQueryHandler<M> : ProcessQuery<M>, IQuery<SqlStructure,
     public override (List<M> models, int? startCursor, int? endCursor, int? totalCount, int? totalPageRecords)
         MappingConfiguration(List<M> models, SqlStructure sqlStructure, object[] map)
     {
-        var customers = models.OfType<Customer>().ToList();
+        var customerCustomerEdges = models.OfType<CustomerCustomerEdge>().ToList();
         var rowNumber = 0;
         var totalCount = 0;
         var pageRecords = 0;
-        var customer = new Customer();
+        var customerCustomerEdge = new CustomerCustomerEdge();
         var product = new Product();
         
         for (int i = 0; i < map.Length; i++)
@@ -42,52 +42,61 @@ public class CustomerQueryHandler<M> : ProcessQuery<M>, IQuery<SqlStructure,
             {
                 totalCount = (map[i] as TotalRecordCount).RecordCount;
             }
+            else if (map[i] is DatabaseEntity.CustomerCustomerRelationship)
+            {
+                customerCustomerEdge = CustomerCustomerRelationshipQueryMapping
+                    .MapCustomerCustomerRelationship(customerCustomerEdges, map[i], _mapper);
+            }
             else if (map[i] is DatabaseEntity.Customer)
             {
-                customer = CustomerQueryMapping.MapCustomer(customers, map[i], _mapper);
+                customerCustomerEdge = CustomerQueryMapping.MapCustomer(customerCustomerEdges, map[i], _mapper);
             }
             else if (map[i] is DatabaseEntity.ContactPoint)
             {
-                customer = ContactPointQueryMapping.MapFromCustomer(map[i], _mapper, customer);
+                customerCustomerEdge = ContactPointQueryMapping.MapFromCustomer(map[i], _mapper, customerCustomerEdge);
             }
             else if (map[i] is DatabaseEntity.CustomerBankingRelationship)
             {
                 var result = CustomerBankingRelationshipQueryMapping
-                    .MapFromCustomer(map[i], _mapper, customer, product);
-                customer = result.existingCustomer;
+                    .MapFromCustomer(map[i], _mapper, customerCustomerEdge, product);
+                customerCustomerEdge = result.existingCustomerCustomerEdge;
                 product = result.existingProduct;
             }
             else if (map[i] is DatabaseEntity.Contract)
             {
-                var result = ContractQueryMapping.MapFromCustomer(map[i], _mapper, customer, product);
-                customer = result.existingCustomer;
+                var result = ContractQueryMapping.MapFromCustomer(map[i], _mapper, 
+                    customerCustomerEdge, product);
+                customerCustomerEdge = result.existingCustomerCustomerEdge;
                 product = result.existingProduct;
             }
             else if (map[i] is DatabaseEntity.Account)
             {
-                var result = AccountQueryMapping.MapFromCustomer(map[i], _mapper, customer, product);
-                customer = result.existingCustomer;
+                var result = AccountQueryMapping.MapFromCustomer(map[i], _mapper, 
+                    customerCustomerEdge, product);
+                customerCustomerEdge = result.existingCustomerCustomerEdge;
                 product = result.existingProduct;
             }
             else if (map[i] is DatabaseEntity.Transaction)
             {
-                var result = TransactionQueryMapping.MapFromCustomer(map[i], _mapper, customer, product);
-                customer = result.existingCustomer;
+                var result = TransactionQueryMapping.MapFromCustomer(map[i], _mapper, 
+                    customerCustomerEdge, product);
+                customerCustomerEdge = result.existingCustomerCustomerEdge;
                 product = result.existingProduct;
             }
         }  
         
-        var existingCustomerIndex = customers.FindIndex(c => c.CustomerKey == customer?.CustomerKey);
+        var existingCustomerIndex = customerCustomerEdges.FindIndex(c => 
+            c.InnerCustomer.CustomerKey == customerCustomerEdge.InnerCustomer?.CustomerKey);
         if (existingCustomerIndex >= 0)
         {
-            customers[existingCustomerIndex] = customer;
+            customerCustomerEdges[existingCustomerIndex]  = customerCustomerEdge;
         }
         else
         {
-            customers.Add(customer);
+            customerCustomerEdges.Add(customerCustomerEdge);
         }
         
-        dynamic list = customers;
+        dynamic list = customerCustomerEdges;
         return (list, sqlStructure.Pagination?.StartCursor, sqlStructure.Pagination?.EndCursor, 
             totalCount, pageRecords);
     }

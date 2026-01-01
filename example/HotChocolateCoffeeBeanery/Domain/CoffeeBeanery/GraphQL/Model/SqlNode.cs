@@ -15,8 +15,12 @@ public class SqlNode
     public List<FieldMap> Mapping { get; set; }
 
     public bool IsEnumeration { get; set; }
+
+    public bool IsGraph { get; set; }
     
     public string RelationshipKey { get; set; } = String.Empty;
+
+    public string Entity { get; set; } = String.Empty;
 
     public string Column { get; set; } = String.Empty;
     
