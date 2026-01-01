@@ -136,7 +136,7 @@ public static class SqlHelper
         if (upsertingEntity.Value != null)
         {
             sql = GenerateUpsert(processingTree, trees, sqlUpsertStatementNodes, 
-                sqlNodes, whereCurrentClause);
+                sqlNodes, whereCurrentClause, entityNames);
             
             if (!string.IsNullOrEmpty(sql))
             {
@@ -170,7 +170,7 @@ public static class SqlHelper
     /// <returns></returns>
     public static string GenerateUpsert(NodeTree currentTree, Dictionary<string, NodeTree> trees,
         Dictionary<string, SqlNode> sqlUpsertStatementNodes,
-        Dictionary<string, SqlNode> sqlNodes, string whereClause)
+        Dictionary<string, SqlNode> sqlNodes, string whereClause, List<string> entities)
     {
         var sqlUpsertAux = string.Empty;
         var parentTree = currentTree;
@@ -194,6 +194,11 @@ public static class SqlHelper
             foreach (var column in currentColumns.Last().Value.LinkKeys)
             {
                 currentTree = trees[column.To.Split('~')[0]];
+                
+                if (entities.Contains(column.To.Split('~')[1]))
+                {
+                    continue;
+                }
 
                 var currentColumnGraph = new List<KeyValuePair<string, SqlNode>>();
                 currentColumnGraph.AddRange(sqlNodes
@@ -218,7 +223,7 @@ public static class SqlHelper
                 exclude.AddRange(
                     currentColumnGraph.Where(c => c.Value.UpsertKeys
                             .Any(u => !u.Matches(c.Value.Entity)))
-                        .Select(e => $"\"{e.Value.Entity}\" = EXCLUDED.\"{e.Value.Entity}\"")
+                        .Select(e => $"\"{e.Value.Column}\" = EXCLUDED.\"{e.Value.Column}\"")
                 );
 
                 if (exclude.Count > 0)
@@ -245,7 +250,7 @@ public static class SqlHelper
         }
         
         sqlUpsertAux += $" INSERT INTO \"{currentTree.Schema}\".\"{currentTree.Name}\" ( " +
-                        $" {string.Join(",", currentColumns.Select(s => $"\"{s.Value.Entity}\"").ToList())}) VALUES ({
+                        $" {string.Join(",", currentColumns.Select(s => $"\"{s.Value.Column}\"").ToList())}) VALUES ({
                             string.Join(",", currentColumns.Select(s => $"'{s.Value.Value}'").ToList())}) " +
                         $" ON CONFLICT" +
                         $" ({string.Join(",", currentColumns.LastOrDefault().Value.UpsertKeys
@@ -254,7 +259,7 @@ public static class SqlHelper
         exclude.AddRange(
             currentColumns.Where(c => c.Value.UpsertKeys
                     .Any(u => !u.Matches(c.Value.Entity)))
-                .Select(e => $"\"{e.Value.Entity}\" = EXCLUDED.\"{e.Value.Entity}\"")
+                .Select(e => $"\"{e.Value.Column}\" = EXCLUDED.\"{e.Value.Column}\"")
         );
 
         if (exclude.Count > 0)
@@ -401,12 +406,12 @@ public static class SqlHelper
             .Select(s => $"{entity}.\"{s.Value.Column}\" = '{s.Value.Value}'").ToList();
         
         if (
-            currentColumns.Count == 0) 
-            // || 
-            // !currentColumns.Any(a => a.Value.UpsertKeys
-            //     .Any(u => u.Split('~')[1].Matches(a.Value.Column)) && a.Value.SqlNodeType == SqlNodeType.Mutation && 
-            //                          !string.IsNullOrEmpty(a.Value.Value)) ||
-            // where.Count == 0)
+            currentColumns.Count == 0 
+            || 
+            !currentColumns.Any(a => a.Value.UpsertKeys
+                .Any(u => u.Split('~')[1].Matches(a.Value.Column)) && a.Value.SqlNodeType == SqlNodeType.Mutation && 
+                                     !string.IsNullOrEmpty(a.Value.Value)) ||
+            where.Count == 0)
         {
             return string.Empty;
         }
@@ -464,7 +469,13 @@ public static class SqlHelper
         var where = currentColumns.Where(a => a.Value.Entity.Matches(entity) && a.Value.Column.Matches(column))
             .Select(s => $"{childEntity}.\"{childColumns.First().Value.UpsertKeys.First().Split('~')[1]}\" = '{s.Value.Value}'").ToList();
         
-        if (currentColumns.Count == 0)
+        if (
+            currentColumns.Count == 0 
+            || 
+            !currentColumns.Any(a => a.Value.UpsertKeys
+                                         .Any(u => u.Split('~')[1].Matches(a.Value.Column)) && a.Value.SqlNodeType == SqlNodeType.Mutation && 
+                                     !string.IsNullOrEmpty(a.Value.Value)) ||
+            where.Count == 0)
         {
             return string.Empty;
         }
