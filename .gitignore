@@ -3,6 +3,7 @@
 *.props
 *.cache
 *.targets
+*.exe
 example/HotChocolateCoffeeBeanery/.idea/*
 example/HotChocolateCoffeeBeanery/Api/Api.Banking/bin/*
 example/HotChocolateCoffeeBeanery/Api/Api.Banking/cpr-checkpoints/*
