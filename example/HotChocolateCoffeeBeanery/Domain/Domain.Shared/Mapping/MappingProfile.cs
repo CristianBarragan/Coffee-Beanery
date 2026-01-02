@@ -9,35 +9,12 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-
-        CreateMap<CustomerCustomerEdge, DataEntity.CustomerCustomerRelationship>()
-            .EqualityComparison((src, dest) =>
-                src.CustomerCustomerRelationshipKey == dest.CustomerCustomerRelationshipKey)
-            .ForMember(dest => dest.CustomerCustomerRelationshipKey, opt =>
-                opt.MapFrom(ps => ps.CustomerCustomerRelationshipKey))
-            .ForMember(dest => dest.CustomerCustomerRelationshipCustomer, opt =>
-                opt.Ignore())
-            .ForMember(dest => dest.Id, opt => 
-                opt.Ignore())
-            .ForMember(dest => dest.Schema, opt => 
-                opt.Ignore())
-            .ForMember(dest => dest.ProcessedDateTime, opt => 
-                opt.Ignore())
-            .ReverseMap();
         
-        CreateMap<CustomerCustomerEdge, DataEntity.CustomerCustomerRelationshipCustomer>()
-            .EqualityComparison((src, dest) =>
-                src.CustomerCustomerRelationshipKey == dest.CustomerCustomerRelationshipKey)
-            .ForMember(dest => dest.CustomerCustomerRelationshipKey, opt =>
-                opt.MapFrom(ps => ps.CustomerCustomerRelationshipKey))
+        CreateMap<CustomerCustomerEdge, DataEntity.CustomerCustomerRelationship>()
             .ForMember(dest => dest.OuterCustomerKey, opt =>
                 opt.MapFrom(ps => ps.OuterCustomerKey))
             .ForMember(dest => dest.InnerCustomerKey, opt =>
                 opt.MapFrom(ps => ps.InnerCustomerKey))
-            .ForMember(dest => dest.CustomerCustomerRelationship, opt =>
-                opt.Ignore())
-            .ForMember(dest => dest.CustomerCustomerRelationshipId, opt =>
-                opt.Ignore())
             .ForMember(dest => dest.OuterCustomer, opt =>
                 opt.Ignore())
             .ForMember(dest => dest.OuterCustomerId, opt =>
@@ -46,7 +23,7 @@ public class MappingProfile : Profile
                 opt.Ignore())
             .ForMember(dest => dest.InnerCustomerId, opt =>
                 opt.Ignore())
-            .ForMember(dest => dest.CustomerCustomerRelationshipCustomerKey, opt => 
+            .ForMember(dest => dest.CustomerCustomerRelationshipKey, opt => 
                 opt.Ignore())
             .ForMember(dest => dest.Id, opt => 
                 opt.Ignore())
@@ -120,19 +97,6 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.LastNaming, opt =>
                 opt.Ignore())
             .ForMember(dest => dest.Product, opt =>
-                opt.Ignore())
-            .ReverseMap();
-        
-        CreateMap<CustomerCustomerRelationship, DataEntity.CustomerCustomerRelationship>()
-            .EqualityComparison((src, dest) =>
-                src.CustomerCustomerRelationshipKey == dest.CustomerCustomerRelationshipKey)
-            .ForMember(dest => dest.Id, opt => 
-                opt.Ignore())
-            .ForMember(dest => dest.Schema, opt => 
-                opt.Ignore())
-            .ForMember(dest => dest.ProcessedDateTime, opt => 
-                opt.Ignore())
-            .ForMember(dest => dest.CustomerCustomerRelationshipCustomer, opt =>
                 opt.Ignore())
             .ReverseMap();
         

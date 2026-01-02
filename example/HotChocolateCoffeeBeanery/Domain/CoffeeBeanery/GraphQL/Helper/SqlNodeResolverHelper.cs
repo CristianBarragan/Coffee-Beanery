@@ -639,7 +639,7 @@ public static class SqlNodeResolverHelper
         var currentJoinOneKeys =
             currentColumns.FirstOrDefault(a => a.Key.Split('~')[0].Matches(currentEntityTree.Name)).Value;
 
-        if (currentJoinOneKeys != null && currentJoinOneKeys.JoinOneKeys != null && currentJoinOneKeys.JoinKeys.Count() > 0
+        if (currentJoinOneKeys != null && currentJoinOneKeys.JoinOneKeys != null && currentJoinOneKeys.JoinOneKeys.Count() > 0
             &&
             currentJoinOneKeys.JoinOneKeys[0].From.Split('~')[0].Matches(currentEntityTree.Name))
         {

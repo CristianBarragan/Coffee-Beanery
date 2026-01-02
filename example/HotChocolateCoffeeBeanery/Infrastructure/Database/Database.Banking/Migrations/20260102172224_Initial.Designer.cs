@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Database.Banking.Migrations
 {
     [DbContext(typeof(BankingDbContext))]
-    [Migration("20251011105219_Initial")]
+    [Migration("20260102172224_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -208,6 +208,49 @@ namespace Database.Banking.Migrations
                     b.ToTable("CustomerBankingRelationship", "Banking");
                 });
 
+            modelBuilder.Entity("Database.Entity.CustomerCustomerRelationship", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("CustomerCustomerRelationshipKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("InnerCustomerId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("InnerCustomerKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("OuterCustomerId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("OuterCustomerKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ProcessedDateTime")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("(now() at time zone 'utc')");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerCustomerRelationshipKey")
+                        .IsUnique();
+
+                    b.HasIndex("InnerCustomerId");
+
+                    b.HasIndex("OuterCustomerId");
+
+                    b.HasIndex("OuterCustomerKey", "InnerCustomerKey")
+                        .IsUnique();
+
+                    b.ToTable("CustomerCustomerRelationship", "Banking");
+                });
+
             modelBuilder.Entity("Database.Entity.Transaction", b =>
                 {
                     b.Property<int>("Id")
@@ -287,6 +330,21 @@ namespace Database.Banking.Migrations
                     b.Navigation("Customer");
                 });
 
+            modelBuilder.Entity("Database.Entity.CustomerCustomerRelationship", b =>
+                {
+                    b.HasOne("Database.Entity.Customer", "InnerCustomer")
+                        .WithMany("InnerCustomerCustomerRelationshipCustomer")
+                        .HasForeignKey("InnerCustomerId");
+
+                    b.HasOne("Database.Entity.Customer", "OuterCustomer")
+                        .WithMany("OuterCustomerCustomerRelationshipCustomer")
+                        .HasForeignKey("OuterCustomerId");
+
+                    b.Navigation("InnerCustomer");
+
+                    b.Navigation("OuterCustomer");
+                });
+
             modelBuilder.Entity("Database.Entity.Transaction", b =>
                 {
                     b.HasOne("Database.Entity.Account", "Account")
@@ -319,6 +377,10 @@ namespace Database.Banking.Migrations
                     b.Navigation("ContactPoint");
 
                     b.Navigation("CustomerBankingRelationship");
+
+                    b.Navigation("InnerCustomerCustomerRelationshipCustomer");
+
+                    b.Navigation("OuterCustomerCustomerRelationshipCustomer");
                 });
 
             modelBuilder.Entity("Database.Entity.CustomerBankingRelationship", b =>

@@ -5,7 +5,7 @@ namespace Domain.Model;
 
 public class CustomerCustomerEdge : GraphProcess
 {
-    [LinkBusinessKey("CustomerCustomerRelationshipCustomer","CustomerCustomerRelationshipCustomerKey")]
+    [LinkBusinessKey("CustomerCustomerRelationship","CustomerCustomerRelationshipCustomerKey")]
     public Guid CustomerCustomerRelationshipCustomerKey { get; set; }
     
     public CustomerCustomerRelationshipCustomer? CustomerCustomerRelationshipCustomer { get; set; }

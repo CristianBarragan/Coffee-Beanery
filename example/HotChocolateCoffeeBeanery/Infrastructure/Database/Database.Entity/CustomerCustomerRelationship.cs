@@ -10,11 +10,25 @@ public class CustomerCustomerRelationship : Process
     {
         Schema = Entity.Schema.Banking;
     }
-
+    
     [UpsertKey("CustomerCustomerRelationship", "Banking")]
     public Guid CustomerCustomerRelationshipKey { get; set; }
     
-    public List<CustomerCustomerRelationshipCustomer>? CustomerCustomerRelationshipCustomer { get; set; }
+    public Guid? OuterCustomerKey { get; set; }
+    
+    public int? OuterCustomerId { get; set; }
+    
+    [LinkKey("Customer","OuterCustomerKey")]
+    [JoinKey("CustomerCustomerRelationship","Id")]
+    public Customer? OuterCustomer { get; set; }
+    
+    public Guid? InnerCustomerKey { get; set; }
+    
+    public int? InnerCustomerId { get; set; }
+    
+    [LinkKey("Customer","InnerCustomerKey")]
+    [JoinKey("CustomerCustomerRelationship","Id")]
+    public Customer? InnerCustomer { get; set; }
 }
 
 public class CustomerCustomerRelationshipEntityConfiguration : IEntityTypeConfiguration<CustomerCustomerRelationship>
@@ -31,10 +45,10 @@ public class CustomerCustomerRelationshipEntityConfiguration : IEntityTypeConfig
         builder.ToTable(nameof(CustomerCustomerRelationship), _schema);
 
         builder.HasKey(c => c.Id);
+        
+        builder.HasIndex(c => new { c.CustomerCustomerRelationshipKey }).IsUnique();
 
-        builder.HasIndex(c => c.CustomerCustomerRelationshipKey).IsUnique();
-
-        builder.HasMany(c => c.CustomerCustomerRelationshipCustomer).WithOne(c => c.CustomerCustomerRelationship).HasForeignKey(c => c.CustomerCustomerRelationshipId);
+        builder.HasIndex(c => new { c.OuterCustomerKey, c.InnerCustomerKey }).IsUnique();
         
         builder.Property(c => c.ProcessedDateTime).HasDefaultValueSql("(now() at time zone 'utc')");
     }

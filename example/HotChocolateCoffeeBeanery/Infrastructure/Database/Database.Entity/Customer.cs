@@ -30,21 +30,13 @@ public class Customer : Process
     [JoinKey("Customer","Id")]
     public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
     
-    public Guid? OuterCustomerCustomerRelationshipCustomerKey { get; set; }
+    [LinkKey("CustomerCustomerRelationship","OuterCustomerCustomerRelationshipKey")]
+    [JoinKey("Customer","Id")]
+    public List<CustomerCustomerRelationship>? OuterCustomerCustomerRelationshipCustomer { get; set; }
     
-    public int? OuterCustomerCustomerRelationshipCustomerId { get; set; }
-    
-    // [LinkKey("CustomerCustomerRelationshipCustomer","OuterCustomerCustomerRelationshipCustomerKey")]
-    // [JoinKey("Customer","Id")]
-    public List<CustomerCustomerRelationshipCustomer>? OuterCustomerCustomerRelationshipCustomer { get; set; }
-    
-    public Guid? InnerCustomerCustomerRelationshipCustomerKey { get; set; }
-    
-    public int? InnerCustomerCustomerRelationshipCustomerId { get; set; }
-    
-    // [LinkKey("CustomerCustomerRelationshipCustomer","InnerCustomerCustomerRelationshipCustomerKey")]
-    // [JoinKey("Customer","Id")]
-    public List<CustomerCustomerRelationshipCustomer>? InnerCustomerCustomerRelationshipCustomer { get; set; }
+    [LinkKey("CustomerCustomerRelationship","InnerCustomerCustomerRelationshipKey")]
+    [JoinKey("Customer","Id")]
+    public List<CustomerCustomerRelationship>? InnerCustomerCustomerRelationshipCustomer { get; set; }
 }
 
 public enum CustomerType

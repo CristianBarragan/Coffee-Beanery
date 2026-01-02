@@ -8,8 +8,6 @@ namespace Database.Banking
         public BankingDbContext(DbContextOptions<BankingDbContext> options) : base(options)
         {
         }
-
-        public DbSet<CustomerCustomerRelationshipCustomer> CustomerCustomerRelationshipCustomer { get; set; }
         
         public DbSet<CustomerCustomerRelationship> CustomerCustomerRelationship { get; set; }
 
@@ -31,8 +29,6 @@ namespace Database.Banking
 
             modelBuilder.ApplyConfiguration(new CustomerCustomerRelationshipEntityConfiguration(Schema.Banking.ToString()));
             
-            modelBuilder.ApplyConfiguration(new CustomerCustomerRelationshipCustomerEntityConfiguration(Schema.Banking.ToString()));
-
             modelBuilder.ApplyConfiguration(new CustomerEntityConfiguration(Schema.Banking.ToString()));
 
             modelBuilder.ApplyConfiguration(new ContactPointEntityConfiguration(Schema.Banking.ToString()));
