@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Database.Banking.Migrations
 {
     [DbContext(typeof(BankingDbContext))]
-    [Migration("20260102172224_Initial")]
+    [Migration("20260102230004_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -333,11 +333,11 @@ namespace Database.Banking.Migrations
             modelBuilder.Entity("Database.Entity.CustomerCustomerRelationship", b =>
                 {
                     b.HasOne("Database.Entity.Customer", "InnerCustomer")
-                        .WithMany("InnerCustomerCustomerRelationshipCustomer")
+                        .WithMany("InnerCustomerCustomerRelationship")
                         .HasForeignKey("InnerCustomerId");
 
                     b.HasOne("Database.Entity.Customer", "OuterCustomer")
-                        .WithMany("OuterCustomerCustomerRelationshipCustomer")
+                        .WithMany("OuterCustomerCustomerRelationship")
                         .HasForeignKey("OuterCustomerId");
 
                     b.Navigation("InnerCustomer");
@@ -378,9 +378,9 @@ namespace Database.Banking.Migrations
 
                     b.Navigation("CustomerBankingRelationship");
 
-                    b.Navigation("InnerCustomerCustomerRelationshipCustomer");
+                    b.Navigation("InnerCustomerCustomerRelationship");
 
-                    b.Navigation("OuterCustomerCustomerRelationshipCustomer");
+                    b.Navigation("OuterCustomerCustomerRelationship");
                 });
 
             modelBuilder.Entity("Database.Entity.CustomerBankingRelationship", b =>

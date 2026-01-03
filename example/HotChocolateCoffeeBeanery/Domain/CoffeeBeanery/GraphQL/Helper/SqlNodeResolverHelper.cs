@@ -334,22 +334,7 @@ public static class SqlNodeResolverHelper
 
         return sqlStructure;
     }
-
-    /// <summary>
-    /// Recursive method to visit every entity that needs to be added into the SQL query statement
-    /// </summary>
-    /// <param name="entityTrees"></param>
-    /// <param name="entityTypes"></param>
-    /// <param name="linkEntityDictionaryTree"></param>
-    /// <param name="sqlQueryStatement"></param>
-    /// <param name="sqlStatementNodes"></param>
-    /// <param name="sqlWhereStatement"></param>
-    /// <param name="currentTree"></param>
-    /// <param name="childrenSqlStatement"></param>
-    /// <param name="entityNames"></param>
-    /// <param name="sqlQueryStructures"></param>
-    /// <param name="splitOnDapper"></param>
-    /// <summary>
+    
     /// Recursive method to visit every entity that needs to be added into the SQL query statement
     /// </summary>
     /// <param name="entityTrees"></param>
@@ -741,15 +726,8 @@ public static class SqlNodeResolverHelper
     {
         if (node != null && node.GetNodes()?.Count() == 0)
         {
-            var currentModel = visitedModels.FirstOrDefault();
-
             if (linkEntityDictionaryTree.TryGetValue($"{currentTree.Name}~{previousNode.Split(':')[0]}",
-                    out var sqlNodeFrom) 
-                // ||
-                // linkEntityDictionaryTree.TryGetValue($"{currentModel}~{previousNode.Split(':')[0]}",
-                //     out sqlNodeFrom) ||
-                //  linkEntityDictionaryTree.TryGetValue($"{previousNode.Split(':')[0]}~{node.ToString()}",
-                //      out sqlNodeFrom)
+                    out var sqlNodeFrom)
                 )
             {
                 if (linkModelDictionaryTree.TryGetValue(sqlNodeFrom.RelationshipKey,
@@ -774,7 +752,7 @@ public static class SqlNodeResolverHelper
                         }
                     }
 
-                    AddEntity(linkEntityDictionaryTree, sqlStatementNodes, models, entities,
+                    AddEntity(linkEntityDictionaryTree, sqlStatementNodes, trees,
                         sqlNodeTo);
 
                     if (!visitedModels.Contains(currentTree.Name))
@@ -797,7 +775,7 @@ public static class SqlNodeResolverHelper
                     }
                 }
 
-                AddEntity(linkEntityDictionaryTree, sqlStatementNodes, models, entities,
+                AddEntity(linkEntityDictionaryTree, sqlStatementNodes, trees,
                     sqlNodeFrom);
             }
 
@@ -842,27 +820,20 @@ public static class SqlNodeResolverHelper
     }
 
     private static void AddEntity(Dictionary<string, SqlNode> linkEntityDictionaryTree,
-        Dictionary<string, SqlNode> sqlStatementNodes, List<string> models, List<string> entities,
+        Dictionary<string, SqlNode> sqlStatementNodes, Dictionary<string, NodeTree> trees,
         SqlNode? sqlNode)
     {
         foreach (var entity in linkEntityDictionaryTree
-                     .Where(v => sqlNode.Column.Matches(v.Value.Column)))
+                   .Where(v => sqlNode.Column.Matches(v.Key.Split('~')[1])))
         {
-            // entity.Value.Value = sqlNode.Value;
-            // entity.Value.SqlNodeType = SqlNodeType.Mutation;
-            // if (sqlStatementNodes.ContainsKey(entity.Value.RelationshipKey) &&
-            //     entities.Contains(entity.Value.RelationshipKey.Split("~")[0]) &&
-            //     !models.Contains(entity.Value.RelationshipKey.Split("~")[1]))
-            // {
-            //     sqlStatementNodes[entity.Value.RelationshipKey] = entity.Value;
-            // }
-
-            // if (!sqlStatementNodes.ContainsKey(entity.Value.RelationshipKey) &&
-            //     entities.Contains(entity.Value.RelationshipKey.Split("~")[0]) &&
-            //     !models.Contains(entity.Value.RelationshipKey.Split("~")[1]))
-            // {
-            //     sqlStatementNodes.Add(entity.Value.RelationshipKey, entity.Value);
-            // }
+            if (sqlNode.Column.Matches("CustomerKey"))
+            {
+                var a = true;
+            }
+            
+            entity.Value.Value = sqlNode.Value;
+            // entity.Value.Column = entity.Key.Split('~')[1];
+            // entity.Value.Entity = entity.Key.Split('~')[0];
             
             if (!sqlStatementNodes.ContainsKey(entity.Key))
             {

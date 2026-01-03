@@ -242,9 +242,9 @@ public static class GraphQLMapper
                             var joinKey = new JoinKey()
                             {
                                 From =
-                                    $"{processingFieldMap.SourceModel}~{joinAttribute.ConstructorArguments[1].Value}",
+                                    $"{joinAttribute.ConstructorArguments[0].Value}~{joinAttribute.ConstructorArguments[1].Value}",
                                 To =
-                                    $"{joinAttribute.ConstructorArguments[0].Value}~{joinAttribute.ConstructorArguments[1].Value}"
+                                    $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}"
                             };
                             joinKeys.Add(joinKey);
                         }
@@ -258,15 +258,13 @@ public static class GraphQLMapper
                             {
                                 From =
                                     $"{propertyEntityAttributeType.CustomAttributes
-                                        .LastOrDefault(a => a.AttributeType == typeof(JoinOneKeyAttribute)).ConstructorArguments[0].Value}~{
+                                        .Last().ConstructorArguments[0].Value}~{
                                         propertyEntityAttributeType.CustomAttributes
-                                        .LastOrDefault(a => a.AttributeType == typeof(JoinOneKeyAttribute)).ConstructorArguments[1].Value}"
+                                            .Last().ConstructorArguments[1].Value}"
                                     ,
-                                To =
-                                    $"{propertyEntityAttributeType.CustomAttributes
-                                        .FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute)).ConstructorArguments[0].Value}~{
-                                        propertyEntityAttributeType.CustomAttributes
-                                        .FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute)).ConstructorArguments[1].Value}"
+                                To = $"{processingFieldMap.DestinationEntity}~{
+                                    processingFieldMap.FieldDestinationName}"
+                                    
                             };
                             joinOneKeys.Add(joinOneKey);
                         }
@@ -326,20 +324,20 @@ public static class GraphQLMapper
             }
         }
 
-        foreach (var node in linkEntityDictionaryTreeNode)
-        {
-            node.Value.Mapping = mappingFields;
-        }
-        
-        foreach (var node in linkEntityDictionaryTreeEdge)
-        {
-            node.Value.Mapping = mappingFields;
-        }
-        
-        foreach (var node in linkEntityDictionaryTreeMutation)
-        {
-            node.Value.Mapping = mappingFields;
-        }
+        // foreach (var node in linkEntityDictionaryTreeNode)
+        // {
+        //     node.Value.Mapping = mappingFields;
+        // }
+        //
+        // foreach (var node in linkEntityDictionaryTreeEdge)
+        // {
+        //     node.Value.Mapping = mappingFields;
+        // }
+        //
+        // foreach (var node in linkEntityDictionaryTreeMutation)
+        // {
+        //     node.Value.Mapping = mappingFields;
+        // }
 
         return mappingFields;
     }

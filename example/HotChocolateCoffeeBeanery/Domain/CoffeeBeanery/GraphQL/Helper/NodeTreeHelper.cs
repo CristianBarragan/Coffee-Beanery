@@ -80,6 +80,7 @@ public static class NodeTreeHelper
         visitedNode.Add($"{name}");
 
         var nonNullableFromType = Nullable.GetUnderlyingType(nodeFromClass.GetType()) ?? nodeFromClass.GetType();
+        
         var nonNullableToType = Nullable.GetUnderlyingType(nodeToClass.GetType()) ?? nodeToClass.GetType();
 
         if (typeof(IList).IsAssignableFrom(nonNullableToType))
@@ -278,13 +279,35 @@ public static class NodeTreeHelper
                         nonNullableToType)!;
                 }
             }
-            else
+            
+            E fromVariable = null;
+            
+            if (typeof(IList).IsAssignableFrom(nonNullableFromType))
+            {
+                if (fromVariable == null)
+                {
+                    fromVariable = (E)Convert.ChangeType(
+                        Activator.CreateInstance(nonNullableFromType.GenericTypeArguments[0]),
+                        nonNullableFromType.GenericTypeArguments[0])!;
+                }
+            }
+            else if (nonNullableFromType.IsClass && nonNullableFromType != typeof(string))
+            {
+                if (fromVariable == null)
+                {
+                    fromVariable = (E)Convert.ChangeType(
+                        Activator.CreateInstance(nonNullableFromType),
+                        nonNullableFromType)!;
+                }
+            }
+
+            if (toVariable == null || fromVariable == null)
             {
                 continue;
             }
 
             tree = IterateTree<E, M>(nodeTrees,
-                nodeFromClass, toVariable, toVariable.GetType().Name, name,
+                fromVariable, toVariable, toVariable?.GetType().Name, name,
                 mapperConfiguration, nodeId, isModel, models, entities, visitedNode,
                 linkEntityDictionaryTreeNode,
                 linkModelDictionaryTreeNode,

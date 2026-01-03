@@ -16,7 +16,6 @@ public enum Model
     Customer,
     ContactPoint,
     CustomerBankingRelationship,
-    CustomerBankingRelationshipCustomer,
     Product,
     Contract,
     Account,

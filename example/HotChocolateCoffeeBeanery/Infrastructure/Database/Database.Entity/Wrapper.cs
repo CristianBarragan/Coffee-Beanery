@@ -6,6 +6,6 @@ namespace Database.Entity;
 public class Wrapper
 {
     
-    [LinkKey("CustomerCustomerRelationship","CustomerCustomerRelationshipCustomerId")]
-    public List<CustomerCustomerRelationship> CustomerCustomerRelationshipCustomer { get; set; }
+    [LinkKey("CustomerCustomerRelationship","CustomerCustomerRelationshipId")]
+    public List<CustomerCustomerRelationship> CustomerCustomerRelationship { get; set; }
 }

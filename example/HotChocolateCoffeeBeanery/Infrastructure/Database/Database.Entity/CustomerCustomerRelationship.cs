@@ -14,20 +14,20 @@ public class CustomerCustomerRelationship : Process
     [UpsertKey("CustomerCustomerRelationship", "Banking")]
     public Guid CustomerCustomerRelationshipKey { get; set; }
     
+    [JoinKey("Customer","CustomerKey")]
     public Guid? OuterCustomerKey { get; set; }
     
     public int? OuterCustomerId { get; set; }
     
     [LinkKey("Customer","OuterCustomerKey")]
-    [JoinKey("CustomerCustomerRelationship","Id")]
     public Customer? OuterCustomer { get; set; }
     
+    [JoinKey("Customer","CustomerKey")]
     public Guid? InnerCustomerKey { get; set; }
     
     public int? InnerCustomerId { get; set; }
     
     [LinkKey("Customer","InnerCustomerKey")]
-    [JoinKey("CustomerCustomerRelationship","Id")]
     public Customer? InnerCustomer { get; set; }
 }
 

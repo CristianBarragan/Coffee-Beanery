@@ -2,7 +2,7 @@
 
 public class GraphProcess
 {
-    public Direction Direction { get; set; }
+    public Direction? Direction { get; set; }
 }
 
 public enum Direction
