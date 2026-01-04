@@ -1,5 +1,12 @@
 ### Coffee Beanery
 
+# “Why Dapper with GraphQL?”
+# “Graphql + C# + Dapper Example”
+# “Coffee Beanery + Entity Framework GraphQL”
+# “GraphQL Dapper C# Example”
+# “HotChocolate + Dapper Example”
+# “Automapper + Dapper Example”
+
 Coffee beanery is a dynamic parser from GraphQL queries into raw SQL queries; the translation happens on the fly and all the features are available out of the box. 
 
 It only requires mappings between models and entities and a few annotations to signal the framework about the relationship between models or entities.
