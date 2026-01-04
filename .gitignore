@@ -16,11 +16,15 @@ example/HotChocolateCoffeeBeanery/Domain/Domain.Model/obj/*
 example/HotChocolateCoffeeBeanery/Domain/Domain.Shared/bin/*
 example/HotChocolateCoffeeBeanery/Domain/Domain.Shared/obj/*
 example/HotChocolateCoffeeBeanery/HotChocolateCoffeeBeanery.sln.DotSettings.user
-example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Banking/bin/*
-example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Banking/obj/*
+example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Entity.Banking/bin/*
+example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Entity.Banking/obj/*
+example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Graph.Banking/bin/*
+example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Graph.Banking/obj/*
 example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Common/bin/*
 example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Common/obj/*
 example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Entity/bin/*
 example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Entity/obj/*
+example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Graph/bin/*
+example/HotChocolateCoffeeBeanery/Infrastructure/Database/Database.Graph/obj/*
 src/CoffeeBeanery/bin/*
 src/CoffeeBeanery/obj/*

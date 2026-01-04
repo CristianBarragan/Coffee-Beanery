@@ -19,6 +19,4 @@ public class CustomerCustomerEdge : GraphProcess
     
     [LinkBusinessKey("Customer","InnerCustomerKey")]
     public Customer? InnerCustomer { get; set; }
-
-    public int? Depth { get; set; }
 }

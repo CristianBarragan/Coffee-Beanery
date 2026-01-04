@@ -1,7 +1,5 @@
-﻿using System.Text;
-using CoffeeBeanery.GraphQL.Extension;
+﻿using CoffeeBeanery.GraphQL.Extension;
 using CoffeeBeanery.GraphQL.Model;
-using MoreLinq;
 
 namespace CoffeeBeanery.GraphQL.Helper;
 
@@ -223,6 +221,16 @@ public static class SqlHelper
                 {
                     sqlUpsertAux += sqlUpsert + " ; ";
                 }
+                
+                sqlUpsert = $" SELECT * FROM cypher('{currentTree.Name}{"Edge"}', $$ MERGE (p:{currentTree.Name} {{ {
+                    (string.Join(",", currentColumns.Select(a => $"{a.Value.Column}: '{a.Value.Value
+                    }'").ToList()))}}}) RETURN p $$) AS (p agtype);";
+           
+                if (AddGeneratedQuery(generatedQuery, false, currentTree.Id.ToString(), $"{currentTree.Name}", upsertKey.Value.UpsertKeys.First().Split('~')[1], sqlUpsert))
+                {
+                    sqlUpsertAux += sqlUpsert;
+                }
+                
                 sqlUpsert = string.Empty;
             }
         }
@@ -251,6 +259,15 @@ public static class SqlHelper
             if (AddGeneratedQuery(generatedQuery, false, currentTree.Id.ToString(), currentTree.Name, currentColumns.First().Value.UpsertKeys.First().Split('~')[1], sqlUpsertAux))
             {
                 sqlUpsertAux += sqlUpsertAux;
+            }
+            
+            sqlUpsert = $" SELECT * FROM cypher('{currentTree.Name}{"Edge"}', $$ MERGE (p:{currentTree.Name} {{ {
+                (string.Join(",", currentColumns.Select(a => $"{a.Value.Column}: '{a.Value.Value
+                }'").ToList()))}}}) RETURN p $$) AS (p agtype);";
+           
+            if (AddGeneratedQuery(generatedQuery, false, currentTree.Id.ToString(), $"{currentTree.Name}", currentColumns.First().Value.UpsertKeys.First().Split('~')[1], sqlUpsert))
+            {
+                sqlUpsertAux += sqlUpsert;
             }
         }
         

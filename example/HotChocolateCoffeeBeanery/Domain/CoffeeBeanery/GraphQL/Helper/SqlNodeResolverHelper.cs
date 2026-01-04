@@ -157,7 +157,8 @@ public static class SqlNodeResolverHelper
                 }
 
                 var statement = generatedQuery.Values.Order();
-                sqlUpsertStatement = string.Join(";", statement);
+                sqlUpsertStatement = @"LOAD 'age';
+                    SET search_path = ag_catalog, ""$user"", public; " + string.Join(";", statement);
             }
         }
 

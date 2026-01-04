@@ -1,11 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Database.Entity;
 
-namespace Database.Banking
+namespace Database.Entity.Banking
 {
-    public class BankingDbContext : DbContext
+    public class BankingEntityContext : DbContext
     {
-        public BankingDbContext(DbContextOptions<BankingDbContext> options) : base(options)
+        public BankingEntityContext(DbContextOptions<BankingEntityContext> options) : base(options)
         {
         }
         
