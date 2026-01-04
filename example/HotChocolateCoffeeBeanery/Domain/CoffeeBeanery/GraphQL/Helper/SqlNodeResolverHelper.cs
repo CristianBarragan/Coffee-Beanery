@@ -63,25 +63,6 @@ public static class SqlNodeResolverHelper
             transformedToParent = true;
         }
         
-        //
-        //
-        // for (int i = 0; i < modelTreeMap.EntityNames.Count; i++)
-        // {
-        //     if (modelTreeMap.DictionaryTree.ContainsKey(rootModelName))
-        //     {
-        //         rootModelName = modelTreeMap.DictionaryTree[rootModelName].ParentName;
-        //         transformedToParent = true;
-        //         break;
-        //     }
-        // }
-        //
-        // if (!rootModelName.Matches(wrapperEntityName) && !transformedToParent)
-        // {
-        //     //It can only be one single model within wrapper model
-        //     rootModelName = modelTreeMap.DictionaryTree[wrapperEntityName].Children.Last().Name;
-        //     transformedToParent = true;
-        // }
-
         //Where conditions
         GetFieldsWhere(modelTreeMap.DictionaryTree, entityTreeMap.LinkDictionaryTreeNode,
             modelTreeMap.LinkDictionaryTreeNode,
@@ -143,9 +124,7 @@ public static class SqlNodeResolverHelper
                 var mutationNodeToProcess = argument.Value.GetNodes()
                     .First(a => !a.ToString().Contains("cache") && !a.ToString().Contains("model"));
 
-                var generatedQuery = new List<string>();
-                var sqlUpsertBuilder = new StringBuilder();
-                var sqlSelectUpsertBuilder = new StringBuilder();
+                var generatedQuery = new Dictionary<string, string>();
 
                 if (mutationNodeToProcess.GetNodes().ToList()[1].ToString().StartsWith("["))
                 {
@@ -160,8 +139,7 @@ public static class SqlNodeResolverHelper
                         
                         SqlHelper.GenerateUpsertStatements(entityTreeMap.DictionaryTree, entityTreeMap.LinkDictionaryTreeMutation, rootEntityName,
                             wrapperEntityName, generatedQuery, sqlUpsertStatementNodes, entityTreeMap.DictionaryTree[rootEntityName], entityTreeMap.EntityNames,
-                            sqlWhereStatement, new List<string>(),
-                            sqlUpsertBuilder, sqlSelectUpsertBuilder);
+                            sqlWhereStatement, new List<string>());
                     }
                 }
                 else
@@ -175,10 +153,11 @@ public static class SqlNodeResolverHelper
                     
                     SqlHelper.GenerateUpsertStatements(entityTreeMap.DictionaryTree, entityTreeMap.LinkDictionaryTreeMutation, rootEntityName,
                         wrapperEntityName, generatedQuery, sqlUpsertStatementNodes, entityTreeMap.DictionaryTree[rootEntityName], entityTreeMap.EntityNames,
-                        sqlWhereStatement, new List<string>(),
-                        sqlUpsertBuilder, sqlSelectUpsertBuilder);
+                        sqlWhereStatement, new List<string>());
                 }
-                sqlUpsertStatement = sqlUpsertBuilder.ToString() + " ; " + sqlSelectUpsertBuilder.ToString();
+
+                var statement = generatedQuery.Values.Order();
+                sqlUpsertStatement = string.Join(";", statement);
             }
         }
 
