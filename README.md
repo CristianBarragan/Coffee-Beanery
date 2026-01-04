@@ -2,7 +2,7 @@
 
 #### “Why GraphQL and Dapper with GraphQL Coffee Beanery and what does better than existing tools?
 
-The uniqueness of using a new approach using dapper for performance, providing out of the box features without adding any code, and give full customisation and integrations based on every project needs.
+Explore the unique approach of using dapper for performance and direct GraphQL operation translations into Raw SQL, providing out of the box features without adding any code, and giving full customisation and integrations based on every project needs.
 
 #### “Graphql + C# + Dapper Example”
 #### “Coffee Beanery + Entity Framework GraphQL”
@@ -15,6 +15,12 @@ Coffee beanery is a dynamic parser from GraphQL queries into raw SQL queries; th
 It only requires mappings between models and entities and a few annotations to signal the framework about the relationship between models or entities.
 
 Also, the feature to have the means for using business transactions and add custom business code within the api. Makes a unique opportunity to do any integration possible.
+
+“Actively developed. Currently a reference implementation and experimentation platform, it might be shipped as a Nuget package once it reaches maturity. 
+
+Any type of contribution and support will be extremely welcome. From proposals, feedback, or any other content that can help out to reach a a wider audience and maturity.”
+
+#### Current focus is to support Graph Data Models
 
 Running example
 
