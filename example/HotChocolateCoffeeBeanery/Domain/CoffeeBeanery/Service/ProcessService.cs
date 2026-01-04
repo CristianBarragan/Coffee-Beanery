@@ -27,17 +27,15 @@ public class ProcessService<M, D, S>
 {
     private readonly ILogger<ProcessService<M, D, S>> _logger;
     private readonly IQueryDispatcher _queryDispatcher;
-    private readonly NpgsqlConnection _connection;
     private readonly IEntityTreeMap<D, S> _entityTreeMap;
     private readonly IModelTreeMap<D, S> _modelTreeMap;
     private IFasterKV<string, string> _cache;
 
     public ProcessService(ILogger<ProcessService<M, D, S>> logger, IQueryDispatcher queryDispatcher,
-        NpgsqlConnection connection, IEntityTreeMap<D, S> entityTreeMap, IModelTreeMap<D, S> modelTreeMap, IFasterKV<string, string> cache)
+        IEntityTreeMap<D, S> entityTreeMap, IModelTreeMap<D, S> modelTreeMap, IFasterKV<string, string> cache)
     {
         _logger = logger;
         _queryDispatcher = queryDispatcher;
-        _connection = connection;
         _entityTreeMap = entityTreeMap;
         _modelTreeMap = modelTreeMap;
         _cache = cache;

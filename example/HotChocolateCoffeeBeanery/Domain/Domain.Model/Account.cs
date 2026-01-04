@@ -14,5 +14,5 @@ public class Account
     public Transaction? Transaction { get; set; }
     
     [LinkBusinessKey("Contract","ContractKey")]
-    public List<Contract>? Contract { get; set; }
+    public Contract? Contract { get; set; }
 }

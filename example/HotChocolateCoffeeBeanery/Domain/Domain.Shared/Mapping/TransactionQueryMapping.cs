@@ -6,21 +6,20 @@ namespace Domain.Shared.Mapping;
 
 public static class TransactionQueryMapping
 {
-    public static (Customer existingCustomer, Product existingProduct)  MapFromCustomer(
-        object mappedObject, IMapper mapper, Customer? existingCustomer, Product? existingProduct)
+    public static (CustomerCustomerEdge existingCustomerCustomerEdge, Product existingProduct)  MapFromCustomer(
+        object mappedObject, IMapper mapper, CustomerCustomerEdge? existingCustomerCustomerEdge, Product? existingProduct)
     {
         if (mappedObject is DatabaseEntity.Transaction)
         {
             var transactionEntity = mappedObject as DatabaseEntity.Transaction;
             
-            if (existingCustomer?.CustomerKey != null)
+            if (existingCustomerCustomerEdge.InnerCustomer?.CustomerKey != null)
             {
                 if (existingProduct?.CustomerKey != null)
                 {
-                    var productIndex = existingCustomer.Product.FindIndex(a => a.CustomerKey == existingProduct?.CustomerKey);
+                    var productIndex = existingCustomerCustomerEdge.InnerCustomer.Product.FindIndex(a => a.CustomerKey == existingProduct?.CustomerKey);
                     
-                    var existingContract = existingProduct.Contract?
-                        .FirstOrDefault(c => c.ContractKey == transactionEntity?.ContractKey);
+                    var existingContract = existingProduct.Contract;
 
                     if (existingContract?.ContractKey != null)
                     {
@@ -48,15 +47,14 @@ public static class TransactionQueryMapping
                         contract.Transaction = [];
                         contract.Transaction.Add(mapper.Map<Transaction>(transactionEntity));
                         
-                        existingProduct.Contract ??= [];
-                        existingProduct.Contract.Add(contract);
+                        existingProduct.Contract ??= new Contract();
+                        existingProduct.Contract = contract;
                         mapper.Map(transactionEntity, existingProduct);
                         
-                        existingCustomer.Product[productIndex] = existingProduct;
+                        existingCustomerCustomerEdge.InnerCustomer.Product[productIndex] = existingProduct;
                     }
 
-                    var existingAccount = existingProduct.Account?
-                        .FirstOrDefault(c => c.AccountKey == transactionEntity?.AccountKey);
+                    var existingAccount = existingProduct.Account;
 
                     if (existingAccount?.AccountKey != null)
                     {
@@ -76,11 +74,11 @@ public static class TransactionQueryMapping
                         account.AccountKey = transactionEntity?.AccountKey;
                         account.Transaction = mapper.Map<Transaction>(transactionEntity);
 
-                        existingProduct.Account ??= [];
-                        existingProduct.Account.Add(account);
+                        existingProduct.Account ??= new Account();
+                        existingProduct.Account = account;
                         mapper.Map(transactionEntity, existingProduct);
                         
-                        existingCustomer.Product[productIndex] = existingProduct;
+                        existingCustomerCustomerEdge.InnerCustomer.Product[productIndex] = existingProduct;
                     }
                 }
                 else
@@ -98,22 +96,22 @@ public static class TransactionQueryMapping
                     contract.Transaction = [];
                     contract.Transaction.Add(mapper.Map<Transaction>(transactionEntity));
                 
-                    existingProduct.Account = [];
-                    existingProduct.Account.Add(account);
-                    existingProduct.Contract = [];
-                    existingProduct.Contract.Add(contract);
+                    existingProduct.Account = new Account();
+                    existingProduct.Account = account;
+                    existingProduct.Contract = new Contract();
+                    existingProduct.Contract = contract;
                     mapper.Map(transactionEntity, existingProduct);
 
-                    existingCustomer.Product ??= [];
+                    existingCustomerCustomerEdge.InnerCustomer.Product ??= [];
                     mapper.Map(transactionEntity, existingProduct);
                     
-                    existingCustomer.Product.Add(existingProduct);
+                    existingCustomerCustomerEdge.InnerCustomer.Product.Add(existingProduct);
                 }
             }
             else
             {
-                existingCustomer = new Customer();
-                existingCustomer.Product = [];
+                existingCustomerCustomerEdge.InnerCustomer = new Customer();
+                existingCustomerCustomerEdge.InnerCustomer.Product = [];
                 
                 existingProduct = new Product();
                 existingProduct.ContractKey = transactionEntity?.ContractKey;
@@ -128,16 +126,16 @@ public static class TransactionQueryMapping
                 contract.Transaction = [];
                 contract.Transaction.Add(mapper.Map<Transaction>(transactionEntity));
                 
-                existingProduct.Account = [];
-                existingProduct.Account.Add(account);
-                existingProduct.Contract = [];
-                existingProduct.Contract.Add(contract);
-                existingProduct.CustomerKey = existingCustomer?.CustomerKey;
+                existingProduct.Account = new Account();
+                existingProduct.Account = account;
+                existingProduct.Contract = new Contract();
+                existingProduct.Contract = contract;
+                existingProduct.CustomerKey = existingCustomerCustomerEdge.InnerCustomer?.CustomerKey;
                 mapper.Map(transactionEntity, existingProduct);
                 
-                existingCustomer?.Product.Add(existingProduct);
+                existingCustomerCustomerEdge.InnerCustomer?.Product.Add(existingProduct);
             }
         }
-        return (existingCustomer, existingProduct);
+        return (default, existingProduct);
     }
 }

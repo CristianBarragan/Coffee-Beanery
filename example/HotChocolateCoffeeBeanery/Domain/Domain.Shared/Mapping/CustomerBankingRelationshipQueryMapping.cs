@@ -6,19 +6,21 @@ namespace Domain.Shared.Mapping;
 
 public static class CustomerBankingRelationshipQueryMapping
 {
-    public static (Customer existingCustomer, Product existingProduct) MapFromCustomer(object mappedObject, IMapper mapper, Customer? existingCustomer, Product? existingProduct)
+    public static (CustomerCustomerEdge existingCustomerCustomerEdge, Product existingProduct) 
+        MapFromCustomer(object mappedObject, IMapper mapper, 
+        CustomerCustomerEdge? existingCustomerCustomerEdge, Product? existingProduct)
     {
         if (mappedObject is DatabaseEntity.CustomerBankingRelationship)
         {
             var customerBankingRelationshipEntity = mappedObject as DatabaseEntity.CustomerBankingRelationship;
             
-            if (existingCustomer?.CustomerKey != null)
+            if (existingCustomerCustomerEdge.InnerCustomer?.CustomerKey != null)
             {
                 if (existingProduct?.CustomerKey != null)
                 {
-                    existingProduct.CustomerBankingRelationship ??= [];
+                    existingProduct.CustomerBankingRelationship ??= new CustomerBankingRelationship();
                     var existingCustomerBankingRelationship = existingProduct.CustomerBankingRelationship
-                        .FirstOrDefault(x => x.CustomerBankingRelationshipKey == customerBankingRelationshipEntity?.CustomerBankingRelationshipKey);
+                        .CustomerBankingRelationshipKey;
 
                     if (existingCustomerBankingRelationship != null)
                     {
@@ -29,26 +31,24 @@ public static class CustomerBankingRelationshipQueryMapping
                         existingProduct = mapper.Map<Product>(customerBankingRelationshipEntity);
                     }
                     
-                    existingCustomer.Product ??= [];
-                    existingCustomer.Product!.Add(existingProduct);
+                    existingCustomerCustomerEdge.InnerCustomer.Product ??= [];
+                    existingCustomerCustomerEdge.InnerCustomer.Product!.Add(existingProduct);
                 }
                 else
                 {
                     existingProduct = mapper.Map<Product>(customerBankingRelationshipEntity);
-                    existingCustomer.Product ??= [];
-                    existingCustomer.Product.Add(existingProduct);
+                    existingCustomerCustomerEdge.InnerCustomer.Product ??= [];
+                    existingCustomerCustomerEdge.InnerCustomer.Product.Add(existingProduct);
                 }
             }
             else
             {
-                existingCustomer = new Customer();
-                existingCustomer.Product = new List<Product>();
-                
+                existingCustomerCustomerEdge.InnerCustomer = new Customer();              
                 if (existingProduct?.CustomerKey != null)
                 {
-                    existingProduct.CustomerBankingRelationship ??= [];
+                    existingProduct.CustomerBankingRelationship ??= new CustomerBankingRelationship();
                     var existingCustomerBankingRelationship = existingProduct.CustomerBankingRelationship
-                        .FirstOrDefault(x => x.CustomerBankingRelationshipKey == customerBankingRelationshipEntity?.CustomerBankingRelationshipKey);
+                        .CustomerBankingRelationshipKey;
 
                     if (existingCustomerBankingRelationship != null)
                     {
@@ -59,18 +59,18 @@ public static class CustomerBankingRelationshipQueryMapping
                         existingProduct = mapper.Map<Product>(customerBankingRelationshipEntity);
                     }
                     
-                    existingCustomer.Product ??= [];
-                    existingCustomer.Product!.Add(existingProduct);
+                    existingCustomerCustomerEdge.InnerCustomer.Product ??= [];
+                    existingCustomerCustomerEdge.InnerCustomer.Product!.Add(existingProduct);
                 }
                 else
                 {
                     existingProduct = mapper.Map<Product>(customerBankingRelationshipEntity);
-                    existingCustomer.Product ??= [];
-                    existingCustomer.Product.Add(existingProduct);
+                    existingCustomerCustomerEdge.InnerCustomer.Product ??= [];
+                    existingCustomerCustomerEdge.InnerCustomer.Product.Add(existingProduct);
                 }
             }
         }
         
-        return (existingCustomer, existingProduct);
+        return (existingCustomerCustomerEdge, existingProduct);
     }
 }

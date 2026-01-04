@@ -17,7 +17,31 @@ namespace Domain.Shared.Extension;
 
 public static class ModelServiceCollectionRegistration
 {
-    public static IServiceCollection AddBankingDomainModelServiceCollection(this IServiceCollection services)
+    // public static IServiceCollection AddGraphDomainModelServiceCollection(this IServiceCollection services)
+    // {
+    //     services = AddProcessServiceCollection(services);
+    //
+    //     services = AddCache(services);
+    //
+    //     services.AddScoped<IProcessService<dynamic, dynamic, dynamic>, ProcessService<dynamic, dynamic, 
+    //         dynamic>>();
+    //     services.AddScoped<IQuery<SqlStructure,
+    //             (List<dynamic> list, int? startCursor, int? endCursor, int? totalCount, int? 
+    //             totalPageRecords)>,
+    //         ProcessQuery<dynamic>>();
+    //
+    //     services.AddScoped<IProcessService<CustomerCustomerEdge, dynamic, dynamic>, ProcessService<CustomerCustomerEdge, 
+    //         dynamic, dynamic>>();
+    //
+    //     services.AddScoped<IQuery<SqlStructure,
+    //             (List<CustomerCustomerEdge> list, int? startCursor, int? endCursor, int? totalCount, 
+    //             int? totalPageRecords)>,
+    //         CustomerCustomerEdgeQueryResolver<CustomerCustomerEdge>>();
+    //
+    //     return services;
+    // } 
+    
+        public static IServiceCollection AddBankingDomainModelServiceCollection(this IServiceCollection services)
     {
         services = AddProcessServiceCollection(services);
 
@@ -30,17 +54,13 @@ public static class ModelServiceCollectionRegistration
                 totalPageRecords)>,
             ProcessQuery<dynamic>>();
 
-        services.AddScoped<IProcessService<Customer, dynamic, dynamic>, ProcessService<Customer, 
+        services.AddScoped<IProcessService<CustomerCustomerEdge, dynamic, dynamic>, ProcessService<CustomerCustomerEdge, 
             dynamic, dynamic>>();
-        services.AddScoped<IQuery<SqlStructure,
-                (List<dynamic> list, int? startCursor, int? endCursor, int? totalCount, int? 
-                totalPageRecords)>,
-            ProcessQuery<dynamic>>();
 
         services.AddScoped<IQuery<SqlStructure,
-                (List<Customer> list, int? startCursor, int? endCursor, int? totalCount, 
+                (List<CustomerCustomerEdge> list, int? startCursor, int? endCursor, int? totalCount, 
                 int? totalPageRecords)>,
-            CustomerQueryHandler<Customer>>();
+            CustomerCustomerEdgeQueryHandler<CustomerCustomerEdge>>();
 
         return services;
     }
@@ -110,16 +130,8 @@ public static class ModelServiceCollectionRegistration
         
         foreach (var tree in modelDictionaryTree)
         {
-            var entityType = Type.GetType($"{typeof(DatabaseCommon.Customer).Namespace}" +
-                                          $".{tree.Value.Name},{typeof(DatabaseCommon.Customer).Assembly}");
-            var modelType = Type.GetType($"{typeof(Customer).Namespace}" +
-                                         $".{tree.Value.Name},{typeof(Customer).Assembly}");
-
-            if (entityType != null && !entityType.Name.Matches(nameof(Wrapper)))
-            {
-                entities.Add(entityType.Name);
-                entityTypes.Add(entityType);    
-            }
+            var modelType = Type.GetType($"{typeof(Wrapper).Namespace}" +
+                                         $".{tree.Value.Name},{typeof(Wrapper).Assembly}");
             
             if (modelType != null && !modelType.Name.Matches(nameof(Wrapper)))
             {
@@ -139,13 +151,385 @@ public static class ModelServiceCollectionRegistration
             linkEntityDictionaryTreeMutation,
             linkModelDictionaryTreeMutation, upsertKeys, joinKeys, joinOneKeys, linkKeys, linkBusinessKeys);
         
+        foreach (var tree in entityDictionaryTree)
+        {
+            var entityType = Type.GetType($"{typeof(DatabaseCommon.Wrapper).Namespace}" +
+                                          $".{tree.Value.Name},{typeof(DatabaseCommon.Wrapper).Assembly}");
+
+            if (entityType != null && !entityType.Name.Matches(nameof(DatabaseCommon.Wrapper)))
+            {
+                entities.Add(entityType.Name);
+                entityTypes.Add(entityType);    
+            }
+        }
+        
+        foreach (var entity in entities)
+        {
+            foreach (var upsertKey in upsertKeys.Where(u => entity
+                         .Matches(u.Split('~')[0])))
+            {
+                foreach (var linkEntity in linkEntityDictionaryTreeNode
+                             .Where(l => upsertKey.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.UpsertKeys.Any(u => u.Matches(
+                            upsertKey)))
+                    {
+                        linkEntity.Value.UpsertKeys.Add(upsertKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkEntityDictionaryTreeEdge
+                             .Where(l => upsertKey.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.UpsertKeys.Any(u => u.Matches(
+                            upsertKey)))
+                    {
+                        linkEntity.Value.UpsertKeys.Add(upsertKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkEntityDictionaryTreeMutation
+                             .Where(l => upsertKey.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.UpsertKeys.Any(u => u.Matches(
+                            upsertKey)))
+                    {
+                        linkEntity.Value.UpsertKeys.Add(upsertKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkModelDictionaryTreeNode
+                             .Where(l => upsertKey.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.UpsertKeys.Any(u => u.Matches(
+                            upsertKey)))
+                    {
+                        linkEntity.Value.UpsertKeys.Add(upsertKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkModelDictionaryTreeEdge
+                             .Where(l => upsertKey.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.UpsertKeys.Any(u => u.Matches(
+                            upsertKey)))
+                    {
+                        linkEntity.Value.UpsertKeys.Add(upsertKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkModelDictionaryTreeMutation
+                             .Where(l => upsertKey.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.UpsertKeys.Any(u => u.Matches(
+                            upsertKey)))
+                    {
+                        linkEntity.Value.UpsertKeys.Add(upsertKey);
+                    }
+                }
+            }
+        }
+        
+        foreach (var entity in entities)
+        {
+            foreach (var linkKey in linkKeys.Where(u => entity.Matches(u.From.Split('~')[0]) ||
+                                                        entity.Matches(u.To.Split('~')[0])))
+            {
+                foreach (var linkEntity in linkEntityDictionaryTreeNode
+                             .Where(l => linkKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity) || linkKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
+                    {
+                        linkEntity.Value.LinkKeys.Add(linkKey);
+                    }
+                    
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
+                    {
+                        linkEntity.Value.LinkKeys.Add(linkKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkEntityDictionaryTreeEdge
+                             .Where(l => linkKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity) || linkKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
+                    {
+                        linkEntity.Value.LinkKeys.Add(linkKey);
+                    }
+                    
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
+                    {
+                        linkEntity.Value.LinkKeys.Add(linkKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkEntityDictionaryTreeMutation
+                             .Where(l => linkKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity) || linkKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
+                    {
+                        linkEntity.Value.LinkKeys.Add(linkKey);
+                    }
+                    
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
+                    {
+                        linkEntity.Value.LinkKeys.Add(linkKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkModelDictionaryTreeNode
+                             .Where(l => linkKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity) || linkKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
+                    {
+                        linkEntity.Value.LinkKeys.Add(linkKey);
+                    }
+                    
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
+                    {
+                        linkEntity.Value.LinkKeys.Add(linkKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkModelDictionaryTreeEdge
+                             .Where(l => linkKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity) || linkKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
+                    {
+                        linkEntity.Value.LinkKeys.Add(linkKey);
+                    }
+                    
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
+                    {
+                        linkEntity.Value.LinkKeys.Add(linkKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkModelDictionaryTreeMutation
+                             .Where(l => linkKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity) || linkKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
+                    {
+                        linkEntity.Value.LinkKeys.Add(linkKey);
+                    }
+                    
+                    if (!linkEntity.Value.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
+                    {
+                        linkEntity.Value.LinkKeys.Add(linkKey);
+                    }
+                }
+            }
+        }
+        
+        foreach (var entity in entities)
+        {
+            foreach (var joinKey in joinKeys.Where(u => entity.Matches(u.From.Split('~')[0]) ||
+                                                        entity.Matches(u.To.Split('~')[0])))
+            {
+                foreach (var linkEntity in linkEntityDictionaryTreeNode
+                             .Where(l => joinKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity) || joinKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                    
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.To.Matches(joinKey.To)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkEntityDictionaryTreeEdge
+                             .Where(l => joinKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity) || joinKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                    
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.To.Matches(joinKey.To)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkEntityDictionaryTreeMutation
+                             .Where(l => joinKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity) || joinKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                    
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.To.Matches(joinKey.To)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkModelDictionaryTreeNode
+                             .Where(l => joinKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity) || joinKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                    
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.To.Matches(joinKey.To)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkModelDictionaryTreeEdge
+                             .Where(l => joinKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity) || joinKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                    
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.To.Matches(joinKey.To)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkModelDictionaryTreeMutation
+                             .Where(l => joinKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity) || joinKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                    
+                    if (!linkEntity.Value.JoinKeys.Any(u => u.To.Matches(joinKey.To)))
+                    {
+                        linkEntity.Value.JoinKeys.Add(joinKey);
+                    }
+                }
+            }
+        }
+        
+        foreach (var entity in models)
+        {
+            foreach (var linkBusinessKey in linkBusinessKeys.Where(u => entity
+                         .Matches(u.From.Split('~')[0])))
+            {
+                foreach (var linkEntity in linkEntityDictionaryTreeNode
+                             .Where(l => linkBusinessKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
+                            linkBusinessKey.From)))
+                    {
+                        linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkEntityDictionaryTreeEdge
+                             .Where(l => linkBusinessKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
+                            linkBusinessKey.From)))
+                    {
+                        linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkEntityDictionaryTreeMutation
+                             .Where(l => linkBusinessKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
+                            linkBusinessKey.From)))
+                    {
+                        linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkModelDictionaryTreeNode
+                             .Where(l => linkBusinessKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
+                            linkBusinessKey.From)))
+                    {
+                        linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkModelDictionaryTreeEdge
+                             .Where(l => linkBusinessKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
+                            linkBusinessKey.From)))
+                    {
+                        linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
+                    }
+                }
+                
+                foreach (var linkEntity in linkModelDictionaryTreeMutation
+                             .Where(l => linkBusinessKey.From.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
+                {
+                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
+                            linkBusinessKey.From)))
+                    {
+                        linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
+                    }
+                }
+            }
+        }
+        
+        foreach (var modelTree in modelDictionaryTree)
+        {
+            if (entityDictionaryTree.TryGetValue(modelTree.Key, out var value))
+            {
+                modelTree.Value.Schema = value.Schema;
+            }
+        }
+        
         foreach (var entity in entities)
         {
             foreach (var upsertKey in upsertKeys.Where(u => entity.Matches(u.Split('~')[0])))
             {
                 foreach (var linkEntity in linkEntityDictionaryTreeNode
                              .Where(l => entity
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!linkEntity.Value.UpsertKeys.Any(u => u.Matches(upsertKey)))
                     {
@@ -155,7 +539,7 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var linkEntity in linkEntityDictionaryTreeEdge
                              .Where(l => entity
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!linkEntity.Value.UpsertKeys.Any(u => u.Matches(upsertKey)))
                     {
@@ -165,7 +549,7 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var linkEntity in linkEntityDictionaryTreeMutation
                              .Where(l => entity
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!linkEntity.Value.UpsertKeys.Any(u => u.Matches(upsertKey)))
                     {
@@ -175,7 +559,7 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var linkEntity in linkModelDictionaryTreeNode
                              .Where(l => entity
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!linkEntity.Value.UpsertKeys.Any(u => u.Matches(upsertKey)))
                     {
@@ -185,7 +569,7 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var linkEntity in linkModelDictionaryTreeEdge
                              .Where(l => entity
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!linkEntity.Value.UpsertKeys.Any(u => u.Matches(upsertKey)))
                     {
@@ -195,7 +579,7 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var linkEntity in linkModelDictionaryTreeMutation
                              .Where(l => entity
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!linkEntity.Value.UpsertKeys.Any(u => u.Matches(upsertKey)))
                     {
@@ -212,8 +596,8 @@ public static class ModelServiceCollectionRegistration
             {
                 foreach (var linkEntity in linkEntityDictionaryTreeNode
                              .Where(l => joinKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || joinKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity) || joinKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
                     {
@@ -228,8 +612,8 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var linkEntity in linkEntityDictionaryTreeEdge
                              .Where(l => joinKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || joinKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity) || joinKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
                     {
@@ -244,8 +628,8 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var linkEntity in linkEntityDictionaryTreeMutation
                              .Where(l => joinKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || joinKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity) || joinKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
                     {
@@ -260,8 +644,8 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var linkEntity in linkModelDictionaryTreeNode
                              .Where(l => joinKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || joinKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity) || joinKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
                     {
@@ -276,8 +660,8 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var linkEntity in linkModelDictionaryTreeNode
                              .Where(l => joinKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || joinKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity) || joinKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
                     {
@@ -292,8 +676,8 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var linkEntity in linkModelDictionaryTreeNode
                              .Where(l => joinKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || joinKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity) || joinKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!linkEntity.Value.JoinKeys.Any(u => u.From.Matches(joinKey.From)))
                     {
@@ -315,8 +699,8 @@ public static class ModelServiceCollectionRegistration
             {
                 foreach (var joinOneEntity in linkEntityDictionaryTreeNode
                              .Where(l => joinOneKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || joinOneKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity) || joinOneKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!joinOneEntity.Value.JoinOneKeys.Any(u => u.From.Matches(joinOneKey.From)))
                     {
@@ -331,8 +715,8 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var joinOneEntity in linkEntityDictionaryTreeEdge
                              .Where(l => joinOneKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || joinOneKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity) || joinOneKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!joinOneEntity.Value.JoinOneKeys.Any(u => u.From.Matches(joinOneKey.From)))
                     {
@@ -347,8 +731,8 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var joinOneEntity in linkEntityDictionaryTreeMutation
                              .Where(l => joinOneKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || joinOneKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity) || joinOneKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!joinOneEntity.Value.JoinOneKeys.Any(u => u.From.Matches(joinOneKey.From)))
                     {
@@ -363,8 +747,8 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var joinOneEntity in linkModelDictionaryTreeNode
                              .Where(l => joinOneKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || joinOneKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity) || joinOneKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!joinOneEntity.Value.JoinOneKeys.Any(u => u.From.Matches(joinOneKey.From)))
                     {
@@ -379,8 +763,8 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var joinOneEntity in linkModelDictionaryTreeEdge
                              .Where(l => joinOneKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || joinOneKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity) || joinOneKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!joinOneEntity.Value.JoinOneKeys.Any(u => u.From.Matches(joinOneKey.From)))
                     {
@@ -395,8 +779,8 @@ public static class ModelServiceCollectionRegistration
                 
                 foreach (var joinOneEntity in linkModelDictionaryTreeMutation
                              .Where(l => joinOneKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || joinOneKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                                 .Matches(l.Value.Entity) || joinOneKey.To.Split('~')[0]
+                                 .Matches(l.Value.Entity)))
                 {
                     if (!joinOneEntity.Value.JoinOneKeys.Any(u => u.From.Matches(joinOneKey.From)))
                     {
@@ -410,191 +794,453 @@ public static class ModelServiceCollectionRegistration
                 }
             }
         }
-        
-        foreach (var entity in entities)
+
+        foreach (var model in models)
         {
-            foreach (var linkKey in linkKeys.Where(u => entity.Matches(u.From.Split('~')[0]) ||
-                                                        entity.Matches(u.To.Split('~')[0])))
+            foreach (var upsert in linkEntityDictionaryTreeNode
+                         .Where(l => l.Value.Entity
+                             .Matches(model) && l.Value.UpsertKeys.Count == 0))
             {
-                foreach (var linkEntity in linkEntityDictionaryTreeNode
-                             .Where(l => linkKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || linkKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                var copyAux = linkEntityDictionaryTreeNode
+                    .LastOrDefault(l => l.Value.Entity
+                        .Matches(model));
+                
+                if (copyAux.Value == null)
                 {
-                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
-                    {
-                        linkEntity.Value.LinkKeys.Add(linkKey);
-                    }
-                    
-                    if (!linkEntity.Value.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
-                    {
-                        linkEntity.Value.LinkKeys.Add(linkKey);
-                    }
+                    continue;
                 }
                 
-                foreach (var linkEntity in linkEntityDictionaryTreeEdge
-                             .Where(l => linkKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || linkKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                var copy = linkEntityDictionaryTreeNode.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+
+                if (copy.Value == null)
                 {
-                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
-                    {
-                        linkEntity.Value.LinkKeys.Add(linkKey);
-                    }
-                    
-                    if (!linkEntity.Value.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
-                    {
-                        linkEntity.Value.LinkKeys.Add(linkKey);
-                    }
+                    continue;
                 }
                 
-                foreach (var linkEntity in linkEntityDictionaryTreeMutation
-                             .Where(l => linkKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || linkKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+                upsert.Value.SqlNodeType = SqlNodeType.Node;
+                upsert.Value.Namespace = copy.Value.Namespace;
+                upsert.Value.JoinKeys.Clear();
+                upsert.Value.JoinKeys = copy.Value.JoinKeys;
+                upsert.Value.LinkBusinessKeys.Clear();
+                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+                upsert.Value.LinkKeys.Clear();
+                upsert.Value.LinkKeys = copy.Value.LinkKeys;
+                upsert.Value.JoinOneKeys.Clear();
+                upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        
+                linkEntityDictionaryTreeNode[upsert.Key] = upsert.Value;
+            }
+            
+            foreach (var upsert in linkEntityDictionaryTreeEdge
+                         .Where(l => l.Value.Entity
+                             .Matches(model) && l.Value.UpsertKeys.Count == 0))
+            {
+                var copyAux = linkEntityDictionaryTreeEdge
+                    .LastOrDefault(l => l.Value.Entity
+                        .Matches(model));
+                
+                if (copyAux.Value == null)
                 {
-                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
-                    {
-                        linkEntity.Value.LinkKeys.Add(linkKey);
-                    }
-                    
-                    if (!linkEntity.Value.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
-                    {
-                        linkEntity.Value.LinkKeys.Add(linkKey);
-                    }
+                    continue;
                 }
                 
-                foreach (var linkEntity in linkModelDictionaryTreeNode
-                             .Where(l => linkKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || linkKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                var copy = linkEntityDictionaryTreeEdge.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        
+                if (copy.Value == null)
                 {
-                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
-                    {
-                        linkEntity.Value.LinkKeys.Add(linkKey);
-                    }
-                    
-                    if (!linkEntity.Value.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
-                    {
-                        linkEntity.Value.LinkKeys.Add(linkKey);
-                    }
+                    continue;
                 }
                 
-                foreach (var linkEntity in linkModelDictionaryTreeEdge
-                             .Where(l => linkKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || linkKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+                upsert.Value.SqlNodeType = SqlNodeType.Edge;
+                upsert.Value.Namespace = copy.Value.Namespace;
+                upsert.Value.JoinKeys.Clear();
+                upsert.Value.JoinKeys = copy.Value.JoinKeys;
+                upsert.Value.LinkBusinessKeys.Clear();
+                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+                upsert.Value.LinkKeys.Clear();
+                upsert.Value.LinkKeys = copy.Value.LinkKeys;
+                upsert.Value.JoinOneKeys.Clear();
+                upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        
+                linkEntityDictionaryTreeEdge[upsert.Key] = upsert.Value;
+            }
+            
+            foreach (var upsert in linkEntityDictionaryTreeMutation
+                         .Where(l => l.Value.Entity
+                             .Matches(model) && l.Value.UpsertKeys.Count == 0))
+            {
+                var copyAux = linkEntityDictionaryTreeMutation
+                    .LastOrDefault(l => l.Value.Entity
+                        .Matches(model));
+                
+                if (copyAux.Value == null)
                 {
-                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
-                    {
-                        linkEntity.Value.LinkKeys.Add(linkKey);
-                    }
-                    
-                    if (!linkEntity.Value.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
-                    {
-                        linkEntity.Value.LinkKeys.Add(linkKey);
-                    }
+                    continue;
                 }
                 
-                foreach (var linkEntity in linkModelDictionaryTreeMutation
-                             .Where(l => linkKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0]) || linkKey.To.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                var copy = linkEntityDictionaryTreeMutation.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        
+                if (copy.Value == null)
                 {
-                    if (!linkEntity.Value.LinkKeys.Any(u => u.From.Matches(linkKey.From)))
-                    {
-                        linkEntity.Value.LinkKeys.Add(linkKey);
-                    }
-                    
-                    if (!linkEntity.Value.LinkKeys.Any(u => u.To.Matches(linkKey.To)))
-                    {
-                        linkEntity.Value.LinkKeys.Add(linkKey);
-                    }
+                    continue;
                 }
+                
+                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+                upsert.Value.SqlNodeType = SqlNodeType.Mutation;
+                upsert.Value.Namespace = copy.Value.Namespace;
+                upsert.Value.JoinKeys.Clear();
+                upsert.Value.JoinKeys = copy.Value.JoinKeys;
+                upsert.Value.LinkBusinessKeys.Clear();
+                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+                upsert.Value.LinkKeys.Clear();
+                upsert.Value.LinkKeys = copy.Value.LinkKeys;
+                upsert.Value.JoinOneKeys.Clear();
+                upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        
+                linkEntityDictionaryTreeMutation[upsert.Key] = upsert.Value;
+            }
+            
+            foreach (var upsert in linkModelDictionaryTreeNode
+                         .Where(l => l.Value.Entity
+                             .Matches(model) && l.Value.UpsertKeys.Count == 0))
+            {
+                var copyAux = linkModelDictionaryTreeNode
+                    .LastOrDefault(l => l.Value.Entity
+                        .Matches(model));
+                
+                if (copyAux.Value == null)
+                {
+                    continue;
+                }
+                
+                var copy = linkModelDictionaryTreeNode.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        
+                if (copy.Value == null)
+                {
+                    continue;
+                }
+                
+                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+                upsert.Value.SqlNodeType = SqlNodeType.Node;
+                upsert.Value.Namespace = copy.Value.Namespace;
+                upsert.Value.JoinKeys.Clear();
+                upsert.Value.JoinKeys = copy.Value.JoinKeys;
+                upsert.Value.LinkBusinessKeys.Clear();
+                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+                upsert.Value.LinkKeys.Clear();
+                upsert.Value.LinkKeys = copy.Value.LinkKeys;
+                upsert.Value.JoinOneKeys.Clear();
+                upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        
+                linkModelDictionaryTreeNode[upsert.Key] = upsert.Value;
+            }
+            
+            foreach (var upsert in linkModelDictionaryTreeEdge
+                         .Where(l => l.Value.Entity
+                             .Matches(model) && l.Value.UpsertKeys.Count == 0))
+            {
+                var copyAux = linkEntityDictionaryTreeEdge
+                    .LastOrDefault(l => l.Value.Entity
+                        .Matches(model));
+                
+                if (copyAux.Value == null)
+                {
+                    continue;
+                }
+                
+                var copy = linkEntityDictionaryTreeEdge.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        
+                if (copy.Value == null)
+                {
+                    continue;
+                }
+                
+                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+                upsert.Value.SqlNodeType = SqlNodeType.Edge;
+                upsert.Value.Namespace = copy.Value.Namespace;
+                upsert.Value.JoinKeys.Clear();
+                upsert.Value.JoinKeys = copy.Value.JoinKeys;
+                upsert.Value.LinkBusinessKeys.Clear();
+                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+                upsert.Value.LinkKeys.Clear();
+                upsert.Value.LinkKeys = copy.Value.LinkKeys;
+                upsert.Value.JoinOneKeys.Clear();
+                upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        
+                linkEntityDictionaryTreeEdge[upsert.Key] = upsert.Value;
+            }
+            
+            foreach (var upsert in linkModelDictionaryTreeMutation
+                         .Where(l => l.Value.Entity
+                             .Matches(model)))
+            {
+                var copyAux = linkModelDictionaryTreeMutation
+                    .LastOrDefault(l => l.Value.Entity
+                        .Matches(model));
+                
+                if (copyAux.Value == null)
+                {
+                    continue;
+                }
+                
+                var copy = linkModelDictionaryTreeMutation.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        
+                if (copy.Value == null)
+                {
+                    continue;
+                }
+                
+                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+                upsert.Value.SqlNodeType = SqlNodeType.Mutation;
+                upsert.Value.Namespace = copy.Value.Namespace;
+                upsert.Value.JoinKeys.Clear();
+                upsert.Value.JoinKeys = copy.Value.JoinKeys;
+                upsert.Value.LinkBusinessKeys.Clear();
+                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+                upsert.Value.LinkKeys.Clear();
+                upsert.Value.LinkKeys = copy.Value.LinkKeys;
+                upsert.Value.JoinOneKeys.Clear();
+                upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        
+                linkModelDictionaryTreeMutation[upsert.Key] = upsert.Value;
             }
         }
         
         foreach (var entity in entities)
         {
-            foreach (var linkBusinessKey in linkBusinessKeys.Where(u => entity
-                         .Matches(u.From.Split('~')[0])))
+            foreach (var upsert in linkEntityDictionaryTreeNode
+                         .Where(l => l.Value.Entity
+                             .Matches(entity) && l.Value.UpsertKeys.Count == 0))
             {
-                foreach (var linkEntity in linkEntityDictionaryTreeNode
-                             .Where(l => linkBusinessKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                var copyAux = linkEntityDictionaryTreeNode
+                    .LastOrDefault(l => l.Value.Entity
+                        .Matches(entity));
+                
+                if (copyAux.Value == null)
                 {
-                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
-                            linkBusinessKey.From)))
-                    {
-                        linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
-                    }
+                    continue;
                 }
                 
-                foreach (var linkEntity in linkEntityDictionaryTreeEdge
-                             .Where(l => linkBusinessKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                var copy = linkEntityDictionaryTreeNode.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        
+                if (copy.Value == null)
                 {
-                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
-                            linkBusinessKey.From)))
-                    {
-                        linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
-                    }
+                    continue;
                 }
                 
-                foreach (var linkEntity in linkEntityDictionaryTreeMutation
-                             .Where(l => linkBusinessKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+                upsert.Value.SqlNodeType = SqlNodeType.Node;
+                upsert.Value.Namespace = copy.Value.Namespace;
+                upsert.Value.JoinKeys.Clear();
+                upsert.Value.JoinKeys = copy.Value.JoinKeys;
+                upsert.Value.LinkBusinessKeys.Clear();
+                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+                upsert.Value.LinkKeys.Clear();
+                upsert.Value.LinkKeys = copy.Value.LinkKeys;
+                upsert.Value.JoinOneKeys.Clear();
+                upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        
+                linkEntityDictionaryTreeNode[upsert.Key] = upsert.Value;
+            }
+            
+            foreach (var upsert in linkEntityDictionaryTreeEdge
+                         .Where(l => l.Value.Entity
+                             .Matches(entity) && l.Value.UpsertKeys.Count == 0))
+            {
+                var copyAux = linkEntityDictionaryTreeEdge
+                    .LastOrDefault(l => l.Value.Entity
+                        .Matches(entity));
+                
+                if (copyAux.Value == null)
                 {
-                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
-                            linkBusinessKey.From)))
-                    {
-                        linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
-                    }
+                    continue;
                 }
                 
-                foreach (var linkEntity in linkModelDictionaryTreeNode
-                             .Where(l => linkBusinessKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                var copy = linkEntityDictionaryTreeEdge.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        
+                if (copy.Value == null)
                 {
-                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
-                            linkBusinessKey.From)))
-                    {
-                        linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
-                    }
+                    continue;
                 }
                 
-                foreach (var linkEntity in linkModelDictionaryTreeEdge
-                             .Where(l => linkBusinessKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+                upsert.Value.SqlNodeType = SqlNodeType.Edge;
+                upsert.Value.Namespace = copy.Value.Namespace;
+                upsert.Value.JoinKeys.Clear();
+                upsert.Value.JoinKeys = copy.Value.JoinKeys;
+                upsert.Value.LinkBusinessKeys.Clear();
+                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+                upsert.Value.LinkKeys.Clear();
+                upsert.Value.LinkKeys = copy.Value.LinkKeys;
+                upsert.Value.JoinOneKeys.Clear();
+                upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        
+                linkEntityDictionaryTreeEdge[upsert.Key] = upsert.Value;
+            }
+            
+            foreach (var upsert in linkEntityDictionaryTreeMutation
+                         .Where(l => l.Value.Entity
+                             .Matches(entity) && l.Value.UpsertKeys.Count == 0))
+            {
+                var copyAux = linkEntityDictionaryTreeMutation
+                    .LastOrDefault(l => l.Value.Entity
+                        .Matches(entity) && !l.Key.Matches(l.Value.RelationshipKey));
+                
+                if (copyAux.Value == null)
                 {
-                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
-                            linkBusinessKey.From)))
-                    {
-                        linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
-                    }
+                    continue;
                 }
                 
-                foreach (var linkEntity in linkModelDictionaryTreeMutation
-                             .Where(l => linkBusinessKey.From.Split('~')[0]
-                                 .Matches(l.Key.Split('~')[0])))
+                var copy = linkEntityDictionaryTreeMutation.FirstOrDefault(a => a.Key.Split('~')[0].Matches(copyAux.Value.RelationshipKey.Split('~')[0]));
+        
+                if (copy.Value == null)
                 {
-                    if (!linkEntity.Value.LinkBusinessKeys.Any(u => u.From.Matches(
-                            linkBusinessKey.From)))
-                    {
-                        linkEntity.Value.LinkBusinessKeys.Add(linkBusinessKey);
-                    }
+                    continue;
                 }
+                
+                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+                upsert.Value.SqlNodeType = SqlNodeType.Mutation;
+                upsert.Value.Namespace = copy.Value.Namespace;
+                upsert.Value.JoinKeys.Clear();
+                upsert.Value.JoinKeys = copy.Value.JoinKeys;
+                upsert.Value.LinkBusinessKeys.Clear();
+                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+                upsert.Value.LinkKeys.Clear();
+                upsert.Value.LinkKeys = copy.Value.LinkKeys;
+                upsert.Value.JoinOneKeys.Clear();
+                upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        
+                linkEntityDictionaryTreeMutation[upsert.Key] = upsert.Value;
+            }
+            
+            foreach (var upsert in linkModelDictionaryTreeNode
+                         .Where(l => l.Value.Entity
+                             .Matches(entity) && l.Value.UpsertKeys.Count == 0))
+            {
+                var copyAux = linkModelDictionaryTreeNode
+                    .LastOrDefault(l => l.Value.Entity
+                        .Matches(entity));
+                
+                if (copyAux.Value == null)
+                {
+                    continue;
+                }
+                
+                var copy = linkModelDictionaryTreeNode.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        
+                if (copy.Value == null)
+                {
+                    continue;
+                }
+                
+                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+                upsert.Value.SqlNodeType = SqlNodeType.Node;
+                upsert.Value.Namespace = copy.Value.Namespace;
+                upsert.Value.JoinKeys.Clear();
+                upsert.Value.JoinKeys = copy.Value.JoinKeys;
+                upsert.Value.LinkBusinessKeys.Clear();
+                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+                upsert.Value.LinkKeys.Clear();
+                upsert.Value.LinkKeys = copy.Value.LinkKeys;
+                upsert.Value.JoinOneKeys.Clear();
+                upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        
+                linkModelDictionaryTreeNode[upsert.Key] = upsert.Value;
+            }
+            
+            foreach (var upsert in linkModelDictionaryTreeEdge
+                         .Where(l => l.Value.Entity
+                             .Matches(entity) && l.Value.UpsertKeys.Count == 0))
+            {
+                var copyAux = linkEntityDictionaryTreeEdge
+                    .LastOrDefault(l => l.Value.Entity
+                        .Matches(entity));
+                
+                if (copyAux.Value == null)
+                {
+                    continue;
+                }
+                
+                var copy = linkEntityDictionaryTreeEdge.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        
+                if (copy.Value == null)
+                {
+                    continue;
+                }
+                
+                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+                upsert.Value.SqlNodeType = SqlNodeType.Edge;
+                upsert.Value.Namespace = copy.Value.Namespace;
+                upsert.Value.JoinKeys.Clear();
+                upsert.Value.JoinKeys = copy.Value.JoinKeys;
+                upsert.Value.LinkBusinessKeys.Clear();
+                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+                upsert.Value.LinkKeys.Clear();
+                upsert.Value.LinkKeys = copy.Value.LinkKeys;
+                upsert.Value.JoinOneKeys.Clear();
+                upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        
+                linkEntityDictionaryTreeEdge[upsert.Key] = upsert.Value;
+            }
+        
+            foreach (var upsert in linkModelDictionaryTreeMutation
+                         .Where(l => l.Value.Entity
+                             .Matches(entity) && l.Value.UpsertKeys.Count == 0))
+            {
+                var copyAux = linkModelDictionaryTreeMutation
+                    .LastOrDefault(l => l.Value.Entity
+                        .Matches(entity) && !l.Key.Matches(l.Value.RelationshipKey));
+                
+                if (copyAux.Value == null)
+                {
+                    continue;
+                }
+                
+                var copy = linkModelDictionaryTreeMutation.FirstOrDefault(a => a.Key.Split('~')[0].Matches(copyAux.Value.RelationshipKey.Split('~')[0]));
+        
+                if (copy.Value == null)
+                {
+                    continue;
+                }
+                
+                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+                upsert.Value.SqlNodeType = SqlNodeType.Mutation;
+                upsert.Value.Namespace = copy.Value.Namespace;
+                upsert.Value.JoinKeys.Clear();
+                upsert.Value.JoinKeys = copy.Value.JoinKeys;
+                upsert.Value.LinkBusinessKeys.Clear();
+                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+                upsert.Value.LinkKeys.Clear();
+                upsert.Value.LinkKeys = copy.Value.LinkKeys;
+                upsert.Value.JoinOneKeys.Clear();
+                upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        
+                linkModelDictionaryTreeMutation[upsert.Key] = upsert.Value;
             }
         }
 
-        foreach (var modelTree in modelDictionaryTree)
+        foreach (var entity in entities)
         {
-            if (entityDictionaryTree.TryGetValue(modelTree.Key, out var value))
+            var tree = entityDictionaryTree[entity];
+
+            foreach (var field in linkEntityDictionaryTreeNode.Where(l => l.Value.Entity.Matches(entity)))
             {
-                modelTree.Value.Schema = value.Schema;
+                field.Value.Mapping = tree.Mapping;
+            }
+            
+            foreach (var field in linkEntityDictionaryTreeEdge.Where(l => l.Value.Entity.Matches(entity)))
+            {
+                field.Value.Mapping = tree.Mapping;
+            }
+            
+            foreach (var field in linkEntityDictionaryTreeMutation.Where(l => l.Value.Entity.Matches(entity)))
+            {
+                field.Value.Mapping = tree.Mapping;
             }
         }
-        
+
         var entityTreeMap = new EntityTreeMap<dynamic, dynamic>()
         {
             NodeId = entityNodeId,
@@ -640,7 +1286,7 @@ public static class ModelServiceCollectionRegistration
 
         return services;
     }
-    
+
     /// <summary>
     /// Method for adding a value into a dictionary
     /// </summary>

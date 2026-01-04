@@ -80,6 +80,7 @@ public static class NodeTreeHelper
         visitedNode.Add($"{name}");
 
         var nonNullableFromType = Nullable.GetUnderlyingType(nodeFromClass.GetType()) ?? nodeFromClass.GetType();
+        
         var nonNullableToType = Nullable.GetUnderlyingType(nodeToClass.GetType()) ?? nodeToClass.GetType();
 
         if (typeof(IList).IsAssignableFrom(nonNullableToType))
@@ -99,35 +100,61 @@ public static class NodeTreeHelper
             nodeId.Add(new KeyValuePair<string, int>(nodeToClass!.GetType().Name!, nodeId.Count + 1));
         }
 
-        if (!linkEntityDictionaryTreeNode.ContainsKey($"{nodeToClass.GetType().Name}~Id"))
-        {
-            linkEntityDictionaryTreeNode.Add($"{nodeToClass.GetType().Name}~Id",
-                new SqlNode()
-                {
-                    Column = "Id",
-                    Namespace = nodeToClass.GetType().Namespace
-                });
-            
-            linkEntityDictionaryTreeEdge.Add($"{nodeToClass.GetType().Name}~Id",
-                new SqlNode()
-                {
-                    Column = "Id",
-                    Namespace = nodeToClass.GetType().Namespace
-                });
-            
-            linkEntityDictionaryTreeMutation.Add($"{nodeToClass.GetType().Name}~Id",
-                new SqlNode()
-                {
-                    Column = "Id",
-                    Namespace = nodeToClass.GetType().Namespace
-                });
-        }
-
         var fromMapping = GraphQLMapper.GetMappings<E, M>(mapperConfiguration,
             nodeFromClass, nodeToClass, isModel, models, entities, linkEntityDictionaryTreeNode,
             linkModelDictionaryTreeNode, linkEntityDictionaryTreeEdge, linkModelDictionaryTreeEdge, 
             linkEntityDictionaryTreeMutation, linkModelDictionaryTreeMutation, linkKeys, joinKeys, joinOneKeys, linkBusinessKeys);
 
+        if (fromMapping.Count > 0)
+        {
+            var columnMapped = linkEntityDictionaryTreeNode.First();
+            
+            if (!linkEntityDictionaryTreeNode.ContainsKey($"{nodeToClass.GetType().Name}~Id"))
+            {
+                linkEntityDictionaryTreeNode.Add($"{nodeToClass.GetType().Name}~Id",
+                    new SqlNode()
+                    {
+                        RelationshipKey = $"{nodeToClass.GetType().Name}~Id",
+                        Column = "Id",
+                        Namespace = nodeToClass.GetType().Namespace,
+                        SqlNodeType = SqlNodeType.Node,
+                        JoinKeys = columnMapped.Value.JoinKeys,
+                        IsGraph = columnMapped.Value.IsGraph,
+                        JoinOneKeys = columnMapped.Value.JoinOneKeys,
+                        LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
+                        LinkKeys = columnMapped.Value.LinkKeys
+                });
+                
+                linkEntityDictionaryTreeEdge.Add($"{nodeToClass.GetType().Name}~Id",
+                    new SqlNode()
+                    {
+                        RelationshipKey = $"{nodeToClass.GetType().Name}~Id",
+                        Column = "Id",
+                        Namespace = nodeToClass.GetType().Namespace,
+                        SqlNodeType = SqlNodeType.Edge,
+                        JoinKeys = columnMapped.Value.JoinKeys,
+                        IsGraph = columnMapped.Value.IsGraph,
+                        JoinOneKeys = columnMapped.Value.JoinOneKeys,
+                        LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
+                        LinkKeys = columnMapped.Value.LinkKeys
+                });
+                
+                linkEntityDictionaryTreeMutation.Add($"{nodeToClass.GetType().Name}~Id",
+                    new SqlNode()
+                    {
+                        RelationshipKey = $"{nodeToClass.GetType().Name}~Id",
+                        Column = "Id",
+                        Namespace = nodeToClass.GetType().Namespace,
+                        SqlNodeType = SqlNodeType.Mutation,
+                        JoinKeys = columnMapped.Value.JoinKeys,
+                        IsGraph = columnMapped.Value.IsGraph,
+                        JoinOneKeys = columnMapped.Value.JoinOneKeys,
+                        LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
+                        LinkKeys = columnMapped.Value.LinkKeys
+                });
+            }
+        }
+        
         var nodeName = nodeToClass.GetType().Name;
 
         if (nodeToClass.GetType().IsGenericType)
@@ -169,25 +196,47 @@ public static class NodeTreeHelper
 
             if (!linkEntityDictionaryTreeNode.ContainsKey($"{entity}~{column}"))
             {
+                var columnMapped = linkEntityDictionaryTreeNode.First(a => a.Key.Split('~')[0]
+                    .Matches(entity.ToString()));
+                
                 linkEntityDictionaryTreeNode.Add($"{entity}~{column}",
                     new SqlNode()
                     {
+                        RelationshipKey = $"{entity}~{column}",
                         Column = column,
-                        Namespace = nodeToClass.GetType().Namespace
+                        Namespace = nodeToClass.GetType().Namespace,
+                        SqlNodeType = SqlNodeType.Node,
+                        JoinKeys = columnMapped.Value.JoinKeys,
+                        IsGraph = columnMapped.Value.IsGraph,
+                        JoinOneKeys = columnMapped.Value.JoinOneKeys,
+                        LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
+                        LinkKeys = columnMapped.Value.LinkKeys
                     });
                 
                 linkEntityDictionaryTreeEdge.Add($"{entity}~{column}",
                     new SqlNode()
                     {
                         Column = column,
-                        Namespace = nodeToClass.GetType().Namespace
+                        Namespace = nodeToClass.GetType().Namespace,
+                        SqlNodeType = SqlNodeType.Edge,
+                        JoinKeys = columnMapped.Value.JoinKeys,
+                        IsGraph = columnMapped.Value.IsGraph,
+                        JoinOneKeys = columnMapped.Value.JoinOneKeys,
+                        LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
+                        LinkKeys = columnMapped.Value.LinkKeys
                     });
                 
                 linkEntityDictionaryTreeMutation.Add($"{entity}~{column}",
                     new SqlNode()
                     {
                         Column = column,
-                        Namespace = nodeToClass.GetType().Namespace
+                        Namespace = nodeToClass.GetType().Namespace,
+                        SqlNodeType = SqlNodeType.Mutation,
+                        JoinKeys = columnMapped.Value.JoinKeys,
+                        IsGraph = columnMapped.Value.IsGraph,
+                        JoinOneKeys = columnMapped.Value.JoinOneKeys,
+                        LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
+                        LinkKeys = columnMapped.Value.LinkKeys
                     });
             }
         }
@@ -230,13 +279,35 @@ public static class NodeTreeHelper
                         nonNullableToType)!;
                 }
             }
-            else
+            
+            E fromVariable = null;
+            
+            if (typeof(IList).IsAssignableFrom(nonNullableFromType))
+            {
+                if (fromVariable == null)
+                {
+                    fromVariable = (E)Convert.ChangeType(
+                        Activator.CreateInstance(nonNullableFromType.GenericTypeArguments[0]),
+                        nonNullableFromType.GenericTypeArguments[0])!;
+                }
+            }
+            else if (nonNullableFromType.IsClass && nonNullableFromType != typeof(string))
+            {
+                if (fromVariable == null)
+                {
+                    fromVariable = (E)Convert.ChangeType(
+                        Activator.CreateInstance(nonNullableFromType),
+                        nonNullableFromType)!;
+                }
+            }
+
+            if (toVariable == null || fromVariable == null)
             {
                 continue;
             }
 
             tree = IterateTree<E, M>(nodeTrees,
-                nodeFromClass, toVariable, toVariable.GetType().Name, name,
+                fromVariable, toVariable, toVariable?.GetType().Name, name,
                 mapperConfiguration, nodeId, isModel, models, entities, visitedNode,
                 linkEntityDictionaryTreeNode,
                 linkModelDictionaryTreeNode,
