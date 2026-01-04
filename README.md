@@ -1,6 +1,9 @@
-## Coffee Beanery
+## GraphQL Coffee Beanery
 
-#### “Why Dapper with 
+#### “Why GraphQL and Dapper with GraphQL Coffee Beanery and what does better than existing tools?
+
+The uniqueness of using a new approach using dapper for performance, providing out of the box features without adding any code, and give full customisation and integrations based on every project needs.
+
 #### “Graphql + C# + Dapper Example”
 #### “Coffee Beanery + Entity Framework GraphQL”
 #### “GraphQL Dapper C# 
