@@ -10,7 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastru
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Database", "Database", "{81914BA5-1D71-4DC9-AA56-BF7154A729D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.Banking", "Infrastructure\Database\Database.Banking\Database.Banking.csproj", "{6C433CFB-0AE9-3DC4-CF8F-58454DBCFE78}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.Entity.Banking", "Infrastructure\Database\Database.Entity.Banking\Database.Entity.Banking.csproj", "{6C433CFB-0AE9-3DC4-CF8F-58454DBCFE78}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.Common", "Infrastructure\Database\Database.Common\Database.Common.csproj", "{DF0F14E6-DFDD-B217-2FE1-61237D99902C}"
 EndProject
@@ -27,6 +27,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.Entity", "Infrastructure\Database\Database.Entity\Database.Entity.csproj", "{0AA7CA93-7B06-4154-A51A-EA06C35FA14F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoffeeBeanery", "Domain\CoffeeBeanery\CoffeeBeanery.csproj", "{D5CAA015-AE1D-4024-B8D1-C9B26721F144}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.Graph", "Infrastructure\Database\Database.Graph\Database.Graph.csproj", "{6BC2D57F-1D80-47A0-A33E-A2AE4CCAD0A4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.Graph.Banking", "Infrastructure\Database\Database.Graph.Banking\Database.Graph.Banking.csproj", "{8E147C37-E42E-463C-85ED-DBB561FA1C8B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -62,6 +66,14 @@ Global
 		{D5CAA015-AE1D-4024-B8D1-C9B26721F144}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5CAA015-AE1D-4024-B8D1-C9B26721F144}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5CAA015-AE1D-4024-B8D1-C9B26721F144}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BC2D57F-1D80-47A0-A33E-A2AE4CCAD0A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BC2D57F-1D80-47A0-A33E-A2AE4CCAD0A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BC2D57F-1D80-47A0-A33E-A2AE4CCAD0A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BC2D57F-1D80-47A0-A33E-A2AE4CCAD0A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E147C37-E42E-463C-85ED-DBB561FA1C8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E147C37-E42E-463C-85ED-DBB561FA1C8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E147C37-E42E-463C-85ED-DBB561FA1C8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E147C37-E42E-463C-85ED-DBB561FA1C8B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -75,6 +87,8 @@ Global
 		{06135D80-3789-4188-8AC5-7AB9756BA7CD} = {E36EDE6E-0BF8-40DA-A441-0E44963953B3}
 		{0AA7CA93-7B06-4154-A51A-EA06C35FA14F} = {81914BA5-1D71-4DC9-AA56-BF7154A729D2}
 		{D5CAA015-AE1D-4024-B8D1-C9B26721F144} = {E36EDE6E-0BF8-40DA-A441-0E44963953B3}
+		{6BC2D57F-1D80-47A0-A33E-A2AE4CCAD0A4} = {81914BA5-1D71-4DC9-AA56-BF7154A729D2}
+		{8E147C37-E42E-463C-85ED-DBB561FA1C8B} = {81914BA5-1D71-4DC9-AA56-BF7154A729D2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9E7DAC60-7C53-4FEF-8B0F-911DD21D9054}

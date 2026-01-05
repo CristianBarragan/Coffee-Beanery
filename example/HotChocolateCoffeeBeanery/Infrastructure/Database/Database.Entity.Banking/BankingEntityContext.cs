@@ -1,13 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Database.Entity;
 
-namespace Database.Banking
+namespace Database.Entity.Banking
 {
-    public class BankingDbContext : DbContext
+    public class BankingEntityContext : DbContext
     {
-        public BankingDbContext(DbContextOptions<BankingDbContext> options) : base(options)
+        public BankingEntityContext(DbContextOptions<BankingEntityContext> options) : base(options)
         {
         }
+        
+        public DbSet<CustomerCustomerRelationship> CustomerCustomerRelationship { get; set; }
 
         public DbSet<Customer> Customer { get; set; }
 
@@ -25,6 +26,8 @@ namespace Database.Banking
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.ApplyConfiguration(new CustomerCustomerRelationshipEntityConfiguration(Schema.Banking.ToString()));
+            
             modelBuilder.ApplyConfiguration(new CustomerEntityConfiguration(Schema.Banking.ToString()));
 
             modelBuilder.ApplyConfiguration(new ContactPointEntityConfiguration(Schema.Banking.ToString()));

@@ -3,9 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql;
 using Database.Common.Extensions;
-using Database.Entity;
 
-namespace Database.Banking
+namespace Database.Entity.Banking
 {
     public class Program
     {
@@ -20,10 +19,11 @@ namespace Database.Banking
 
             await Host.CreateDefaultBuilder(args).ConfigureServices(services =>
             {
-                services.AddPostgressDbContext<BankingDbContext>(
+                services.AddPostgressDbContext<BankingEntityContext>(
                     connectionStringBuilder,
                     Schema.Banking.ToString(),
                     ServiceLifetime.Transient);
+                
             }).Build().RunAsync();
         }
     }

@@ -6,45 +6,46 @@ namespace Domain.Shared.Mapping;
 
 public static class ContractQueryMapping
 {
-    public static (Customer existingCustomer, Product existingProduct) MapFromCustomer(
-        object mappedObject, IMapper mapper, Customer? existingCustomer, Product? existingProduct)
+    public static (CustomerCustomerEdge existingCustomerCustomerEdge, Product existingProduct) MapFromCustomer(
+        object mappedObject, IMapper mapper, CustomerCustomerEdge? existingCustomerCustomerEdge, 
+        Product? existingProduct)
     {
         if (mappedObject is DatabaseEntity.Contract)
         {
             var contractEntity = mappedObject as DatabaseEntity.Contract;
             
-            if (existingCustomer?.CustomerKey != null)
+            if (existingCustomerCustomerEdge.InnerCustomer?.CustomerKey != null)
             {
-                existingCustomer.Product ??= [];
+                existingCustomerCustomerEdge.InnerCustomer.Product ??= [];
                 
                 if (existingProduct?.CustomerKey != null)
                 {
                     mapper.Map(contractEntity, existingProduct);
-                    var productIndex = existingCustomer.Product.FindIndex(a => a.CustomerKey == existingProduct?.CustomerKey);
-                    existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                    var productIndex = existingCustomerCustomerEdge.InnerCustomer.Product.FindIndex(a => a.CustomerKey == existingProduct?.CustomerKey);
+                    existingProduct.CustomerKey = existingCustomerCustomerEdge.InnerCustomer.CustomerKey;
                     mapper.Map(contractEntity, existingProduct);
-                    existingCustomer.Product[productIndex] = existingProduct;
+                    existingCustomerCustomerEdge.InnerCustomer.Product[productIndex] = existingProduct;
                 }
                 else
                 {
                     existingProduct = mapper.Map<Product>(contractEntity);
-                    existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                    existingProduct.CustomerKey = existingCustomerCustomerEdge.InnerCustomer.CustomerKey;
                     mapper.Map(contractEntity, existingProduct);
-                    existingCustomer.Product.Add(existingProduct);
+                    existingCustomerCustomerEdge.InnerCustomer.Product.Add(existingProduct);
                 }
             }
             else
             {
-                existingCustomer = new Customer();
-                existingCustomer.Product = [];
+                existingCustomerCustomerEdge.InnerCustomer = new Customer();
+                existingCustomerCustomerEdge.InnerCustomer.Product = [];
                 
                 existingProduct = mapper.Map<Product>(contractEntity);
-                existingProduct.CustomerKey = existingCustomer.CustomerKey;
+                existingProduct.CustomerKey = existingCustomerCustomerEdge.InnerCustomer.CustomerKey;
                 mapper.Map(contractEntity, existingProduct);
-                existingCustomer.Product.Add(existingProduct);
+                existingCustomerCustomerEdge.InnerCustomer.Product.Add(existingProduct);
             }
         }
 
-        return (existingCustomer, existingProduct);
+        return (existingCustomerCustomerEdge, existingProduct);
     }
 }

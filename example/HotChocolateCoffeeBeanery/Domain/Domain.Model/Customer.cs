@@ -19,6 +19,9 @@ public class Customer
 
     [LinkBusinessKey("ContactPoint","ContactPointKey")]
     public List<ContactPoint>? ContactPoint { get; set; }
+
+    [LinkBusinessKey("CustomerBankingRelationship","CustomerBankingRelationshipKey")]
+    public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
 }
 
 public enum CustomerType
