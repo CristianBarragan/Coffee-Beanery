@@ -29,6 +29,17 @@ public class CustomerCustomerRelationship : Process
     
     [LinkKey("Customer","InnerCustomerKey")]
     public Customer? InnerCustomer { get; set; }
+
+    public CustomerCustomerRelationshipType? CustomerCustomerRelationshipType { get; set; }
+}
+
+public enum CustomerCustomerRelationshipType
+{
+    Family,
+    Partner,
+    Widow,
+    Single,
+    Divorced
 }
 
 public class CustomerCustomerRelationshipEntityConfiguration : IEntityTypeConfiguration<CustomerCustomerRelationship>

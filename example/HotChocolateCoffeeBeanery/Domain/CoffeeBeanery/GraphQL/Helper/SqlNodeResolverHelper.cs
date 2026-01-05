@@ -5,6 +5,7 @@ using HotChocolate.Language;
 using CoffeeBeanery.GraphQL.Model;
 using FASTER.core;
 using HotChocolate.Execution.Processing;
+using MoreLinq;
 
 namespace CoffeeBeanery.GraphQL.Helper;
 
@@ -350,7 +351,7 @@ public static class SqlNodeResolverHelper
             return hasChildren;
         }
 
-        var queryBuilder = $"SELECT % FROM \"{currentEntityTree.Schema}\".\"{currentEntityTree.Name}\" {currentEntityTree.Name} ";
+        var queryBuilder = currentEntityStructure.Query;
         currentEntityStructure.SelectColumns.AddRange(currentEntityStructure.Columns);
         currentEntityStructure.SelectColumns = currentEntityStructure.SelectColumns.Distinct().ToList();
 
@@ -439,6 +440,10 @@ public static class SqlNodeResolverHelper
     {
         var currentColumns = new List<KeyValuePair<string, SqlNode>>();
         var childrenJoinColumns = new Dictionary<string, string>();
+        var entitySql = string.Empty;
+        var graphSql = string.Empty;
+        var graphColumns = new List<KeyValuePair<string, SqlNode>>();
+        var upsertColumn = new KeyValuePair<string, SqlNode>();
 
         var columnToAdd = linkEntityDictionaryTreeNode
             .FirstOrDefault(k => k.Key
@@ -567,10 +572,60 @@ public static class SqlNodeResolverHelper
         }
         else
         {
+            graphColumns = currentColumns
+                .Where(a => a.Value.IsColumnGraph).ToList();
+            
             sqlQueryStatement.Append(queryBuilder);
             queryBuilder = "";
-            queryBuilder += " SELECT % ";
-            queryBuilder += $" FROM \"{currentEntityTree.Schema}\".\"{currentEntityTree.Name}\" {currentEntityTree.Name}";
+
+            if (graphColumns.Any())
+            {
+                upsertColumn = graphColumns.First(a => 
+                    a.Value.UpsertKeys.First().Split('~')[1].Matches(a.Value.Column));
+                
+                graphSql = $"WITH graph_data AS ( SELECT {(string.Join(",", currentColumns.Where(a =>  a.Value.UpsertKeys.Count > 0)
+                    .Select(a => $"{a.Value.Column}::TEXT::UUID AS {a.Value.Column}").ToList()))} FROM cypher('{currentColumns.First(a => !string.IsNullOrEmpty(a.Value.Graph)).Value.Graph}', $$ MATCH " +
+                           $"(p:{currentEntityTree.Name} ) RETURN {
+                               $"{(string.Join(",", currentColumns.Where(a =>  a.Value.UpsertKeys.Count > 0)
+                                   .Select(a => $"(p.{a.Value.Column}) AS {a.Value.Column}").ToList()))}"} $$) AS ({$"{
+                                       (string.Join(",", currentColumns.Where(a =>  a.Value.UpsertKeys.Count > 0)
+                                           .Select(a => $"{a.Value.Column} agtype").ToList()))} )) "}" + 
+                           $"SELECT * FROM (SELECT {(string.Join(",", currentColumns.Where(a =>  a.Value.UpsertKeys.Count > 0)
+                                   .Select(a => $" (a.{a.Value.Column})::UUID AS {a.Value.Column} ").ToList()))
+                           } FROM graph_data a ";
+                
+                var graphColumnTree = entityTrees[upsertColumn.Value.Entity];
+                
+                graphSql += $" JOIN \"{graphColumnTree.Schema}\".\"{graphColumnTree.Name}\" {
+                    upsertColumn.Value.Entity}{upsertColumn.Value.Column} ON a.{upsertColumn.Value.Column} = {
+                        upsertColumn.Value.Entity}{upsertColumn.Value.Column}.\"{upsertColumn.Value.Column}\" ";
+
+                var parentFieldGraph = graphColumns.First();
+                var parentGraph = parentFieldGraph.Value.JoinKeys.First(a => !a.From.Matches(parentFieldGraph.Key));
+                
+                foreach (var column in graphColumns)
+                {
+                    foreach (var joinKey in column.Value.JoinKeys)
+                    {
+                        if (!joinKey.To.Split('~')[1].Matches(column.Value.Column))
+                        {
+                            continue;
+                        }
+
+                        graphColumnTree = entityTrees[joinKey.From.Split('~')[0]];
+                        var upsertKey = linkEntityDictionaryTreeNode.First(a => 
+                            a.Value.Entity.Matches(graphColumnTree.Name));
+
+                        graphSql += $" JOIN \"{graphColumnTree.Schema}\".\"{graphColumnTree.Name}\" {
+                            parentGraph.From.Split('~')[0]}{joinKey.To.Split('~')[1]} ON a.{
+                                joinKey.To.Split('~')[1]} = {
+                                    parentGraph.From.Split('~')[0]}{joinKey.To.Split('~')[1]}.\"{parentGraph.From.Split('~')[1]}\" ";
+                    }
+                }
+            }
+            
+            entitySql += " SELECT % ";
+            entitySql += $" FROM \"{currentEntityTree.Schema}\".\"{currentEntityTree.Name}\" {currentEntityTree.Name}";
 
             var model = linkEntityDictionaryTreeNode
                 .FirstOrDefault(e =>
@@ -625,9 +680,19 @@ public static class SqlNodeResolverHelper
         }
 
         queryColumns = queryColumns.Distinct().ToList();
-        var select = string.Join(",", queryColumns);
-        queryBuilder = queryBuilder.Replace("%", select);
 
+        if (!string.IsNullOrEmpty(graphSql))
+        {
+            var parentFieldGraph = graphColumns.First();
+            var parentGraph = parentFieldGraph.Value.JoinKeys.First(a => !a.From.Matches(parentFieldGraph.Key));
+
+            entitySql = $" ;{graphSql}) a";
+            //         $"ON {parentGraph.To.Replace("~","")}.\"{
+            // currentColumns.Last().Value.UpsertKeys.First().Split('~')[1]}\" = a.{
+            //     currentColumns.Last().Value.UpsertKeys.First().Split('~')[1]} ";
+        }
+        queryBuilder += entitySql;
+        
         var sqlStructure = new SqlQueryStructure()
         {
             Id = currentEntityTree.Id,

@@ -2,14 +2,23 @@
 
 public class GraphProcess
 {
-    public Direction? Direction { get; set; }
+    public LevelDirection? LevelDirection { get; set; }
 
-    public int? Depth { get; set; }
+    public int? LevelDepth { get; set; }
+
+    public GraphType? GraphType { get; set; }
 }
 
-public enum Direction
+public enum LevelDirection
 {
     Outer,
     Inner,
     Full
+}
+
+public enum GraphType
+{
+    None,
+    WithInclusiveMathing,
+    WithExclusiveMathing,
 }

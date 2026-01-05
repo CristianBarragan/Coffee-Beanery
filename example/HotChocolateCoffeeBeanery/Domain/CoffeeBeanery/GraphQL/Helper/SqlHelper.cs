@@ -221,16 +221,22 @@ public static class SqlHelper
                 {
                     sqlUpsertAux += sqlUpsert + " ; ";
                 }
-                
-                sqlUpsert = $" SELECT * FROM cypher('{currentTree.Name}{"Edge"}', $$ MERGE (p:{currentTree.Name} {{ {
-                    (string.Join(",", currentColumns.Select(a => $"{a.Value.Column}: '{a.Value.Value
-                    }'").ToList()))}}}) RETURN p $$) AS (p agtype);";
-           
-                if (AddGeneratedQuery(generatedQuery, false, currentTree.Id.ToString(), $"{currentTree.Name}", upsertKey.Value.UpsertKeys.First().Split('~')[1], sqlUpsert))
+
+                if (currentColumns.Count != 0)
                 {
-                    sqlUpsertAux += sqlUpsert;
+                    //Need a validation to make sure all the graph fields are present
+                    sqlUpsert =
+                        $" SELECT * FROM cypher('{currentColumns.First().Value.Graph}', $$ MERGE (p:{currentTree.Name} {{ {
+                            (string.Join(",", currentColumns.Where(a => a.Value.IsColumnGraph).Select(a => $"{a.Value.Column}: '{a.Value.Value
+                            }'").ToList()))}}});";
+
+                    if (AddGeneratedQuery(generatedQuery, false, currentTree.Id.ToString(), $"{currentTree.Name}",
+                            upsertKey.Value.UpsertKeys.First().Split('~')[1], sqlUpsert))
+                    {
+                        sqlUpsertAux += sqlUpsert;
+                    }
                 }
-                
+
                 sqlUpsert = string.Empty;
             }
         }
@@ -260,14 +266,18 @@ public static class SqlHelper
             {
                 sqlUpsertAux += sqlUpsertAux;
             }
-            
-            sqlUpsert = $" SELECT * FROM cypher('{currentTree.Name}{"Edge"}', $$ MERGE (p:{currentTree.Name} {{ {
-                (string.Join(",", currentColumns.Select(a => $"{a.Value.Column}: '{a.Value.Value
-                }'").ToList()))}}}) RETURN p $$) AS (p agtype);";
-           
-            if (AddGeneratedQuery(generatedQuery, false, currentTree.Id.ToString(), $"{currentTree.Name}", currentColumns.First().Value.UpsertKeys.First().Split('~')[1], sqlUpsert))
+
+            if (currentColumns.Count != 0)
             {
-                sqlUpsertAux += sqlUpsert;
+                sqlUpsert = $" ;CREATE TEMP TABLE temp_merge AS SELECT 1 FROM cypher('{currentTree.Name}{"Edge"}', $$ MERGE (p:{currentTree.Name} {{ {
+                    (string.Join(",", currentColumns.Where(a => !a.Value.Column.Matches(
+                        a.Value.UpsertKeys.First().Split('~')[1])).Select(a => $"{a.Value.Column}: '{a.Value.Value
+                    }'").ToList()))}}}) RETURN p $$) AS (p agtype); DROP TABLE temp_merge;";
+           
+                if (AddGeneratedQuery(generatedQuery, false, currentTree.Id.ToString(), $"{currentTree.Name}", currentColumns.First().Value.UpsertKeys.First().Split('~')[1], sqlUpsert))
+                {
+                    sqlUpsertAux += sqlUpsert;
+                }    
             }
         }
         

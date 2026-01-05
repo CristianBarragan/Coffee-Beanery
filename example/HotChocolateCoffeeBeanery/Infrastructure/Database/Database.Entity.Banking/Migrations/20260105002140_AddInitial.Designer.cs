@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Database.Entity.Banking.Migrations
 {
     [DbContext(typeof(BankingEntityContext))]
-    [Migration("20260102230004_Initial")]
-    partial class Initial
+    [Migration("20260105002140_AddInitial")]
+    partial class AddInitial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -218,6 +218,9 @@ namespace Database.Entity.Banking.Migrations
 
                     b.Property<Guid>("CustomerCustomerRelationshipKey")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("CustomerCustomerRelationshipType")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("InnerCustomerId")
                         .HasColumnType("integer");

@@ -216,6 +216,9 @@ namespace Database.Entity.Banking.Migrations
                     b.Property<Guid>("CustomerCustomerRelationshipKey")
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("CustomerCustomerRelationshipType")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("InnerCustomerId")
                         .HasColumnType("integer");
 

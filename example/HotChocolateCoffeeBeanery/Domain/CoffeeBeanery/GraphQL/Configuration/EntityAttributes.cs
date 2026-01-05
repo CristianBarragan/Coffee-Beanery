@@ -64,3 +64,13 @@ public class LinkBusinessKeyAttribute() : Attribute
     
     public string Column { get; set; }
 }
+
+public class GraphKeyAttribute() : Attribute
+{
+    public GraphKeyAttribute(string entity) : this()
+    {
+        Entity = entity;
+    }
+    
+    public string Entity { get; set; }
+}

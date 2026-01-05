@@ -115,7 +115,7 @@ public static class NodeTreeHelper
                     new SqlNode()
                     {
                         RelationshipKey = $"{nodeToClass.GetType().Name}~Id",
-                        Column = "Id",
+                        Column = $"{nodeToClass.GetType().Name}Id",
                         Namespace = nodeToClass.GetType().Namespace,
                         SqlNodeType = SqlNodeType.Node,
                         JoinKeys = columnMapped.Value.JoinKeys,
@@ -129,7 +129,7 @@ public static class NodeTreeHelper
                     new SqlNode()
                     {
                         RelationshipKey = $"{nodeToClass.GetType().Name}~Id",
-                        Column = "Id",
+                        Column = $"{nodeToClass.GetType().Name}Id",
                         Namespace = nodeToClass.GetType().Namespace,
                         SqlNodeType = SqlNodeType.Edge,
                         JoinKeys = columnMapped.Value.JoinKeys,
@@ -143,7 +143,7 @@ public static class NodeTreeHelper
                     new SqlNode()
                     {
                         RelationshipKey = $"{nodeToClass.GetType().Name}~Id",
-                        Column = "Id",
+                        Column = $"{nodeToClass.GetType().Name}Id",
                         Namespace = nodeToClass.GetType().Namespace,
                         SqlNodeType = SqlNodeType.Mutation,
                         JoinKeys = columnMapped.Value.JoinKeys,

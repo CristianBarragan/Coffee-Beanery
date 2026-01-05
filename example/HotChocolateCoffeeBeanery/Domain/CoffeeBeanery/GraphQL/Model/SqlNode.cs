@@ -17,6 +17,10 @@ public class SqlNode
     public bool IsEnumeration { get; set; }
 
     public bool IsGraph { get; set; }
+
+    public string Graph { get; set; }
+
+    public bool IsColumnGraph { get; set; }
     
     public string RelationshipKey { get; set; } = String.Empty;
 

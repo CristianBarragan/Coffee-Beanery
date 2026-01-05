@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Database.Entity.Banking.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class AddInitial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -117,6 +117,7 @@ namespace Database.Entity.Banking.Migrations
                     OuterCustomerId = table.Column<int>(type: "integer", nullable: true),
                     InnerCustomerKey = table.Column<Guid>(type: "uuid", nullable: true),
                     InnerCustomerId = table.Column<int>(type: "integer", nullable: true),
+                    CustomerCustomerRelationshipType = table.Column<int>(type: "integer", nullable: true),
                     ProcessedDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "(now() at time zone 'utc')")
                 },
                 constraints: table =>

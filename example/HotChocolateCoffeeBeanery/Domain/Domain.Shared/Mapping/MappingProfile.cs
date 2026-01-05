@@ -15,6 +15,8 @@ public class MappingProfile : Profile
                 opt.MapFrom(ps => ps.OuterCustomerKey))
             .ForMember(dest => dest.InnerCustomerKey, opt =>
                 opt.MapFrom(ps => ps.InnerCustomerKey))
+            .ForMember(dest => dest.CustomerCustomerRelationshipType, opt =>
+                opt.MapFrom(ps => ps.CustomerCustomerRelationshipType))
             .ForMember(dest => dest.OuterCustomer, opt =>
                 opt.Ignore())
             .ForMember(dest => dest.OuterCustomerId, opt =>
