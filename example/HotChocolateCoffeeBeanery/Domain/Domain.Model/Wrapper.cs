@@ -1,10 +1,13 @@
 
+using CoffeeBeanery.GraphQL.Configuration;
+
 namespace Domain.Model;
 
 public class Wrapper
 {
     public string CacheKey { get; set; }
     
+    [LinkBusinessKey("CustomerCustomerEdge","CustomerCustomerEdgeId")]
     public List<CustomerCustomerEdge>? CustomerCustomerEdge { get; set; }
 
     public Model Model { get; set; }
@@ -13,6 +16,7 @@ public class Wrapper
 public enum Model
 {
     CustomerCustomerEdge,
+    CustomerCustomerRelationship,
     Customer,
     ContactPoint,
     CustomerBankingRelationship,

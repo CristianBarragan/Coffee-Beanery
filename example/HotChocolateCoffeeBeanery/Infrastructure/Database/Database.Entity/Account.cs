@@ -18,10 +18,9 @@ public class Account : Process
 
     public string? AccountName { get; set; }
     
-    [LinkKey("Contract","ContractKey")]
     public Contract? Contract { get; set; }
     
-    [LinkKey("Transaction","TransactionKey")]
+    // [LinkKey("Transaction","TransactionKey")]
     public List<Transaction>? Transaction { get; set; }
 }
 

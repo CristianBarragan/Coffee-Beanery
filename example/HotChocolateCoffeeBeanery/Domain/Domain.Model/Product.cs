@@ -26,13 +26,13 @@ public class Product
 
     public ProductType? ProductType { get; set; }
 
-    [LinkBusinessKey("CustomerBankingRelationship","CustomerBankingRelationshipKey")]
+    [LinkBusinessKey("CustomerBankingRelationship","CustomerBankingRelationshipId")]
     public CustomerBankingRelationship? CustomerBankingRelationship { get; set; }
     
-    [LinkBusinessKey("Contract","ContractKey")]
+    [LinkBusinessKey("Contract","ContractId")]
     public Contract? Contract { get; set; }
 
-    [LinkBusinessKey("Account","AccountKey")]
+    [LinkBusinessKey("Account","AccountId")]
     public Account? Account { get; set; }
 }
 

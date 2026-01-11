@@ -14,13 +14,16 @@ public class CustomerBankingRelationship : Process
     [UpsertKey("CustomerBankingRelationship", "Banking")]
     public Guid CustomerBankingRelationshipKey { get; set; }
 
-    [JoinKey("Customer","CustomerKey")]
+    
+    
+    [LinkKey("Customer", "CustomerKey")]
+    [LinkIdKey("Customer", "Id")]
+    [JoinKey("CustomerBankingRelationship","CustomerId")]
     public Guid? CustomerKey { get; set; }
     
     public int? CustomerId { get; set; }
     public Customer? Customer { get; set; }
     
-    [LinkKey("Contract","ContractKey")]
     public List<Contract>? Contract { get; set; }
 }
 

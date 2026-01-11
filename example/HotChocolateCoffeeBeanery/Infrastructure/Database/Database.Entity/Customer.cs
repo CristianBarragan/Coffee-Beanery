@@ -22,16 +22,12 @@ public class Customer : Process
 
     public CustomerType? CustomerType { get; set; }
     
-    [LinkKey("ContactPoint","ContactPointKey")]
     public List<ContactPoint>? ContactPoint { get; set; }
     
-    [LinkKey("CustomerBankingRelationship","CustomerBankingRelationshipKey")]
     public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
     
-    [LinkKey("CustomerCustomerRelationship","OuterCustomerCustomerRelationshipKey")]
     public List<CustomerCustomerRelationship>? OuterCustomerCustomerRelationship { get; set; }
     
-    [LinkKey("CustomerCustomerRelationship","InnerCustomerCustomerRelationshipKey")]
     public List<CustomerCustomerRelationship>? InnerCustomerCustomerRelationship { get; set; }
 }
 

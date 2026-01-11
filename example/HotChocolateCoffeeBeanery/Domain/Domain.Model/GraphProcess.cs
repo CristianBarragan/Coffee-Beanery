@@ -19,6 +19,6 @@ public enum LevelDirection
 public enum GraphType
 {
     None,
-    WithInclusiveMathing,
-    WithExclusiveMathing,
+    WithInclusiveMatching,
+    WithExclusiveMatching,
 }

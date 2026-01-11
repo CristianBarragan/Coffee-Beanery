@@ -46,7 +46,7 @@ public static class GraphQLStringExtension
     /// <param name="field"></param>
     /// <param name="separator"></param>
     /// <returns></returns>
-    public static string ToFieldName(this string field, char separator = '~')
+    public static string ToFieldName(this string field, string separator = "~")
     {
         if (string.IsNullOrEmpty(field))
         {
@@ -54,7 +54,7 @@ public static class GraphQLStringExtension
         }
 
         var fieldSplit = field.Split(separator);
-        return fieldSplit[1];
+        return fieldSplit[1].Sanitize();
     }
 
     public static string ToEntityName(this string field, char separator = '~')

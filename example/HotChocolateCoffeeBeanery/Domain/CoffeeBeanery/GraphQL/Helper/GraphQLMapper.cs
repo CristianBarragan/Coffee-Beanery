@@ -250,59 +250,57 @@ public static class GraphQLMapper
                         }
                     }
 
-                    var propertyEntityAttributeType = to.GetType().GetProperties()
+                    var propertyEntityAttributeType = from.GetType().GetProperties()
                         .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldDestinationName));
-
+                    
                     if (propertyEntityAttributeType != null)
                     {
                         var linkAttribute = propertyEntityAttributeType.CustomAttributes
                             .FirstOrDefault(a => a.AttributeType == typeof(LinkKeyAttribute));
+                        var joinIdAttribute = propertyEntityAttributeType.CustomAttributes
+                            .FirstOrDefault(a => a.AttributeType == typeof(JoinIdKeyAttribute));
+                        var joinAttribute = propertyEntityAttributeType.CustomAttributes
+                            .FirstOrDefault(a => a.AttributeType == typeof(JoinKeyAttribute));
 
-                        if (linkKeys != null && linkAttribute != null)
+                        if (linkKeys != null && linkAttribute != null && joinIdAttribute != null)
                         {
                             var linkKey = new LinkKey()
                             {
-                                From =
-                                    $"{processingFieldMap.SourceModel}~{linkAttribute.ConstructorArguments[1].Value}",
+                                From = $"{joinAttribute.ConstructorArguments[0].Value}~{joinAttribute.ConstructorArguments[1].Value}",
+                                FromId = $"{joinIdAttribute.ConstructorArguments[0].Value}~{joinIdAttribute.ConstructorArguments[1].Value}",
                                 To =
                                     $"{linkAttribute.ConstructorArguments[0].Value}~{linkAttribute.ConstructorArguments[1].Value}"
                             };
                             linkKeys.Add(linkKey);
-                        }
-
-                        var joinAttribute = propertyEntityAttributeType.CustomAttributes
-                            .FirstOrDefault(a => a.AttributeType == typeof(JoinKeyAttribute));
-
-                        if (joinKeys != null && joinAttribute != null)
-                        {
+                            
                             var joinKey = new JoinKey()
                             {
                                 From =
-                                    $"{joinAttribute.ConstructorArguments[0].Value}~{joinAttribute.ConstructorArguments[1].Value}",
+                                    $"{linkAttribute.ConstructorArguments[0].Value}~{linkAttribute.ConstructorArguments[1].Value}",
                                 To =
-                                    $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}"
+                                    $"{joinAttribute.ConstructorArguments[0].Value}~{joinAttribute.ConstructorArguments[1].Value}"
                             };
                             joinKeys.Add(joinKey);
                         }
 
-                        var joinOneAttribute = propertyEntityAttributeType.CustomAttributes
-                            .FirstOrDefault(a => a.AttributeType == typeof(JoinOneKeyAttribute));
-
-                        if (joinOneKeys != null && joinOneAttribute != null)
-                        {
-                            var joinOneKey = new JoinOneKey()
-                            {
-                                From =
-                                    $"{propertyEntityAttributeType.CustomAttributes
-                                        .Last().ConstructorArguments[0].Value}~{
-                                        propertyEntityAttributeType.CustomAttributes
-                                            .Last().ConstructorArguments[1].Value}",
-                                To = $"{processingFieldMap.DestinationEntity}~{
-                                    processingFieldMap.FieldDestinationName}"
-
-                            };
-                            joinOneKeys.Add(joinOneKey);
-                        }
+                        // var joinOneAttribute = propertyEntityAttributeType.CustomAttributes
+                        //     .FirstOrDefault(a => a.AttributeType == typeof(JoinOneKeyAttribute));
+                        //
+                        // if (joinOneKeys != null && joinOneAttribute != null)
+                        // {
+                        //     var joinOneKey = new JoinOneKey()
+                        //     {
+                        //         From =
+                        //             $"{propertyEntityAttributeType.CustomAttributes
+                        //                 .Last().ConstructorArguments[0].Value}~{
+                        //                 propertyEntityAttributeType.CustomAttributes
+                        //                     .Last().ConstructorArguments[1].Value}",
+                        //         To = $"{processingFieldMap.DestinationEntity}~{
+                        //             processingFieldMap.FieldDestinationName}"
+                        //
+                        //     };
+                        //     joinOneKeys.Add(joinOneKey);
+                        // }
                     }
                 }
             }
