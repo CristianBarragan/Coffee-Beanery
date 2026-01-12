@@ -178,14 +178,7 @@ public static class GraphQLMapper
                         // }
                     }
 
-                    // if (propertyToAttributeType == null)
-                    // {
-                    //     propertyToAttributeType = to.GetType().GetProperties()
-                    //         .FirstOrDefault(n => n.Name.Matches(processingFieldMap.FieldDestinationName));
-                    // }
-
-                    if (propertyToAttributeType != null &&
-                        graphKeyAttribute?.AttributeType != null)
+                    if (propertyToAttributeType != null)
                     {
                         var nonNullableToType = Nullable.GetUnderlyingType(propertyToAttributeType
                             .PropertyType) ?? propertyToAttributeType.PropertyType;
