@@ -52,6 +52,19 @@ public class LinkKeyAttribute() : Attribute
     public string Column { get; set; }
 }
 
+public class LinkIdKeyAttribute() : Attribute
+{
+    public LinkIdKeyAttribute(string entity, string column) : this()
+    {
+        Entity = entity;
+        Column = column;
+    }
+    
+    public string Entity { get; set; }
+    
+    public string Column { get; set; }
+}
+
 public class LinkBusinessKeyAttribute() : Attribute
 {
     public LinkBusinessKeyAttribute(string entity, string column) : this()
@@ -63,4 +76,14 @@ public class LinkBusinessKeyAttribute() : Attribute
     public string Entity { get; set; }
     
     public string Column { get; set; }
+}
+
+public class GraphKeyAttribute() : Attribute
+{
+    public GraphKeyAttribute(string entity) : this()
+    {
+        Entity = entity;
+    }
+    
+    public string Entity { get; set; }
 }

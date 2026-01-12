@@ -6,17 +6,17 @@ namespace Domain.Shared.Mapping;
 
 public static class ContactPointQueryMapping
 {
-    public static Customer MapFromCustomer(object mappedObject, IMapper mapper, Customer? existingCustomer)
+    public static CustomerCustomerEdge MapFromCustomer(object mappedObject, IMapper mapper, CustomerCustomerEdge? existingCustomerCustomerEdge)
     {
         if (mappedObject is DatabaseEntity.ContactPoint)
         {
             var contactPointEntity = mappedObject as DatabaseEntity.ContactPoint;
 
-            if (existingCustomer?.ContactPoint != null)
+            if (existingCustomerCustomerEdge.InnerCustomer?.ContactPoint != null)
             {
-                existingCustomer.ContactPoint ??= [];
+                existingCustomerCustomerEdge.InnerCustomer.ContactPoint ??= [];
                 
-                var existingContactPoint = existingCustomer.ContactPoint.FirstOrDefault(a => a.ContactPointKey == contactPointEntity!.ContactPointKey);
+                var existingContactPoint = existingCustomerCustomerEdge.InnerCustomer.ContactPoint.FirstOrDefault(a => a.ContactPointKey == contactPointEntity!.ContactPointKey);
                 
                 if (existingContactPoint?.CustomerKey != null)
                 {
@@ -26,20 +26,20 @@ public static class ContactPointQueryMapping
                 {
                     var contactPoint = new ContactPoint();
                     contactPoint = mapper.Map<ContactPoint>(contactPoint);
-                    existingCustomer.ContactPoint.Add(contactPoint);
+                    existingCustomerCustomerEdge.InnerCustomer.ContactPoint.Add(contactPoint);
                 }
             }
             else
             {
-                existingCustomer = new Customer();
-                existingCustomer.ContactPoint = [];
+                existingCustomerCustomerEdge.InnerCustomer = new Customer();
+                existingCustomerCustomerEdge.InnerCustomer.ContactPoint = [];
                 var contactPoint = new ContactPoint();
                 contactPoint = mapper.Map(contactPointEntity,
                     contactPoint);
-                existingCustomer.ContactPoint.Add(contactPoint);
+                existingCustomerCustomerEdge.InnerCustomer.ContactPoint.Add(contactPoint);
             }
         }
 
-        return existingCustomer;
+        return existingCustomerCustomerEdge;
     }
 }

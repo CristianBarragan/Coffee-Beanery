@@ -18,12 +18,18 @@ public class Transaction : Process
 
     public decimal? Balance { get; set; }
 
+    [LinkKey("Contract", "ContractKey")]
+    [LinkIdKey("Contract", "Id")]
+    [JoinKey("Transaction","ContractId")]
     public Guid? ContractKey { get; set; }
     
     public Contract? Contract { get; set; }
     
     public int? ContractId { get; set; }
 
+    [LinkKey("Account", "AccountKey")]
+    [LinkIdKey("Account", "Id")]
+    [JoinKey("Transaction","AccountId")]
     public Guid? AccountKey { get; set; }
     
     public Account? Account { get; set; }

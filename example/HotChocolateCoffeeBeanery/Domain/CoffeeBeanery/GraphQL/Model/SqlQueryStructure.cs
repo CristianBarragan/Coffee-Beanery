@@ -8,6 +8,8 @@ public class SqlQueryStructure
     public SqlNodeType SqlNodeType { get; set; } = SqlNodeType.Node;
     
     public string Query { get; set; }
+    
+    public string GraphQuery { get; set; }
 
     public SqlNode SqlNode { get; set; }
 
@@ -21,5 +23,7 @@ public class SqlQueryStructure
 
     public string WhereClause { get; set; } = string.Empty;
 
-    public string JoinOneKey { get; set; } = string.Empty;
+    // public JoinKey JoinKey { get; set; }
+    //
+    // public JoinOneKey JoinOneKey { get; set; }
 }

@@ -18,6 +18,9 @@ public class ContactPoint : Process
 
     public string? ContactPointValue { get; set; }
     
+    [LinkKey("Customer", "CustomerKey")]
+    [LinkIdKey("Customer", "Id")]
+    [JoinKey("ContactPoint","CustomerId")]
     public Guid? CustomerKey { get; set; }
 
     public int? CustomerId { get; set; }

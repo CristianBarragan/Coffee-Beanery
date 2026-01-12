@@ -7,12 +7,12 @@ using HotChocolate.Types.Pagination;
 
 namespace Api.Banking.Mutation;
 
-[ExtendObjectType("CustomerMutation")]
-public class CustomerMutationResolver : IInputType, IOutputType
+[ExtendObjectType("CustomerCustomerEdgeMutation")]
+public class CustomerCustomerEdgeMutationResolver : IInputType, IOutputType
 {
-    private readonly ILogger<CustomerMutationResolver> _logger;
+    private readonly ILogger<CustomerCustomerEdgeMutationResolver> _logger;
 
-    public CustomerMutationResolver(ILogger<CustomerMutationResolver> logger)
+    public CustomerCustomerEdgeMutationResolver(ILogger<CustomerCustomerEdgeMutationResolver> logger)
     {
         _logger = logger;
     }
@@ -20,17 +20,17 @@ public class CustomerMutationResolver : IInputType, IOutputType
     [UsePaging]
     [UseFiltering]
     [UseSorting]
-    public async Task<Connection<Customer>> UpsertCustomer(
-        [Service] IProcessService<Customer, dynamic, dynamic> service,
+    public async Task<Connection<CustomerCustomerEdge>> UpsertCustomerCustomerEdge(
+        [Service] IProcessService<CustomerCustomerEdge, dynamic, dynamic> service,
         [SchemaService] IResolverContext resolverContext, Wrapper wrapper)
     {
         try
         {
-            var set = await service.UpsertProcessAsync<Customer>(wrapper.CacheKey, resolverContext.Selection, 
+            var set = await service.UpsertProcessAsync<CustomerCustomerEdge>(wrapper.CacheKey, resolverContext.Selection, 
                 wrapper.Model.ToString(), nameof(Wrapper), CancellationToken.None);
 
             var connection = ContextResolverHelper.GenerateConnection(
-                set.list.Select(a => new EntityNode<Customer>(a, wrapper.CacheKey.ToString())),
+                set.list.Select(a => new EntityNode<CustomerCustomerEdge>(a, wrapper.CacheKey.ToString())),
                 new Pagination()
                 {
                     TotalRecordCount = new TotalRecordCount()

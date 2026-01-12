@@ -22,13 +22,13 @@ public class Customer : Process
 
     public CustomerType? CustomerType { get; set; }
     
-    [LinkKey("ContactPoint","ContactPointKey")]
-    [JoinKey("Customer","Id")]
     public List<ContactPoint>? ContactPoint { get; set; }
     
-    [LinkKey("CustomerBankingRelationship","CustomerBankingRelationshipKey")]
-    [JoinKey("Customer","Id")]
     public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
+    
+    public List<CustomerCustomerRelationship>? OuterCustomerCustomerRelationship { get; set; }
+    
+    public List<CustomerCustomerRelationship>? InnerCustomerCustomerRelationship { get; set; }
 }
 
 public enum CustomerType
@@ -57,6 +57,10 @@ public class CustomerEntityConfiguration : IEntityTypeConfiguration<Customer>
         builder.HasMany(c => c.ContactPoint).WithOne(c => c.Customer).HasForeignKey(c => c.CustomerId);
 
         builder.HasMany(c => c.CustomerBankingRelationship).WithOne(c => c.Customer).HasForeignKey(c => c.CustomerId);
+
+        builder.HasMany(c => c.OuterCustomerCustomerRelationship).WithOne(c => c.OuterCustomer).HasForeignKey(c => c.OuterCustomerId);
+        
+        builder.HasMany(c => c.InnerCustomerCustomerRelationship).WithOne(c => c.InnerCustomer).HasForeignKey(c => c.InnerCustomerId);
 
         builder.Property(c => c.ProcessedDateTime).HasDefaultValueSql("(now() at time zone 'utc')");
     }

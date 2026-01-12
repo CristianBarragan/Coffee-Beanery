@@ -7,12 +7,12 @@ using HotChocolate.Types.Pagination;
 
 namespace Api.Banking.Query;
 
-[ExtendObjectType("CustomerQuery")]
-public class CustomerQueryResolver : IOutputType
+[ExtendObjectType("CustomerCustomerEdgeQuery")]
+public class CustomerCustomerEdgeQueryResolver : IOutputType
 {
-    private readonly ILogger<CustomerQueryResolver> _logger;
+    private readonly ILogger<CustomerCustomerEdgeQueryResolver> _logger;
 
-    public CustomerQueryResolver(ILogger<CustomerQueryResolver> logger)
+    public CustomerCustomerEdgeQueryResolver(ILogger<CustomerCustomerEdgeQueryResolver> logger)
     {
         _logger = logger;
     }
@@ -20,8 +20,8 @@ public class CustomerQueryResolver : IOutputType
     [UsePaging]
     [UseFiltering]
     [UseSorting]
-    public async Task<Connection<Customer>> GetCustomer(
-        [Service] IProcessService<Customer, dynamic, dynamic> service,
+    public async Task<Connection<CustomerCustomerEdge>> GetCustomerCustomerEdge(
+        [Service] IProcessService<CustomerCustomerEdge, dynamic, dynamic> service,
         [SchemaService] IResolverContext resolverContext, CancellationToken cancellationToken)
     {
         try
@@ -29,13 +29,13 @@ public class CustomerQueryResolver : IOutputType
             //might be sent by client
             var cacheKey = string.Empty;
 
-            var set = await service.QueryProcessAsync<Customer>(cacheKey, resolverContext.Selection, nameof(Customer),
+            var set = await service.QueryProcessAsync<CustomerCustomerEdge>(cacheKey, resolverContext.Selection, nameof(Customer),
                 nameof(Wrapper), CancellationToken.None);
             var recordCount = set.totalCount ?? 0;
             var pageRecords = set.totalPageRecords ?? 0;
 
             var connection = ContextResolverHelper.GenerateConnection(
-                set.list.Select(a => new EntityNode<Customer>(a, Guid.NewGuid().ToString())),
+                set.list.Select(a => new EntityNode<CustomerCustomerEdge>(a, Guid.NewGuid().ToString())),
                 new Pagination()
                 {
                     TotalRecordCount = new TotalRecordCount()

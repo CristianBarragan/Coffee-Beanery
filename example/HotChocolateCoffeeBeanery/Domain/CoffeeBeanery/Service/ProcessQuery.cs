@@ -26,10 +26,15 @@ public class ProcessQuery<M> : IQuery<SqlStructure,
             int? totalPageRecords)>
         ExecuteAsync(SqlStructure parameters, CancellationToken cancellationToken)
     {
+
+        if (parameters.SplitOnDapper == null)
+        {
+            return default;
+        }
         
         var splitOnTypes = parameters.SplitOnDapper.Values.Distinct().ToList();
         var splitOn = parameters.SplitOnDapper
-            .Select(a => a.Key).ToList();
+            .Select(a => a.Value.Name).ToList();
         
         if (parameters != null && parameters.HasTotalCount && parameters.HasPagination)
         {

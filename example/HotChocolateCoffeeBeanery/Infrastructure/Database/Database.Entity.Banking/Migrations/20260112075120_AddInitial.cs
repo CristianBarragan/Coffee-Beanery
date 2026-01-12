@@ -4,10 +4,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Database.Banking.Migrations
+namespace Database.Entity.Banking.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class AddInitial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -100,6 +100,38 @@ namespace Database.Banking.Migrations
                     table.ForeignKey(
                         name: "FK_CustomerBankingRelationship_Customer_CustomerId",
                         column: x => x.CustomerId,
+                        principalSchema: "Banking",
+                        principalTable: "Customer",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CustomerCustomerRelationship",
+                schema: "Banking",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CustomerCustomerRelationshipKey = table.Column<Guid>(type: "uuid", nullable: false),
+                    OuterCustomerKey = table.Column<Guid>(type: "uuid", nullable: true),
+                    OuterCustomerId = table.Column<int>(type: "integer", nullable: true),
+                    InnerCustomerKey = table.Column<Guid>(type: "uuid", nullable: true),
+                    InnerCustomerId = table.Column<int>(type: "integer", nullable: true),
+                    CustomerCustomerRelationshipType = table.Column<int>(type: "integer", nullable: true),
+                    ProcessedDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "(now() at time zone 'utc')")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerCustomerRelationship", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CustomerCustomerRelationship_Customer_InnerCustomerId",
+                        column: x => x.InnerCustomerId,
+                        principalSchema: "Banking",
+                        principalTable: "Customer",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_CustomerCustomerRelationship_Customer_OuterCustomerId",
+                        column: x => x.OuterCustomerId,
                         principalSchema: "Banking",
                         principalTable: "Customer",
                         principalColumn: "Id");
@@ -232,6 +264,32 @@ namespace Database.Banking.Migrations
                 column: "CustomerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CustomerCustomerRelationship_CustomerCustomerRelationshipKey",
+                schema: "Banking",
+                table: "CustomerCustomerRelationship",
+                column: "CustomerCustomerRelationshipKey",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerCustomerRelationship_InnerCustomerId",
+                schema: "Banking",
+                table: "CustomerCustomerRelationship",
+                column: "InnerCustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerCustomerRelationship_OuterCustomerId",
+                schema: "Banking",
+                table: "CustomerCustomerRelationship",
+                column: "OuterCustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerCustomerRelationship_OuterCustomerKey_InnerCustomer~",
+                schema: "Banking",
+                table: "CustomerCustomerRelationship",
+                columns: new[] { "OuterCustomerKey", "InnerCustomerKey" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Transaction_AccountId",
                 schema: "Lending",
                 table: "Transaction",
@@ -256,6 +314,10 @@ namespace Database.Banking.Migrations
         {
             migrationBuilder.DropTable(
                 name: "ContactPoint",
+                schema: "Banking");
+
+            migrationBuilder.DropTable(
+                name: "CustomerCustomerRelationship",
                 schema: "Banking");
 
             migrationBuilder.DropTable(

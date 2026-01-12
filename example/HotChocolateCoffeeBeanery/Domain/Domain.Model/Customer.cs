@@ -14,11 +14,14 @@ public class Customer
 
     public CustomerType? CustomerType { get; set; }
 
-    [LinkBusinessKey("Product","ProductKey")]
+    [LinkBusinessKey("Product","ProductId")]
     public List<Product>? Product { get; set; }
 
-    [LinkBusinessKey("ContactPoint","ContactPointKey")]
+    [LinkBusinessKey("ContactPoint","ContactPointId")]
     public List<ContactPoint>? ContactPoint { get; set; }
+
+    [LinkBusinessKey("CustomerBankingRelationship","CustomerBankingRelationshipId")]
+    public List<CustomerBankingRelationship>? CustomerBankingRelationship { get; set; }
 }
 
 public enum CustomerType

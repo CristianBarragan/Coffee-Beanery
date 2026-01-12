@@ -15,4 +15,6 @@ public class FieldMap
     public string DestinationEntity { get; set; }
     
     public Type FieldDestinationType { get; set; }
+
+    public string FieldDestinationPropertyType { get; set; }
 }

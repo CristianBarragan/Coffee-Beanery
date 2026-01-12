@@ -16,15 +16,21 @@ public class SqlNode
 
     public bool IsEnumeration { get; set; }
     
+    public string ColumnType { get; set; }
+    
+    public bool IsGraph { get; set; }
+
+    public string Graph { get; set; }
+
+    public bool IsColumnGraph { get; set; }
+    
     public string RelationshipKey { get; set; } = String.Empty;
+
+    public string Entity { get; set; } = String.Empty;
 
     public string Column { get; set; } = String.Empty;
     
     public List<string> UpsertKeys { get; set; } = [];
-    
-    public List<JoinKey> JoinKeys { get; set; } = [];
-    
-    public List<JoinOneKey> JoinOneKeys { get; set; } = [];
     
     public List<LinkKey> LinkKeys { get; set; } = [];
     
@@ -50,6 +56,8 @@ public class JoinOneKey()
 public class LinkKey()
 {
     public string From { get; set; }
+    
+    public string FromId { get; set; }
     
     public string To { get; set; }
 }

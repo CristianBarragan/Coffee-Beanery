@@ -10,9 +10,9 @@ public class Account
 
     public string? AccountName { get; set; }
     
-    [LinkBusinessKey("Transaction","TransactionKey")]
+    [LinkBusinessKey("Transaction","TransactionId")]
     public Transaction? Transaction { get; set; }
     
-    [LinkBusinessKey("Contract","ContractKey")]
-    public List<Contract>? Contract { get; set; }
+    [LinkBusinessKey("Contract","ContractId")]
+    public Contract? Contract { get; set; }
 }
