@@ -26,6 +26,11 @@ public class ProcessQuery<M> : IQuery<SqlStructure,
             int? totalPageRecords)>
         ExecuteAsync(SqlStructure parameters, CancellationToken cancellationToken)
     {
+
+        if (parameters.SplitOnDapper == null)
+        {
+            return default;
+        }
         
         var splitOnTypes = parameters.SplitOnDapper.Values.Distinct().ToList();
         var splitOn = parameters.SplitOnDapper

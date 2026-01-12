@@ -27,7 +27,7 @@ public static class SqlNodeResolverHelper
     /// <returns></returns>
     public static SqlStructure HandleGraphQL<D, S>(ISelection graphQlSelection,
         IEntityTreeMap<D, S> entityTreeMap,
-        IModelTreeMap<D, S> modelTreeMap, string rootEntityName, string wrapperEntityName,
+        IModelTreeMap<D, S> modelTreeMap, string rootModelName, string wrapperEntityName,
         IFasterKV<string, string> cache, string cacheKey,
         Dictionary<string, List<string>> permissions = null)
         where D : class where S : class
@@ -44,17 +44,13 @@ public static class SqlNodeResolverHelper
         var sqlUpsertStatement = string.Empty;
         var models = modelTreeMap.ModelNames;
         var transformedToParent = false;
-        var tranformedModel = rootEntityName;
-        var rootModelName = rootEntityName;
-
-        for (int i = 0; i < entityTreeMap.EntityNames.Count; i++)
+        var tranformedModel = rootModelName;
+        var rootEntityName = rootModelName;
+        
+        while (!entityTreeMap.EntityNames.Contains(rootModelName) || rootModelName.Matches(wrapperEntityName))
         {
-            if (entityTreeMap.DictionaryTree.ContainsKey(rootEntityName))
-            {
-                rootEntityName = entityTreeMap.DictionaryTree[rootEntityName].ParentName;
-                transformedToParent = true;
-                break;
-            }
+            rootEntityName = modelTreeMap.DictionaryTree[rootModelName].ParentName;
+            transformedToParent = true;
         }
 
         if (!rootEntityName.Matches(wrapperEntityName) && !transformedToParent)
@@ -133,9 +129,7 @@ public static class SqlNodeResolverHelper
                     {
                         GetMutations(modelTreeMap.DictionaryTree, mutationNode,
                             entityTreeMap.LinkDictionaryTreeMutation, modelTreeMap.LinkDictionaryTreeMutation,
-                            sqlUpsertStatementNodes, entityTreeMap.DictionaryTree
-                                .First(t =>
-                                    t.Key.Matches(rootEntityName)).Value, string.Empty,
+                            sqlUpsertStatementNodes, modelTreeMap.DictionaryTree[rootModelName], string.Empty,
                             new NodeTree(), models, modelTreeMap.EntityNames, visitedModels);
                         
                         SqlHelper.GenerateUpsertStatements(entityTreeMap.DictionaryTree, entityTreeMap.LinkDictionaryTreeMutation, rootEntityName,
@@ -147,9 +141,7 @@ public static class SqlNodeResolverHelper
                 {
                     GetMutations(modelTreeMap.DictionaryTree, mutationNodeToProcess,
                         entityTreeMap.LinkDictionaryTreeMutation, modelTreeMap.LinkDictionaryTreeMutation,
-                        sqlUpsertStatementNodes, entityTreeMap.DictionaryTree
-                            .First(t =>
-                                t.Key.Matches(rootEntityName)).Value, string.Empty,
+                        sqlUpsertStatementNodes, modelTreeMap.DictionaryTree[rootModelName], string.Empty,
                         new NodeTree(), models, modelTreeMap.EntityNames, visitedModels);
                     
                     SqlHelper.GenerateUpsertStatements(entityTreeMap.DictionaryTree, entityTreeMap.LinkDictionaryTreeMutation, rootEntityName,
@@ -157,7 +149,7 @@ public static class SqlNodeResolverHelper
                         sqlWhereStatement, new List<string>());
                 }
 
-                var statement = generatedQuery.Values.Order();
+                var statement = generatedQuery.Values.Order().ToList();
                 sqlUpsertStatement = @"LOAD 'age';
                     SET search_path = ag_catalog, ""$user"", public; " + string.Join(";", statement);
             }
@@ -186,8 +178,7 @@ public static class SqlNodeResolverHelper
                     .ToList()[0],
                 entityTreeMap.LinkDictionaryTreeEdge, modelTreeMap.LinkDictionaryTreeEdge,
                 sqlStatementNodes,
-                entityTreeMap.DictionaryTree.First(t =>
-                    t.Key.Matches(rootEntityName)).Value,
+                entityTreeMap.DictionaryTree[rootEntityName],
                 new NodeTree(), visitedFieldModel, models, rootModelName, modelTreeMap.EntityNames,
                 true);
         }
@@ -198,8 +189,7 @@ public static class SqlNodeResolverHelper
             GetFields(modelTreeMap.DictionaryTree, node,
                 entityTreeMap.LinkDictionaryTreeNode, modelTreeMap.LinkDictionaryTreeNode,
                 sqlStatementNodes,
-                entityTreeMap.DictionaryTree.First(t =>
-                    t.Key.Matches(rootEntityName)).Value,
+                entityTreeMap.DictionaryTree[rootEntityName],
                 new NodeTree(), visitedFieldModel, models, rootModelName, modelTreeMap.EntityNames,
                 false);
         }
@@ -229,6 +219,11 @@ public static class SqlNodeResolverHelper
 
             var queryStructure = sqlQueryStructures.FirstOrDefault();
 
+            if (queryStructure.Value == null)
+            {
+                return new SqlStructure();
+            }
+            
             if (splitOnDapper.Count == 0)
             {
                 splitOnDapper.Add(queryStructure.Key, entityTypes
@@ -238,7 +233,12 @@ public static class SqlNodeResolverHelper
             {
                 if (splitOnDapper.Count > 0 && transformedToParent && !rootEntityName.Matches(wrapperEntityName))
                 {
-                    splitOnDapper.Remove(splitOnDapper.FirstOrDefault(a => a.Value.Name == rootEntityName).Key);
+                    var key = splitOnDapper.FirstOrDefault(a => a.Value.Name == rootEntityName).Key;
+
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        splitOnDapper.Remove(key);
+                    }
                 
                     foreach (var childName in entityTreeMap.DictionaryTree[rootEntityName].ChildrenName)
                     {
@@ -327,7 +327,7 @@ public static class SqlNodeResolverHelper
     /// <param name="entityNames"></param>
     /// <param name="sqlQueryStructures"></param>
     /// <param name="splitOnDapper"></param>
-    private static bool
+    private static void
         GenerateQuery(Dictionary<string, NodeTree> entityTrees,
             List<Type> entityTypes,
             Dictionary<string, SqlNode> linkEntityDictionaryTreeNode,
@@ -338,6 +338,34 @@ public static class SqlNodeResolverHelper
             Dictionary<string, Type> splitOnDapper, List<string> entityOrder, string rootEntityName)
     {
         var hasChildren = false;
+        var currentColumns = new List<KeyValuePair<string,SqlNode>>();
+            
+        currentColumns.AddRange(sqlStatementNodes
+            .Where(k =>
+                !entityNames.Any(a => a.Matches(k.Key.Split('~')[1])) &&
+                (currentTree.Mapping.Any(m => m.FieldDestinationName
+                     .Matches(k.Key.Split('~')[1])) && 
+                 !k.Key.Matches($"{currentTree.Name}~Id"))).ToList());
+
+        if (currentColumns.Count == 0)
+        {
+            foreach (var child in currentTree.Children)
+            {
+                currentColumns.AddRange(sqlStatementNodes
+                    .Where(k =>
+                        !entityNames.Any(a => a.Matches(k.Key.Split('~')[1])) &&
+                        (child.Mapping.Any(m => m.FieldDestinationName
+                             .Matches(k.Key.Split('~')[1])) && 
+                         !k.Key.Matches($"{child.Name}~Id"))).ToList());
+
+                if (currentColumns.Count > 0)
+                {
+                    currentTree = child;
+                    break;
+                }
+            }
+        }
+        
         var currentEntityStructure = GenerateEntityQuery(entityTrees,
             linkEntityDictionaryTreeNode,
             sqlStatementNodes, currentTree, entityNames, sqlQueryStatement,
@@ -362,10 +390,10 @@ public static class SqlNodeResolverHelper
                 }
                 
                 foreach (var linkKey in currentEntityStructure.SqlNode.LinkKeys.Where(a =>
-                             a.To.Split('~')[0].Matches(child.Name)))
+                             a.From.Split('~')[0].Matches(child.Name)))
                 {
                     hasActiveChildren = true;
-                    var isQueryGenerated = GenerateQuery(entityTrees, entityTypes, linkEntityDictionaryTreeNode,
+                    GenerateQuery(entityTrees, entityTypes, linkEntityDictionaryTreeNode,
                         sqlQueryStatement, sqlStatementNodes, sqlWhereStatement,
                         child, entityNames, childrenSqlStatement, sqlQueryStructures,
                         splitOnDapper, entityOrder, rootEntityName);
@@ -377,11 +405,12 @@ public static class SqlNodeResolverHelper
                         var linkKeyPart = currentEntityStructure.SqlNode.LinkKeys.First(a => a.From.Matches(linkKey.From));
                         
                         queryBuilder +=
-                        $" ( {childStructure.Query} ) {child.Name}{linkKeyPart.From.Replace("~","")} ON {currentTree.Name}.\"{linkKeyPart.From.Split('~')[1]}\" = {
-                        child.Name}{linkKeyPart.From.Replace("~","")}.\"{linkKeyPart.To.Split('~')[1].ToSnakeCase(child.Id)}\"";  
+                        $" ( {childStructure.Query} ) {child.Name}{linkKeyPart.From.Substring(0,10).Replace("~","")} ON {currentTree.Name}.\"{
+                            linkKeyPart.FromId.Split('~')[1]}\" = {
+                        child.Name}{linkKeyPart.From.Substring(0,10).Replace("~","")}.\"{linkKeyPart.FromId.Split('~')[1].ToSnakeCase(child.Id)}\"";  
 
                         currentEntityStructure.SelectColumns.AddRange(
-                            childStructure.ParentColumns.Select(s => s.Replace("~", $"{child.Name}{linkKeyPart.From.Replace("~","")}")));
+                            childStructure.ParentColumns.Select(s => s.Replace("~", $"{child.Name}{linkKeyPart.From.Substring(0,10).Replace("~","")}")));
                         currentEntityStructure.ParentColumns.AddRange(childStructure.ParentColumns);
 
                         currentEntityStructure.SelectColumns = currentEntityStructure.SelectColumns.Distinct().ToList();
@@ -458,10 +487,7 @@ public static class SqlNodeResolverHelper
                 splitOnDapper.Add("Id".ToSnakeCase(currentTree.Id),
                     entityTypes.FirstOrDefault(e => e.Name.Matches(currentTree.Name)));
             }
-
-            return true; 
         }
-        return false;
     }
 
 
@@ -510,6 +536,25 @@ public static class SqlNodeResolverHelper
 
         if (currentColumns.Count == 0)
         {
+            foreach (var child in currentTree.Children)
+            {
+                currentColumns.AddRange(sqlStatementNodes
+                    .Where(k =>
+                        !entityNames.Any(a => a.Matches(k.Key.Split('~')[1])) &&
+                        (child.Mapping.Any(m => m.FieldDestinationName
+                             .Matches(k.Key.Split('~')[1])) && 
+                         !k.Key.Matches($"{child.Name}~Id"))).ToList());
+
+                if (currentColumns.Count > 0)
+                {
+                    currentTree = child;
+                    break;
+                }
+            }
+        }
+
+        if (currentColumns.Count == 0)
+        {
             return new SqlQueryStructure();
         }
         
@@ -517,8 +562,6 @@ public static class SqlNodeResolverHelper
         sqlNodeId.Column = "Id";
         var columnToAdd = new KeyValuePair<string, SqlNode>($"{currentTree.Name}~Id", sqlNodeId);
         currentColumns.Insert(0, columnToAdd);
-        
-        
         currentColumns = currentColumns.Distinct().ToList();
 
         var queryBuilder = string.Empty;
@@ -537,25 +580,16 @@ public static class SqlNodeResolverHelper
                 var a = true;
             }
             
-            //
-            // var linkKey = tableColumn.Value.LinkKeys.FirstOrDefault(a => tableColumn.Key.Matches(a.From));
-            // var joinKey = tableColumn.Value.JoinKeys.FirstOrDefault(a => a.To.Matches(tableColumn.Key));
-            //
-            // if (!string.IsNullOrEmpty(linkKey?.From))
-            // {
-            //     if (linkKey.From.Split('~')[0].Matches(currentTree.ParentName))
-            //     {
-            //         column = joinKey?.From.Split('~')[1];
-            //     }
-            //     else
-            //     {
-            //         column = linkKey.From.Split('~')[1];
-            //     }
-            // }
-            // else
-            // {
-            //     column = tableColumn.Value.Column;
-            // }
+            var linkKey = tableColumn.Value.LinkKeys.FirstOrDefault(a => tableColumn.Value.Column.Matches(a.To.Split('~')[1]));
+            
+            if (!string.IsNullOrEmpty(linkKey?.From))
+            {
+                column = linkKey.FromId.Split('~')[1];
+            }
+            else
+            {
+                column = tableColumn.Value.Column;
+            }
             
             queryColumns.Add(
                 $"{currentTree.Name}.\"{column}\" AS \"{column
@@ -576,28 +610,28 @@ public static class SqlNodeResolverHelper
             var joinChildKey = $"\"{"Id"
                 .ToSnakeCase(childQuery.Value.Id)}\"";
 
-            if (currentColumns.Count > 0)
-            {
-                var linkKeys = currentColumns[0].Value.JoinKeys
-                    .Where(k => k.To.Matches(childQuery.Key)).ToList();
-
-                if (linkKeys.Count == 0)
-                {
-                    for (var i = 0; i < linkKeys.Count; i++)
-                    {
-                        if (i == 0)
-                        {
-                            queryBuilder +=
-                                $" ) {childQuery.Key} ON {currentTree.Name}.\"Id\" = {childQuery.Key}.{joinChildKey}";
-                        }
-                        else
-                        {
-                            queryBuilder +=
-                                $" AND {childQuery.Key} ON {currentTree.Name}.\"Id\" = {childQuery.Key}.{joinChildKey}";
-                        }
-                    }
-                }
-            }
+            // if (currentColumns.Count > 0)
+            // {
+            //     var linkKeys = currentColumns[0].Value.JoinKeys
+            //         .Where(k => k.To.Matches(childQuery.Key)).ToList();
+            //
+            //     if (linkKeys.Count == 0)
+            //     {
+            //         for (var i = 0; i < linkKeys.Count; i++)
+            //         {
+            //             if (i == 0)
+            //             {
+            //                 queryBuilder +=
+            //                     $" ) {childQuery.Key} ON {currentTree.Name}.\"Id\" = {childQuery.Key}.{joinChildKey}";
+            //             }
+            //             else
+            //             {
+            //                 queryBuilder +=
+            //                     $" AND {childQuery.Key} ON {currentTree.Name}.\"Id\" = {childQuery.Key}.{joinChildKey}";
+            //             }
+            //         }
+            //     }
+            // }
         }
 
         var entitySqlWhereStatement = string.Empty;
@@ -679,28 +713,29 @@ public static class SqlNodeResolverHelper
         }
 
         var joinOneKey = new JoinOneKey();
-        var currentJoinOneKeys = currentColumns.FirstOrDefault(a => a.Key.Split('~')[0].Matches(currentTree.Name)).Value
-            .JoinOneKeys;
+        // var currentJoinOneKeys = currentColumns.FirstOrDefault(a => a.Key.Split('~')[0].Matches(currentTree.Name)).Value
+        //     .JoinOneKeys;
 
-        if (currentJoinOneKeys.Count() > 0
-            &&
-            currentJoinOneKeys[0].From.Split('~')[0].Matches(currentTree.Name))
-        {
-            joinOneKey = currentJoinOneKeys.FirstOrDefault();
-            
-            var oneKey = $"{currentTree.Name}.\"{joinOneKey.To.Split('~')[1]}\" AS \"{joinOneKey.To.Split('~')[0]}{joinOneKey
-                .To.Split('~')[1].ToSnakeCase(currentTree.Id)}\"";
-            var joinOneKeyParent = $"~.\"{joinOneKey.To.Split('~')[1].ToSnakeCase(currentTree.Id)}\" AS \"{joinOneKey
-                .To.Split('~')[0]}{joinOneKey.To.Split('~')[1].ToSnakeCase(currentTree.Id)}\"";
-            queryColumns.Add(oneKey);
-            if (!parentQueryColumns.Contains($"\"{joinOneKey.To.Split('~')[0]}{joinOneKey.To.Split('~')[1]
-                .ToSnakeCase(currentTree.Id)}\""))
-            {
-                parentQueryColumns.Add(joinOneKeyParent);
-            }
-        }
+        // if (currentJoinOneKeys.Count() > 0
+        //     &&
+        //     currentJoinOneKeys[0].From.Split('~')[0].Matches(currentTree.Name))
+        // {
+        //     joinOneKey = currentJoinOneKeys.FirstOrDefault();
+        //     
+        //     var oneKey = $"{currentTree.Name}.\"{joinOneKey.To.Split('~')[1]}\" AS \"{joinOneKey.To.Split('~')[0]}{joinOneKey
+        //         .To.Split('~')[1].ToSnakeCase(currentTree.Id)}\"";
+        //     var joinOneKeyParent = $"~.\"{joinOneKey.To.Split('~')[1].ToSnakeCase(currentTree.Id)}\" AS \"{joinOneKey
+        //         .To.Split('~')[0]}{joinOneKey.To.Split('~')[1].ToSnakeCase(currentTree.Id)}\"";
+        //     queryColumns.Add(oneKey);
+        //     if (!parentQueryColumns.Contains($"\"{joinOneKey.To.Split('~')[0]}{joinOneKey.To.Split('~')[1]
+        //         .ToSnakeCase(currentTree.Id)}\""))
+        //     {
+        //         parentQueryColumns.Add(joinOneKeyParent);
+        //     }
+        // }
 
         queryColumns = queryColumns.Distinct().ToList();
+        parentQueryColumns = parentQueryColumns.Distinct().ToList();
         var select = string.Join(",", queryColumns);
         queryBuilder = queryBuilder.Replace("%", select);
 
@@ -780,11 +815,11 @@ public static class SqlNodeResolverHelper
     {
         if (node != null && node.GetNodes()?.Count() == 0)
         {
-            if (linkEntityDictionaryTree.TryGetValue($"{currentTree.Name}~{previousNode.Split(':')[0]}",
+            if (linkModelDictionaryTree.TryGetValue($"{currentTree.Name}~{previousNode.Split(':')[0]}",
                     out var sqlNodeFrom)
                 )
             {
-                if (linkModelDictionaryTree.TryGetValue(sqlNodeFrom.RelationshipKey,
+                if (linkEntityDictionaryTree.TryGetValue(sqlNodeFrom.RelationshipKey,
                         out var sqlNodeTo))
                 {
                     sqlNodeTo.SqlNodeType = SqlNodeType.Mutation;
@@ -914,13 +949,13 @@ public static class SqlNodeResolverHelper
         {
             var currentModel = visitedModels.FirstOrDefault();
 
-            if (linkEntityDictionaryTree.TryGetValue($"{currentTree.Name}~{node.ToString()}",
+            if (linkModelDictionaryTree.TryGetValue($"{currentTree.Name}~{node.ToString()}",
                     out var sqlNodeFrom) ||
-                linkEntityDictionaryTree.TryGetValue($"{currentModel}~{node.ToString()}",
+                linkModelDictionaryTree.TryGetValue($"{currentModel}~{node.ToString()}",
                     out sqlNodeFrom)
                )
             {
-                if (linkModelDictionaryTree.TryGetValue(sqlNodeFrom.RelationshipKey,
+                if (linkEntityDictionaryTree.TryGetValue(sqlNodeFrom.RelationshipKey,
                         out var sqlNodeTo))
                 {
                     
@@ -977,9 +1012,10 @@ public static class SqlNodeResolverHelper
     {
         foreach (var entity in linkEntityDictionaryTree
                      .Where(v => (sqlNode.Column.Matches(v.Value.Column) || 
-                            sqlNode.UpsertKeys.Any(y => v.Key.Split('~')[1].Matches(y.Split("~")[1])) ||
-                                 sqlNode.JoinOneKeys.Any(y => v.Key.Split('~')[1].Matches(y.From.Split("~")[1]))) ||
-                               sqlNode.JoinOneKeys.Any(y => v.Key.Split('~')[1].Matches(y.To.Split("~")[1]))))
+                            sqlNode.UpsertKeys.Any(y => v.Key.Split('~')[1].Matches(y.Split("~")[1]))))) 
+                            // ||
+                            //      sqlNode.JoinOneKeys.Any(y => v.Key.Split('~')[1].Matches(y.From.Split("~")[1]))) ||
+                            //    sqlNode.JoinOneKeys.Any(y => v.Key.Split('~')[1].Matches(y.To.Split("~")[1]))))
         {
             entity.Value.Value = sqlNode.Value;
             entity.Value.SqlNodeType = SqlNodeType.Mutation;

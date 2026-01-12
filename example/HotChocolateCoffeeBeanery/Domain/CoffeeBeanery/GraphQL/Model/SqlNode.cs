@@ -30,10 +30,6 @@ public class SqlNode
     
     public List<string> UpsertKeys { get; set; } = [];
     
-    public List<JoinKey> JoinKeys { get; set; } = [];
-    
-    public List<JoinOneKey> JoinOneKeys { get; set; } = [];
-    
     public List<LinkKey> LinkKeys { get; set; } = [];
     
     public List<LinkBusinessKey> LinkBusinessKeys { get; set; } = [];

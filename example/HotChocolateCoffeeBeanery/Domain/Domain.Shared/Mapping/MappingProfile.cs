@@ -67,7 +67,7 @@ public class MappingProfile : Profile
             .ReverseMap();
         
         CreateMap<CustomerCustomerEdge, CustomerCustomerRelationship>()
-            .ForMember(dest => dest.CustomerCustomerRelationshipKey, opt =>
+            .ForMember(dest => dest.CustomerCustomerRelationshipKey, opt => 
                 opt.MapFrom(ps => ps.CustomerCustomerRelationshipKey))
             .ReverseMap();
         
@@ -80,15 +80,19 @@ public class MappingProfile : Profile
                 opt.Ignore())
             .ForMember(dest => dest.CustomerType, opt =>
                 opt.Ignore())
-            .ForMember(dest => dest.FirstNaming, opt =>
-                opt.Ignore())
             .ForMember(dest => dest.CustomerBankingRelationship, opt =>
                 opt.Ignore())
-            .ForMember(dest => dest.FullNaming, opt =>
+            .ForMember(dest => dest.FirstNaming, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.FirstNaming, opt =>
                 opt.Ignore())
             .ForMember(dest => dest.LastNaming, opt =>
                 opt.Ignore())
+            .ForMember(dest => dest.FullNaming, opt =>
+                opt.Ignore())
             .ForMember(dest => dest.Product, opt =>
+                opt.Ignore())
+            .ForMember(dest => dest.CustomerBankingRelationship, opt => 
                 opt.Ignore())
             .ReverseMap();
         
@@ -128,6 +132,32 @@ public class MappingProfile : Profile
         
         CreateMap<Customer, Product>()
             .ForMember(dest => dest.CustomerBankingRelationship, opt => opt.MapFrom(ps => ps.Product))
+            .ForMember(dest => dest.CustomerBankingRelationshipKey, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.ContractKey, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.AccountKey, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.AccountName, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.AccountNumber, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.Amount, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.Balance, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.ProductType, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.Contract, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.Account, opt => 
+                opt.Ignore())
+            .ForMember(dest => dest.CustomerBankingRelationship, opt => 
+                opt.Ignore())
+            .ReverseMap();
+        
+        CreateMap<DataEntity.Customer, Product>()
+            .ForMember(dest => dest.CustomerBankingRelationship, opt => opt.MapFrom(ps => ps.CustomerBankingRelationship))
             .ForMember(dest => dest.CustomerBankingRelationshipKey, opt => 
                 opt.Ignore())
             .ForMember(dest => dest.ContractKey, opt => 

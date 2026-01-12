@@ -15,7 +15,7 @@ public class CustomerCustomerRelationship : Process
     public Guid CustomerCustomerRelationshipKey { get; set; }
     
     [LinkKey("Customer", "OuterCustomerKey")]
-    // [LinkIdKey("Customer","Id")]
+    [LinkIdKey("Customer","Id")]
     [JoinKey("CustomerCustomerRelationship","OuterCustomerId")]
     public Guid? OuterCustomerKey { get; set; }
     
@@ -23,7 +23,7 @@ public class CustomerCustomerRelationship : Process
     public Customer? OuterCustomer { get; set; }
     
     [LinkKey("Customer", "InnerCustomerKey")]
-    // [LinkIdKey("Customer","Id")]
+    [LinkIdKey("Customer","Id")]
     [JoinKey("CustomerCustomerRelationship","InnerCustomerId")]
     public Guid? InnerCustomerKey { get; set; }
     

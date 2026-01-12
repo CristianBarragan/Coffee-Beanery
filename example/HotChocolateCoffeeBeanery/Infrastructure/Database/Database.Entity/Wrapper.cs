@@ -1,6 +1,4 @@
 
-using CoffeeBeanery.GraphQL.Configuration;
-
 namespace Database.Entity;
 
 public class Wrapper
