@@ -24,13 +24,6 @@ public class CustomerCustomerEdge : GraphProcess
     public Customer? InnerCustomer { get; set; }
     
     [GraphKey("CustomerCustomerRelationshipEdge")]
+    [LinkBusinessKey("Customer","CustomerCustomerRelationshipType")]
     public CustomerCustomerRelationshipType? CustomerCustomerRelationshipType { get; set; }
-}
-public enum CustomerCustomerRelationshipType
-{
-    Family,
-    Partner,
-    Widow,
-    Single,
-    Divorced
 }

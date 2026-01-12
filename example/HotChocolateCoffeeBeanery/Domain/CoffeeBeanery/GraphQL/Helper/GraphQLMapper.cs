@@ -112,7 +112,7 @@ public static class GraphQLMapper
                         continue;
                     }
 
-                    var graphKeyAttribute = propertyFromAttributeType.CustomAttributes
+                    var graphKeyAttribute = propertyToAttributeType.CustomAttributes
                         .FirstOrDefault(a => a.AttributeType == typeof(GraphKeyAttribute));
 
                     var fromEnumDictionary = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);

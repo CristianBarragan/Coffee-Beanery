@@ -314,10 +314,12 @@ public static class SqlHelper
                 return string.Empty;
             }
 
-            if (currentColumns.Any() &&
-                currentColumns.All(a => currentColumns.FirstOrDefault(a => 
-                        a.Value.UpsertKeys.Any(b => b.Matches(a.Key))).Value.LinkKeys
-                    .Any(b => b.From.Matches(a.Key))))
+            var graphColumns = currentColumns
+                .Where(a => a.Value.IsColumnGraph).ToList();
+            
+            if (currentColumns.Any() && graphColumns.Any(a => a.Value.IsGraph) && 
+                graphColumns.Count == sqlNodes.Count(a => a.Value.Graph
+                    .Matches(graphColumns.First().Value.Graph)))
             {
                 sqlUpsert = $" ;CREATE TEMP TABLE temp_merge AS SELECT 1 FROM cypher('{currentTree.Name}{"Edge"}', $$ MERGE (p:{currentTree.Name} {{ {
                     (string.Join(",", currentColumns.Where(a => !a.Value.Column.Matches(
@@ -519,12 +521,20 @@ public static class SqlHelper
             return sqlUpsertAux;
         }
         
-        if (currentColumns.Any() && currentColumns.Any(s => s.Value.IsGraph || s.Value.LinkKeys
-                                                                .Any(a => a.To.Split('~')[0].Matches(currentTree.Name))))
-            // upsertColumn.Value.JoinKeys.All(a => currentColumns.Any(b => 
-            //     b.Key.Matches(a.To)))
-            // )
+        var graphColumns = currentColumns
+            .Where(a => a.Value.IsColumnGraph).ToList();
+        
+        if (currentColumns.Any() && graphColumns.Any(a => a.Value.IsGraph) && 
+            graphColumns.Count == sqlNodes.Count(a => a.Value.Graph
+                .Matches(graphColumns.First(a => a.Value.IsGraph).Value.Graph)))
         {
+        
+        // if (currentColumns.Any() && currentColumns.Any(s => s.Value.IsGraph || s.Value.LinkKeys
+        //                                                         .Any(a => a.To.Split('~')[0].Matches(currentTree.Name))))
+        //     // upsertColumn.Value.JoinKeys.All(a => currentColumns.Any(b => 
+        //     //     b.Key.Matches(a.To)))
+        //     // )
+        // {
             foreach (var linkKey in columnValue.LinkKeys)
             {
                 if (linkKey.From.Split('~')[0].Matches(currentTree.Name))

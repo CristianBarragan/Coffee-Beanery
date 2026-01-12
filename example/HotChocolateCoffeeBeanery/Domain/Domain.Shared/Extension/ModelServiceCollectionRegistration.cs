@@ -478,13 +478,13 @@ public static class ModelServiceCollectionRegistration
             }
         }
         
-        foreach (var entityTree in entityDictionaryTree)
-        {
-            if (entityDictionaryTree.TryGetValue(entityTree.Key, out var value))
-            {
-                entityTree.Value.Schema = value.Schema;
-            }
-        }
+        // foreach (var entityTree in entityDictionaryTree)
+        // {
+        //     if (entityDictionaryTree.TryGetValue(entityTree.Key, out var value))
+        //     {
+        //         entityTree.Value.Schema = value.Schema;
+        //     }
+        // }
         
         foreach (var entity in entities)
         {
@@ -758,432 +758,432 @@ public static class ModelServiceCollectionRegistration
         //     }
         // }
         
-        foreach (var model in models)
-        {
-            foreach (var upsert in linkEntityDictionaryTreeNode
-                         .Where(l => l.Value.Entity
-                             .Matches(model) && l.Value.UpsertKeys.Count == 0))
-            {
-                var copyAux = linkEntityDictionaryTreeNode
-                    .LastOrDefault(l => l.Value.Entity
-                        .Matches(model));
-                
-                if (copyAux.Value == null)
-                {
-                    continue;
-                }
-                
-                var copy = linkEntityDictionaryTreeNode.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
-        
-                if (copy.Value == null)
-                {
-                    continue;
-                }
-                
-                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
-                upsert.Value.SqlNodeType = SqlNodeType.Node;
-                upsert.Value.Namespace = copy.Value.Namespace;
-                // upsert.Value.JoinKeys.Clear();
-                // upsert.Value.JoinKeys = copy.Value.JoinKeys;
-                upsert.Value.LinkBusinessKeys.Clear();
-                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
-                upsert.Value.LinkKeys.Clear();
-                upsert.Value.LinkKeys = copy.Value.LinkKeys;
-                // upsert.Value.JoinOneKeys.Clear();
-                // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
-        
-                linkEntityDictionaryTreeNode[upsert.Key] = upsert.Value;
-            }
-            
-            foreach (var upsert in linkEntityDictionaryTreeEdge
-                         .Where(l => l.Value.Entity
-                             .Matches(model) && l.Value.UpsertKeys.Count == 0))
-            {
-                var copyAux = linkEntityDictionaryTreeEdge
-                    .LastOrDefault(l => l.Value.Entity
-                        .Matches(model));
-                
-                if (copyAux.Value == null)
-                {
-                    continue;
-                }
-                
-                var copy = linkEntityDictionaryTreeEdge.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
-        
-                if (copy.Value == null)
-                {
-                    continue;
-                }
-                
-                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
-                upsert.Value.SqlNodeType = SqlNodeType.Edge;
-                upsert.Value.Namespace = copy.Value.Namespace;
-                // upsert.Value.JoinKeys.Clear();
-                // upsert.Value.JoinKeys = copy.Value.JoinKeys;
-                upsert.Value.LinkBusinessKeys.Clear();
-                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
-                upsert.Value.LinkKeys.Clear();
-                upsert.Value.LinkKeys = copy.Value.LinkKeys;
-                // upsert.Value.JoinOneKeys.Clear();
-                // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
-        
-                linkEntityDictionaryTreeEdge[upsert.Key] = upsert.Value;
-            }
-            
-            foreach (var upsert in linkEntityDictionaryTreeMutation
-                         .Where(l => l.Value.Entity
-                             .Matches(model) && l.Value.UpsertKeys.Count == 0))
-            {
-                var copyAux = linkEntityDictionaryTreeMutation
-                    .LastOrDefault(l => l.Value.Entity
-                        .Matches(model));
-                
-                if (copyAux.Value == null)
-                {
-                    continue;
-                }
-                
-                var copy = linkEntityDictionaryTreeMutation.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
-        
-                if (copy.Value == null)
-                {
-                    continue;
-                }
-                
-                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
-                upsert.Value.SqlNodeType = SqlNodeType.Mutation;
-                upsert.Value.Namespace = copy.Value.Namespace;
-                // upsert.Value.JoinKeys.Clear();
-                // upsert.Value.JoinKeys = copy.Value.JoinKeys;
-                upsert.Value.LinkBusinessKeys.Clear();
-                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
-                upsert.Value.LinkKeys.Clear();
-                upsert.Value.LinkKeys = copy.Value.LinkKeys;
-                // upsert.Value.JoinOneKeys.Clear();
-                // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
-        
-                linkEntityDictionaryTreeMutation[upsert.Key] = upsert.Value;
-            }
-            
-            foreach (var upsert in linkModelDictionaryTreeNode
-                         .Where(l => l.Value.Entity
-                             .Matches(model) && l.Value.UpsertKeys.Count == 0))
-            {
-                var copyAux = linkModelDictionaryTreeNode
-                    .LastOrDefault(l => l.Value.Entity
-                        .Matches(model));
-                
-                if (copyAux.Value == null)
-                {
-                    continue;
-                }
-                
-                var copy = linkModelDictionaryTreeNode.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
-        
-                if (copy.Value == null)
-                {
-                    continue;
-                }
-                
-                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
-                upsert.Value.SqlNodeType = SqlNodeType.Node;
-                upsert.Value.Namespace = copy.Value.Namespace;
-                // upsert.Value.JoinKeys.Clear();
-                // upsert.Value.JoinKeys = copy.Value.JoinKeys;
-                upsert.Value.LinkBusinessKeys.Clear();
-                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
-                upsert.Value.LinkKeys.Clear();
-                upsert.Value.LinkKeys = copy.Value.LinkKeys;
-                // upsert.Value.JoinOneKeys.Clear();
-                // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
-        
-                linkModelDictionaryTreeNode[upsert.Key] = upsert.Value;
-            }
-            
-            foreach (var upsert in linkModelDictionaryTreeEdge
-                         .Where(l => l.Value.Entity
-                             .Matches(model) && l.Value.UpsertKeys.Count == 0))
-            {
-                var copyAux = linkModelDictionaryTreeEdge
-                    .LastOrDefault(l => l.Value.Entity
-                        .Matches(model));
-                
-                if (copyAux.Value == null)
-                {
-                    continue;
-                }
-                
-                var copy = linkModelDictionaryTreeEdge.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
-        
-                if (copy.Value == null)
-                {
-                    continue;
-                }
-                
-                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
-                upsert.Value.SqlNodeType = SqlNodeType.Edge;
-                upsert.Value.Namespace = copy.Value.Namespace;
-                // upsert.Value.JoinKeys.Clear();
-                // upsert.Value.JoinKeys = copy.Value.JoinKeys;
-                upsert.Value.LinkBusinessKeys.Clear();
-                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
-                upsert.Value.LinkKeys.Clear();
-                upsert.Value.LinkKeys = copy.Value.LinkKeys;
-                // upsert.Value.JoinOneKeys.Clear();
-                // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
-        
-                linkEntityDictionaryTreeEdge[upsert.Key] = upsert.Value;
-            }
-            
-            foreach (var upsert in linkModelDictionaryTreeMutation
-                         .Where(l => l.Value.Entity
-                             .Matches(model)))
-            {
-                var copyAux = linkModelDictionaryTreeMutation
-                    .LastOrDefault(l => l.Value.Entity
-                        .Matches(model));
-                
-                if (copyAux.Value == null)
-                {
-                    continue;
-                }
-                
-                var copy = linkModelDictionaryTreeMutation.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
-        
-                if (copy.Value == null)
-                {
-                    continue;
-                }
-                
-                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
-                upsert.Value.SqlNodeType = SqlNodeType.Mutation;
-                upsert.Value.Namespace = copy.Value.Namespace;
-                // upsert.Value.JoinKeys.Clear();
-                // upsert.Value.JoinKeys = copy.Value.JoinKeys;
-                upsert.Value.LinkBusinessKeys.Clear();
-                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
-                upsert.Value.LinkKeys.Clear();
-                upsert.Value.LinkKeys = copy.Value.LinkKeys;
-                // upsert.Value.JoinOneKeys.Clear();
-                // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
-        
-                linkModelDictionaryTreeMutation[upsert.Key] = upsert.Value;
-            }
-        }
-        
-        foreach (var entity in entities)
-        {
-            foreach (var upsert in linkEntityDictionaryTreeNode
-                         .Where(l => l.Value.Entity
-                             .Matches(entity) && l.Value.UpsertKeys.Count == 0))
-            {
-                var copyAux = linkEntityDictionaryTreeNode
-                    .LastOrDefault(l => l.Value.Entity
-                        .Matches(entity));
-                
-                if (copyAux.Value == null)
-                {
-                    continue;
-                }
-                
-                var copy = linkEntityDictionaryTreeNode.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
-        
-                if (copy.Value == null)
-                {
-                    continue;
-                }
-                
-                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
-                upsert.Value.SqlNodeType = SqlNodeType.Node;
-                upsert.Value.Namespace = copy.Value.Namespace;
-                // upsert.Value.JoinKeys.Clear();
-                // upsert.Value.JoinKeys = copy.Value.JoinKeys;
-                upsert.Value.LinkBusinessKeys.Clear();
-                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
-                upsert.Value.LinkKeys.Clear();
-                upsert.Value.LinkKeys = copy.Value.LinkKeys;
-                // upsert.Value.JoinOneKeys.Clear();
-                // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
-        
-                linkEntityDictionaryTreeNode[upsert.Key] = upsert.Value;
-            }
-            
-            foreach (var upsert in linkEntityDictionaryTreeEdge
-                         .Where(l => l.Value.Entity
-                             .Matches(entity) && l.Value.UpsertKeys.Count == 0))
-            {
-                var copyAux = linkEntityDictionaryTreeEdge
-                    .LastOrDefault(l => l.Value.Entity
-                        .Matches(entity));
-                
-                if (copyAux.Value == null)
-                {
-                    continue;
-                }
-                
-                var copy = linkEntityDictionaryTreeEdge.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
-        
-                if (copy.Value == null)
-                {
-                    continue;
-                }
-                
-                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
-                upsert.Value.SqlNodeType = SqlNodeType.Edge;
-                upsert.Value.Namespace = copy.Value.Namespace;
-                // upsert.Value.JoinKeys.Clear();
-                // upsert.Value.JoinKeys = copy.Value.JoinKeys;
-                upsert.Value.LinkBusinessKeys.Clear();
-                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
-                upsert.Value.LinkKeys.Clear();
-                upsert.Value.LinkKeys = copy.Value.LinkKeys;
-                // upsert.Value.JoinOneKeys.Clear();
-                // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
-        
-                linkEntityDictionaryTreeEdge[upsert.Key] = upsert.Value;
-            }
-            
-            foreach (var upsert in linkEntityDictionaryTreeMutation
-                         .Where(l => l.Value.Entity
-                             .Matches(entity) && l.Value.UpsertKeys.Count == 0))
-            {
-                var copyAux = linkEntityDictionaryTreeMutation
-                    .LastOrDefault(l => l.Value.Entity
-                        .Matches(entity) && !l.Key.Matches(l.Value.RelationshipKey));
-                
-                if (copyAux.Value == null)
-                {
-                    continue;
-                }
-                
-                var copy = linkEntityDictionaryTreeMutation.FirstOrDefault(a => a.Key.Split('~')[0].Matches(copyAux.Value.RelationshipKey.Split('~')[0]));
-        
-                if (copy.Value == null)
-                {
-                    continue;
-                }
-                
-                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
-                upsert.Value.SqlNodeType = SqlNodeType.Mutation;
-                upsert.Value.Namespace = copy.Value.Namespace;
-                // upsert.Value.JoinKeys.Clear();
-                // upsert.Value.JoinKeys = copy.Value.JoinKeys;
-                upsert.Value.LinkBusinessKeys.Clear();
-                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
-                upsert.Value.LinkKeys.Clear();
-                upsert.Value.LinkKeys = copy.Value.LinkKeys;
-                // upsert.Value.JoinOneKeys.Clear();
-                // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
-        
-                linkEntityDictionaryTreeMutation[upsert.Key] = upsert.Value;
-            }
-            
-            foreach (var upsert in linkModelDictionaryTreeNode
-                         .Where(l => l.Value.Entity
-                             .Matches(entity) && l.Value.UpsertKeys.Count == 0))
-            {
-                var copyAux = linkModelDictionaryTreeNode
-                    .LastOrDefault(l => l.Value.Entity
-                        .Matches(entity));
-                
-                if (copyAux.Value == null)
-                {
-                    continue;
-                }
-                
-                var copy = linkModelDictionaryTreeNode.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
-        
-                if (copy.Value == null)
-                {
-                    continue;
-                }
-                
-                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
-                upsert.Value.SqlNodeType = SqlNodeType.Node;
-                upsert.Value.Namespace = copy.Value.Namespace;
-                // upsert.Value.JoinKeys.Clear();
-                // upsert.Value.JoinKeys = copy.Value.JoinKeys;
-                upsert.Value.LinkBusinessKeys.Clear();
-                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
-                upsert.Value.LinkKeys.Clear();
-                upsert.Value.LinkKeys = copy.Value.LinkKeys;
-                // upsert.Value.JoinOneKeys.Clear();
-                // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
-        
-                linkModelDictionaryTreeNode[upsert.Key] = upsert.Value;
-            }
-            
-            foreach (var upsert in linkModelDictionaryTreeEdge
-                         .Where(l => l.Value.Entity
-                             .Matches(entity) && l.Value.UpsertKeys.Count == 0))
-            {
-                var copyAux = linkModelDictionaryTreeEdge
-                    .LastOrDefault(l => l.Value.Entity
-                        .Matches(entity));
-                
-                if (copyAux.Value == null)
-                {
-                    continue;
-                }
-                
-                var copy = linkModelDictionaryTreeEdge.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
-        
-                if (copy.Value == null)
-                {
-                    continue;
-                }
-                
-                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
-                upsert.Value.SqlNodeType = SqlNodeType.Edge;
-                upsert.Value.Namespace = copy.Value.Namespace;
-                // upsert.Value.JoinKeys.Clear();
-                // upsert.Value.JoinKeys = copy.Value.JoinKeys;
-                upsert.Value.LinkBusinessKeys.Clear();
-                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
-                upsert.Value.LinkKeys.Clear();
-                upsert.Value.LinkKeys = copy.Value.LinkKeys;
-                // upsert.Value.JoinOneKeys.Clear();
-                // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
-        
-                linkEntityDictionaryTreeEdge[upsert.Key] = upsert.Value;
-            }
-        
-            foreach (var upsert in linkModelDictionaryTreeMutation
-                         .Where(l => l.Value.Entity
-                             .Matches(entity) && l.Value.UpsertKeys.Count == 0))
-            {
-                var copyAux = linkModelDictionaryTreeMutation
-                    .LastOrDefault(l => l.Value.Entity
-                        .Matches(entity) && !l.Key.Matches(l.Value.RelationshipKey));
-                
-                if (copyAux.Value == null)
-                {
-                    continue;
-                }
-                
-                var copy = linkModelDictionaryTreeMutation.FirstOrDefault(a => a.Key.Split('~')[0].Matches(copyAux.Value.RelationshipKey.Split('~')[0]));
-        
-                if (copy.Value == null)
-                {
-                    continue;
-                }
-                
-                upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
-                upsert.Value.SqlNodeType = SqlNodeType.Mutation;
-                upsert.Value.Namespace = copy.Value.Namespace;
-                // upsert.Value.JoinKeys.Clear();
-                // upsert.Value.JoinKeys = copy.Value.JoinKeys;
-                upsert.Value.LinkBusinessKeys.Clear();
-                upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
-                upsert.Value.LinkKeys.Clear();
-                upsert.Value.LinkKeys = copy.Value.LinkKeys;
-                // upsert.Value.JoinOneKeys.Clear();
-                // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
-        
-                linkModelDictionaryTreeMutation[upsert.Key] = upsert.Value;
-            }
-        }
-
+        // foreach (var model in models)
+        // {
+        //     foreach (var upsert in linkEntityDictionaryTreeNode
+        //                  .Where(l => l.Value.Entity
+        //                      .Matches(model) && l.Value.UpsertKeys.Count == 0))
+        //     {
+        //         var copyAux = linkEntityDictionaryTreeNode
+        //             .LastOrDefault(l => l.Value.Entity
+        //                 .Matches(model));
+        //         
+        //         if (copyAux.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         var copy = linkEntityDictionaryTreeNode.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        //
+        //         if (copy.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+        //         upsert.Value.SqlNodeType = SqlNodeType.Node;
+        //         upsert.Value.Namespace = copy.Value.Namespace;
+        //         // upsert.Value.JoinKeys.Clear();
+        //         // upsert.Value.JoinKeys = copy.Value.JoinKeys;
+        //         upsert.Value.LinkBusinessKeys.Clear();
+        //         upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+        //         upsert.Value.LinkKeys.Clear();
+        //         upsert.Value.LinkKeys = copy.Value.LinkKeys;
+        //         // upsert.Value.JoinOneKeys.Clear();
+        //         // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        //
+        //         linkEntityDictionaryTreeNode[upsert.Key] = upsert.Value;
+        //     }
+        //     
+        //     foreach (var upsert in linkEntityDictionaryTreeEdge
+        //                  .Where(l => l.Value.Entity
+        //                      .Matches(model) && l.Value.UpsertKeys.Count == 0))
+        //     {
+        //         var copyAux = linkEntityDictionaryTreeEdge
+        //             .LastOrDefault(l => l.Value.Entity
+        //                 .Matches(model));
+        //         
+        //         if (copyAux.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         var copy = linkEntityDictionaryTreeEdge.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        //
+        //         if (copy.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+        //         upsert.Value.SqlNodeType = SqlNodeType.Edge;
+        //         upsert.Value.Namespace = copy.Value.Namespace;
+        //         // upsert.Value.JoinKeys.Clear();
+        //         // upsert.Value.JoinKeys = copy.Value.JoinKeys;
+        //         upsert.Value.LinkBusinessKeys.Clear();
+        //         upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+        //         upsert.Value.LinkKeys.Clear();
+        //         upsert.Value.LinkKeys = copy.Value.LinkKeys;
+        //         // upsert.Value.JoinOneKeys.Clear();
+        //         // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        //
+        //         linkEntityDictionaryTreeEdge[upsert.Key] = upsert.Value;
+        //     }
+        //     
+        //     foreach (var upsert in linkEntityDictionaryTreeMutation
+        //                  .Where(l => l.Value.Entity
+        //                      .Matches(model) && l.Value.UpsertKeys.Count == 0))
+        //     {
+        //         var copyAux = linkEntityDictionaryTreeMutation
+        //             .LastOrDefault(l => l.Value.Entity
+        //                 .Matches(model));
+        //         
+        //         if (copyAux.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         var copy = linkEntityDictionaryTreeMutation.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        //
+        //         if (copy.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+        //         upsert.Value.SqlNodeType = SqlNodeType.Mutation;
+        //         upsert.Value.Namespace = copy.Value.Namespace;
+        //         // upsert.Value.JoinKeys.Clear();
+        //         // upsert.Value.JoinKeys = copy.Value.JoinKeys;
+        //         upsert.Value.LinkBusinessKeys.Clear();
+        //         upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+        //         upsert.Value.LinkKeys.Clear();
+        //         upsert.Value.LinkKeys = copy.Value.LinkKeys;
+        //         // upsert.Value.JoinOneKeys.Clear();
+        //         // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        //
+        //         linkEntityDictionaryTreeMutation[upsert.Key] = upsert.Value;
+        //     }
+        //     
+        //     foreach (var upsert in linkModelDictionaryTreeNode
+        //                  .Where(l => l.Value.Entity
+        //                      .Matches(model) && l.Value.UpsertKeys.Count == 0))
+        //     {
+        //         var copyAux = linkModelDictionaryTreeNode
+        //             .LastOrDefault(l => l.Value.Entity
+        //                 .Matches(model));
+        //         
+        //         if (copyAux.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         var copy = linkModelDictionaryTreeNode.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        //
+        //         if (copy.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+        //         upsert.Value.SqlNodeType = SqlNodeType.Node;
+        //         upsert.Value.Namespace = copy.Value.Namespace;
+        //         // upsert.Value.JoinKeys.Clear();
+        //         // upsert.Value.JoinKeys = copy.Value.JoinKeys;
+        //         upsert.Value.LinkBusinessKeys.Clear();
+        //         upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+        //         upsert.Value.LinkKeys.Clear();
+        //         upsert.Value.LinkKeys = copy.Value.LinkKeys;
+        //         // upsert.Value.JoinOneKeys.Clear();
+        //         // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        //
+        //         linkModelDictionaryTreeNode[upsert.Key] = upsert.Value;
+        //     }
+        //     
+        //     foreach (var upsert in linkModelDictionaryTreeEdge
+        //                  .Where(l => l.Value.Entity
+        //                      .Matches(model) && l.Value.UpsertKeys.Count == 0))
+        //     {
+        //         var copyAux = linkModelDictionaryTreeEdge
+        //             .LastOrDefault(l => l.Value.Entity
+        //                 .Matches(model));
+        //         
+        //         if (copyAux.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         var copy = linkModelDictionaryTreeEdge.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        //
+        //         if (copy.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+        //         upsert.Value.SqlNodeType = SqlNodeType.Edge;
+        //         upsert.Value.Namespace = copy.Value.Namespace;
+        //         // upsert.Value.JoinKeys.Clear();
+        //         // upsert.Value.JoinKeys = copy.Value.JoinKeys;
+        //         upsert.Value.LinkBusinessKeys.Clear();
+        //         upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+        //         upsert.Value.LinkKeys.Clear();
+        //         upsert.Value.LinkKeys = copy.Value.LinkKeys;
+        //         // upsert.Value.JoinOneKeys.Clear();
+        //         // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        //
+        //         linkEntityDictionaryTreeEdge[upsert.Key] = upsert.Value;
+        //     }
+        //     
+        //     foreach (var upsert in linkModelDictionaryTreeMutation
+        //                  .Where(l => l.Value.Entity
+        //                      .Matches(model)))
+        //     {
+        //         var copyAux = linkModelDictionaryTreeMutation
+        //             .LastOrDefault(l => l.Value.Entity
+        //                 .Matches(model));
+        //         
+        //         if (copyAux.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         var copy = linkModelDictionaryTreeMutation.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        //
+        //         if (copy.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+        //         upsert.Value.SqlNodeType = SqlNodeType.Mutation;
+        //         upsert.Value.Namespace = copy.Value.Namespace;
+        //         // upsert.Value.JoinKeys.Clear();
+        //         // upsert.Value.JoinKeys = copy.Value.JoinKeys;
+        //         upsert.Value.LinkBusinessKeys.Clear();
+        //         upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+        //         upsert.Value.LinkKeys.Clear();
+        //         upsert.Value.LinkKeys = copy.Value.LinkKeys;
+        //         // upsert.Value.JoinOneKeys.Clear();
+        //         // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        //
+        //         linkModelDictionaryTreeMutation[upsert.Key] = upsert.Value;
+        //     }
+        // }
+        //
+        // foreach (var entity in entities)
+        // {
+        //     foreach (var upsert in linkEntityDictionaryTreeNode
+        //                  .Where(l => l.Value.Entity
+        //                      .Matches(entity) && l.Value.UpsertKeys.Count == 0))
+        //     {
+        //         var copyAux = linkEntityDictionaryTreeNode
+        //             .LastOrDefault(l => l.Value.Entity
+        //                 .Matches(entity));
+        //         
+        //         if (copyAux.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         var copy = linkEntityDictionaryTreeNode.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        //
+        //         if (copy.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+        //         upsert.Value.SqlNodeType = SqlNodeType.Node;
+        //         upsert.Value.Namespace = copy.Value.Namespace;
+        //         // upsert.Value.JoinKeys.Clear();
+        //         // upsert.Value.JoinKeys = copy.Value.JoinKeys;
+        //         upsert.Value.LinkBusinessKeys.Clear();
+        //         upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+        //         upsert.Value.LinkKeys.Clear();
+        //         upsert.Value.LinkKeys = copy.Value.LinkKeys;
+        //         // upsert.Value.JoinOneKeys.Clear();
+        //         // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        //
+        //         linkEntityDictionaryTreeNode[upsert.Key] = upsert.Value;
+        //     }
+        //     
+        //     foreach (var upsert in linkEntityDictionaryTreeEdge
+        //                  .Where(l => l.Value.Entity
+        //                      .Matches(entity) && l.Value.UpsertKeys.Count == 0))
+        //     {
+        //         var copyAux = linkEntityDictionaryTreeEdge
+        //             .LastOrDefault(l => l.Value.Entity
+        //                 .Matches(entity));
+        //         
+        //         if (copyAux.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         var copy = linkEntityDictionaryTreeEdge.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        //
+        //         if (copy.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+        //         upsert.Value.SqlNodeType = SqlNodeType.Edge;
+        //         upsert.Value.Namespace = copy.Value.Namespace;
+        //         // upsert.Value.JoinKeys.Clear();
+        //         // upsert.Value.JoinKeys = copy.Value.JoinKeys;
+        //         upsert.Value.LinkBusinessKeys.Clear();
+        //         upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+        //         upsert.Value.LinkKeys.Clear();
+        //         upsert.Value.LinkKeys = copy.Value.LinkKeys;
+        //         // upsert.Value.JoinOneKeys.Clear();
+        //         // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        //
+        //         linkEntityDictionaryTreeEdge[upsert.Key] = upsert.Value;
+        //     }
+        //     
+        //     foreach (var upsert in linkEntityDictionaryTreeMutation
+        //                  .Where(l => l.Value.Entity
+        //                      .Matches(entity) && l.Value.UpsertKeys.Count == 0))
+        //     {
+        //         var copyAux = linkEntityDictionaryTreeMutation
+        //             .LastOrDefault(l => l.Value.Entity
+        //                 .Matches(entity) && !l.Key.Matches(l.Value.RelationshipKey));
+        //         
+        //         if (copyAux.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         var copy = linkEntityDictionaryTreeMutation.FirstOrDefault(a => a.Key.Split('~')[0].Matches(copyAux.Value.RelationshipKey.Split('~')[0]));
+        //
+        //         if (copy.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+        //         upsert.Value.SqlNodeType = SqlNodeType.Mutation;
+        //         upsert.Value.Namespace = copy.Value.Namespace;
+        //         // upsert.Value.JoinKeys.Clear();
+        //         // upsert.Value.JoinKeys = copy.Value.JoinKeys;
+        //         upsert.Value.LinkBusinessKeys.Clear();
+        //         upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+        //         upsert.Value.LinkKeys.Clear();
+        //         upsert.Value.LinkKeys = copy.Value.LinkKeys;
+        //         // upsert.Value.JoinOneKeys.Clear();
+        //         // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        //
+        //         linkEntityDictionaryTreeMutation[upsert.Key] = upsert.Value;
+        //     }
+        //     
+        //     foreach (var upsert in linkModelDictionaryTreeNode
+        //                  .Where(l => l.Value.Entity
+        //                      .Matches(entity) && l.Value.UpsertKeys.Count == 0))
+        //     {
+        //         var copyAux = linkModelDictionaryTreeNode
+        //             .LastOrDefault(l => l.Value.Entity
+        //                 .Matches(entity));
+        //         
+        //         if (copyAux.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         var copy = linkModelDictionaryTreeNode.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        //
+        //         if (copy.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+        //         upsert.Value.SqlNodeType = SqlNodeType.Node;
+        //         upsert.Value.Namespace = copy.Value.Namespace;
+        //         // upsert.Value.JoinKeys.Clear();
+        //         // upsert.Value.JoinKeys = copy.Value.JoinKeys;
+        //         upsert.Value.LinkBusinessKeys.Clear();
+        //         upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+        //         upsert.Value.LinkKeys.Clear();
+        //         upsert.Value.LinkKeys = copy.Value.LinkKeys;
+        //         // upsert.Value.JoinOneKeys.Clear();
+        //         // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        //
+        //         linkModelDictionaryTreeNode[upsert.Key] = upsert.Value;
+        //     }
+        //     
+        //     foreach (var upsert in linkModelDictionaryTreeEdge
+        //                  .Where(l => l.Value.Entity
+        //                      .Matches(entity) && l.Value.UpsertKeys.Count == 0))
+        //     {
+        //         var copyAux = linkModelDictionaryTreeEdge
+        //             .LastOrDefault(l => l.Value.Entity
+        //                 .Matches(entity));
+        //         
+        //         if (copyAux.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         var copy = linkModelDictionaryTreeEdge.FirstOrDefault(a => a.Key.Matches(copyAux.Value.RelationshipKey));
+        //
+        //         if (copy.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+        //         upsert.Value.SqlNodeType = SqlNodeType.Edge;
+        //         upsert.Value.Namespace = copy.Value.Namespace;
+        //         // upsert.Value.JoinKeys.Clear();
+        //         // upsert.Value.JoinKeys = copy.Value.JoinKeys;
+        //         upsert.Value.LinkBusinessKeys.Clear();
+        //         upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+        //         upsert.Value.LinkKeys.Clear();
+        //         upsert.Value.LinkKeys = copy.Value.LinkKeys;
+        //         // upsert.Value.JoinOneKeys.Clear();
+        //         // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        //
+        //         linkEntityDictionaryTreeEdge[upsert.Key] = upsert.Value;
+        //     }
+        //
+        //     foreach (var upsert in linkModelDictionaryTreeMutation
+        //                  .Where(l => l.Value.Entity
+        //                      .Matches(entity) && l.Value.UpsertKeys.Count == 0))
+        //     {
+        //         var copyAux = linkModelDictionaryTreeMutation
+        //             .LastOrDefault(l => l.Value.Entity
+        //                 .Matches(entity) && !l.Key.Matches(l.Value.RelationshipKey));
+        //         
+        //         if (copyAux.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         var copy = linkModelDictionaryTreeMutation.FirstOrDefault(a => a.Key.Split('~')[0].Matches(copyAux.Value.RelationshipKey.Split('~')[0]));
+        //
+        //         if (copy.Value == null)
+        //         {
+        //             continue;
+        //         }
+        //         
+        //         upsert.Value.UpsertKeys = copy.Value.UpsertKeys;
+        //         upsert.Value.SqlNodeType = SqlNodeType.Mutation;
+        //         upsert.Value.Namespace = copy.Value.Namespace;
+        //         // upsert.Value.JoinKeys.Clear();
+        //         // upsert.Value.JoinKeys = copy.Value.JoinKeys;
+        //         upsert.Value.LinkBusinessKeys.Clear();
+        //         upsert.Value.LinkBusinessKeys = copy.Value.LinkBusinessKeys;
+        //         upsert.Value.LinkKeys.Clear();
+        //         upsert.Value.LinkKeys = copy.Value.LinkKeys;
+        //         // upsert.Value.JoinOneKeys.Clear();
+        //         // upsert.Value.JoinOneKeys = copy.Value.JoinOneKeys;
+        //
+        //         linkModelDictionaryTreeMutation[upsert.Key] = upsert.Value;
+        //     }
+        // }
+        //
         var entityTreeMap = new EntityTreeMap<dynamic, dynamic>()
         {
             NodeId = entityNodeId,
@@ -1196,7 +1196,7 @@ public static class ModelServiceCollectionRegistration
             LinkDictionaryTreeEdge = linkEntityDictionaryTreeEdge,
             LinkDictionaryTreeMutation = linkEntityDictionaryTreeMutation
         };
-
+        
         var modelTreeMap = new ModelTreeMap<dynamic, dynamic>()
         {
             NodeId = modelNodeId,

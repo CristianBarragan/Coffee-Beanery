@@ -147,7 +147,7 @@ public static class NodeTreeHelper
             var upsertKeyAttribute =
                 toProperty.CustomAttributes.FirstOrDefault(ca => ca.AttributeType == typeof(UpsertKeyAttribute));
             var entity = upsertKeyAttribute.ConstructorArguments[0].Value;
-            var column = toProperty.Name;
+            var column = upsertKeyAttribute.ConstructorArguments[1].Value;
 
             upsertKeys.Add($"{entity}~{column}");
 
@@ -162,7 +162,8 @@ public static class NodeTreeHelper
                         new SqlNode()
                         {
                             RelationshipKey = $"{entity}~{column}",
-                            Column = column,
+                            Column = column.ToString(),
+                            Entity = entity.ToString(),
                             Namespace = nodeFromClass.GetType().Namespace,
                             SqlNodeType = SqlNodeType.Node,
                             // JoinKeys = columnMapped.Value.JoinKeys,
@@ -175,7 +176,8 @@ public static class NodeTreeHelper
                     linkEntityDictionaryTreeEdge.Add($"{entity}~{column}",
                         new SqlNode()
                         {
-                            Column = column,
+                            Column = column.ToString(),
+                            Entity = entity.ToString(),
                             Namespace = nodeFromClass.GetType().Namespace,
                             SqlNodeType = SqlNodeType.Edge,
                             // JoinKeys = columnMapped.Value.JoinKeys,
@@ -188,7 +190,8 @@ public static class NodeTreeHelper
                     linkEntityDictionaryTreeMutation.Add($"{entity}~{column}",
                         new SqlNode()
                         {
-                            Column = column,
+                            Column = column.ToString(),
+                            Entity = entity.ToString(),
                             Namespace = nodeFromClass.GetType().Namespace,
                             SqlNodeType = SqlNodeType.Mutation,
                             // JoinKeys = columnMapped.Value.JoinKeys,
@@ -212,6 +215,7 @@ public static class NodeTreeHelper
                     {
                         RelationshipKey = $"{nodeFromClass.GetType().Name}~Id",
                         Column = $"{nodeFromClass.GetType().Name}Id",
+                        Entity = nodeFromClass.GetType().Name,
                         Namespace = nodeFromClass.GetType().Namespace,
                         SqlNodeType = SqlNodeType.Node,
                         // JoinKeys = columnMapped.Value.JoinKeys,
@@ -226,6 +230,7 @@ public static class NodeTreeHelper
                     {
                         RelationshipKey = $"{nodeFromClass.GetType().Name}~Id",
                         Column = $"{nodeFromClass.GetType().Name}Id",
+                        Entity = nodeFromClass.GetType().Name,
                         Namespace = nodeFromClass.GetType().Namespace,
                         SqlNodeType = SqlNodeType.Edge,
                         // JoinKeys = columnMapped.Value.JoinKeys,
@@ -240,6 +245,7 @@ public static class NodeTreeHelper
                     {
                         RelationshipKey = $"{nodeFromClass.GetType().Name}~Id",
                         Column = $"{nodeFromClass.GetType().Name}Id",
+                        Entity = nodeFromClass.GetType().Name,
                         Namespace = nodeFromClass.GetType().Namespace,
                         SqlNodeType = SqlNodeType.Mutation,
                         // JoinKeys = columnMapped.Value.JoinKeys,
