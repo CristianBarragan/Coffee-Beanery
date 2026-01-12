@@ -214,7 +214,7 @@ public static class SqlNodeResolverHelper
                 sqlQueryStatement, sqlStatementNodes, sqlWhereStatement,
                 entityTreeMap.DictionaryTree[rootEntityName], entityTreeMap.EntityNames,
                 childrenSqlStatement, sqlQueryStructures,
-                splitOnDapper, entityOrder, rootEntityName);
+                splitOnDapper, entityOrder, rootEntityName, new List<string>());
             
             //if transformedToParent then will be used the first matching child, TODO: Support multiple child queries for complex entities
 
@@ -337,7 +337,8 @@ public static class SqlNodeResolverHelper
             Dictionary<string, string> sqlWhereStatement,
             NodeTree currentTree, List<string> entityNames, Dictionary<string, string> childrenSqlStatement,
             Dictionary<string, SqlQueryStructure> sqlQueryStructures,
-            Dictionary<string, Type> splitOnDapper, List<string> entityOrder, string rootEntityName)
+            Dictionary<string, Type> splitOnDapper, List<string> entityOrder, string rootEntityName,
+            List<string> processedGraph)
     {
         var hasChildren = false;
         var currentColumns = new List<KeyValuePair<string,SqlNode>>();
@@ -381,6 +382,7 @@ public static class SqlNodeResolverHelper
         entityOrder.Add(currentTree.Name);
         
         var hasActiveChildren = false;
+        int index = 0;
         
         foreach (var child in currentTree.Children)
         {
@@ -398,29 +400,31 @@ public static class SqlNodeResolverHelper
                     GenerateQuery(entityTrees, entityTypes, linkEntityDictionaryTreeNode, linkModelDictionaryTreeNode,
                         sqlQueryStatement, sqlStatementNodes, sqlWhereStatement,
                         child, entityNames, childrenSqlStatement, sqlQueryStructures,
-                        splitOnDapper, entityOrder, rootEntityName);
+                        splitOnDapper, entityOrder, rootEntityName, processedGraph);
                 
                     if (sqlQueryStructures.TryGetValue(child.Name, out var childStructure) && childStructure.Columns.Count > 0)
                     {
                         var linkKeyPart = currentEntityStructure.SqlNode.LinkKeys.First(a => a.From.Matches(linkKey.From));
                         
-                        if (!string.IsNullOrEmpty(childStructure.GraphQuery)){
+                        if (!string.IsNullOrEmpty(childStructure.GraphQuery) && !processedGraph.Contains(childStructure.GraphQuery))
+                        {
+                            processedGraph.Add(childStructure.GraphQuery);
                             queryBuilder += childStructure.SqlNodeType == SqlNodeType.Edge ? " JOIN " : " LEFT JOIN ";
                             queryBuilder +=
-                                $" ( {childStructure.GraphQuery} ) {child.Name}{linkKeyPart.From.Substring(0,10).Replace("~","")} ON {currentTree.Name}.\"{
-                                    linkKeyPart.FromId.Split('~')[1]}\" = {
-                                        child.Name}{linkKeyPart.From.Substring(0,10).Replace("~","")}.\"{linkKeyPart.FromId.Split('~')[1].ToSnakeCase(child.Id)}\"";  
+                                $" ( {childStructure.GraphQuery} )) {child.Name}{currentTree.Id}{index} ON {currentTree.Name}.\"{
+                                    linkKeyPart.FromId.Split('~')[1]}\" = {child.Name}{currentTree.Id}{index}.{linkKeyPart.FromId.Split('~')[1]}";
+                            index++;
                         }
                         
                         queryBuilder += childStructure.SqlNodeType == SqlNodeType.Edge ? " JOIN " : " LEFT JOIN ";
                         
                         queryBuilder +=
-                        $" ( {childStructure.Query} ) {child.Name}{linkKeyPart.From.Substring(0,10).Replace("~","")} ON {currentTree.Name}.\"{
+                        $" ( {childStructure.Query} ) {child.Name}{currentTree.Id}{index} ON {currentTree.Name}.\"{
                             linkKeyPart.FromId.Split('~')[1]}\" = {
-                        child.Name}{linkKeyPart.From.Substring(0,10).Replace("~","")}.\"{linkKeyPart.FromId.Split('~')[1].ToSnakeCase(child.Id)}\"";  
+                        child.Name}{currentTree.Id}{index}.\"{linkKeyPart.FromId.Split('~')[1].ToSnakeCase(child.Id)}\"";  
 
                         currentEntityStructure.SelectColumns.AddRange(
-                            childStructure.ParentColumns.Select(s => s.Replace("~", $"{child.Name}{linkKeyPart.From.Substring(0,10).Replace("~","")}")));
+                            childStructure.ParentColumns.Select(s => s.Replace("~", $"{child.Name}{currentTree.Id}{index}")));
                         currentEntityStructure.ParentColumns.AddRange(childStructure.ParentColumns);
 
                         currentEntityStructure.SelectColumns = currentEntityStructure.SelectColumns.Distinct().ToList();
@@ -431,6 +435,7 @@ public static class SqlNodeResolverHelper
                             splitOnDapper.Add(linkKeyPart.To.Split('~')[1].ToSnakeCase(child.Id),
                                 entityTypes.FirstOrDefault(e => e.Name.Matches(child.Name)));
                         }
+                        index++;
                     }
                 }
                 
@@ -704,14 +709,14 @@ public static class SqlNodeResolverHelper
                     .Matches(graphColumns.First().Value.Graph)))
             {
                 graphSql = $"WITH graph_data AS ( SELECT {(string.Join(",", currentColumns.Where(a =>  a.Value.UpsertKeys.Count > 0)
-                    .Select(a => $"{a.Value.Column}::TEXT::UUID AS {a.Value.Column}").ToList()))} FROM cypher('{currentColumns.First(a => !string.IsNullOrEmpty(a.Value.Graph)).Value.Graph}', $$ MATCH " +
+                    .Select(a => $"{a.Value.Column}::TEXT::{GetColumnType(a.Value.ColumnType)} AS {a.Value.Column}").Distinct().ToList()))} FROM cypher('{currentColumns.First(a => !string.IsNullOrEmpty(a.Value.Graph)).Value.Graph}', $$ MATCH " +
                            $"(p:{currentTree.Name} ) RETURN {
                                $"{(string.Join(",", currentColumns.Where(a =>  a.Value.UpsertKeys.Count > 0)
-                                   .Select(a => $"(p.{a.Value.Column}) AS {a.Value.Column}").ToList()))}"} $$) AS ({$"{
+                                   .Select(a => $"(p.{a.Value.Column}) AS {a.Value.Column}").Distinct().ToList()))}"} $$) AS ({$"{
                                        (string.Join(",", currentColumns.Where(a =>  a.Value.UpsertKeys.Count > 0)
-                                           .Select(a => $"{a.Value.Column} agtype").ToList()))} )) "}" + 
+                                           .Select(a => $"{a.Value.Column} agtype").Distinct().ToList()))} )) "}" + 
                            $"SELECT * FROM (SELECT {(string.Join(",", currentColumns.Where(a =>  a.Value.UpsertKeys.Count > 0)
-                                   .Select(a => $" (a.{a.Value.Column})::UUID AS {a.Value.Column} ").ToList()))
+                                   .Select(a => $" (a.{a.Value.Column})::{GetColumnType(a.Value.ColumnType)} AS {a.Value.Column} ").Distinct().ToList()))
                            } FROM graph_data a ";
                 
                 var graphColumnTree = entityTrees[upsertColumn.Value.Entity];
@@ -867,6 +872,19 @@ public static class SqlNodeResolverHelper
         }
 
         return sqlStructure;
+    }
+
+    public static string GetColumnType(string propertyType)
+    {
+        switch (propertyType.ToLower())
+        {
+            case "int":
+                return "INT";
+            case "guid":
+                return "UUID";
+        }
+
+        return "INT";
     }
 
     /// <summary>

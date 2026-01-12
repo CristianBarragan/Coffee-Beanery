@@ -15,7 +15,9 @@ public class SqlNode
     public List<FieldMap> Mapping { get; set; }
 
     public bool IsEnumeration { get; set; }
-
+    
+    public string ColumnType { get; set; }
+    
     public bool IsGraph { get; set; }
 
     public string Graph { get; set; }

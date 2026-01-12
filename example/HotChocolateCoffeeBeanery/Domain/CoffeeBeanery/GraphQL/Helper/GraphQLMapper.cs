@@ -75,7 +75,12 @@ public static class GraphQLMapper
                         : mapping.TypeMap.DestinationType,
                     DestinationEntity = mapping.TypeMap.SourceType == to.GetType()
                         ? mapping.TypeMap.SourceType.Name
-                        : mapping.TypeMap.DestinationType.Name
+                        : mapping.TypeMap.DestinationType.Name,
+                    FieldDestinationPropertyType = mapping.TypeMap.SourceType == to.GetType() 
+                        ? string.Empty
+                        : mapping.DestinationType.GenericTypeArguments.Length > 0 
+                            ? mapping.DestinationType.GenericTypeArguments[0].Name 
+                            : mapping.DestinationType.Name,
                 };
 
                 if (!entities.Contains(processingFieldMap.SourceModel))
@@ -205,10 +210,6 @@ public static class GraphQLMapper
                             }
                         }
                     }
-
-                    joinTo = string.IsNullOrEmpty(joinTo)
-                        ? $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}"
-                        : joinTo;
                     
                     AddDictionaryValue(linkModelDictionaryTreeEdge,
                         $"{processingFieldMap.DestinationEntity}~{processingFieldMap.FieldDestinationName}",
@@ -225,7 +226,8 @@ public static class GraphQLMapper
                             FromEnumeration = fromEnumDictionary,
                             ToEnumeration = toEnumDictionary,
                             SqlNodeType = SqlNodeType.Edge,
-                            Namespace = processingFieldMap.FieldSourceType.Namespace
+                            Namespace = processingFieldMap.FieldSourceType.Namespace,
+                            ColumnType = processingFieldMap.FieldDestinationPropertyType 
                         });
 
                     AddDictionaryValue(linkModelDictionaryTreeNode,
@@ -243,7 +245,8 @@ public static class GraphQLMapper
                             FromEnumeration = fromEnumDictionary,
                             ToEnumeration = toEnumDictionary,
                             SqlNodeType = SqlNodeType.Node,
-                            Namespace = processingFieldMap.FieldSourceType.Namespace
+                            Namespace = processingFieldMap.FieldSourceType.Namespace,
+                            ColumnType = processingFieldMap.FieldDestinationPropertyType
                         });
 
                     AddDictionaryValue(linkModelDictionaryTreeMutation,
@@ -261,7 +264,8 @@ public static class GraphQLMapper
                             FromEnumeration = fromEnumDictionary,
                             ToEnumeration = toEnumDictionary,
                             SqlNodeType = SqlNodeType.Mutation,
-                            Namespace = processingFieldMap.FieldSourceType.Namespace
+                            Namespace = processingFieldMap.FieldSourceType.Namespace,
+                            ColumnType = processingFieldMap.FieldDestinationPropertyType
                         });
                     AddDictionaryValue(linkEntityDictionaryTreeEdge,
                         $"{processingFieldMap.SourceModel}~{processingFieldMap.FieldSourceName}",
@@ -278,7 +282,8 @@ public static class GraphQLMapper
                             FromEnumeration = fromEnumDictionary,
                             ToEnumeration = toEnumDictionary,
                             SqlNodeType = SqlNodeType.Edge,
-                            Namespace = processingFieldMap.FieldDestinationType.Namespace
+                            Namespace = processingFieldMap.FieldDestinationType.Namespace,
+                            ColumnType = processingFieldMap.FieldDestinationPropertyType
                         });
 
 
@@ -297,7 +302,8 @@ public static class GraphQLMapper
                             FromEnumeration = fromEnumDictionary,
                             ToEnumeration = toEnumDictionary,
                             SqlNodeType = SqlNodeType.Node,
-                            Namespace = processingFieldMap.FieldDestinationType.Namespace
+                            Namespace = processingFieldMap.FieldDestinationType.Namespace,
+                            ColumnType = processingFieldMap.FieldDestinationPropertyType
                         });
 
                     AddDictionaryValue(linkEntityDictionaryTreeMutation,
@@ -315,7 +321,8 @@ public static class GraphQLMapper
                             FromEnumeration = fromEnumDictionary,
                             ToEnumeration = toEnumDictionary,
                             SqlNodeType = SqlNodeType.Mutation,
-                            Namespace = processingFieldMap.FieldDestinationType.Namespace
+                            Namespace = processingFieldMap.FieldDestinationType.Namespace,
+                            ColumnType = processingFieldMap.FieldDestinationPropertyType
                         });
 
                     var linkBusinessAttribute = propertyFromAttributeType.CustomAttributes
