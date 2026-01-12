@@ -160,11 +160,9 @@ public static class SqlHelper
         
         if (upsertColumn.Value != null)
         {
-            if (sqlUpsertStatementNodes.Any() && sqlUpsertStatementNodes.Any(a => a.Value.IsGraph)
-                //                               && 
-                // upsertColumn.Value.JoinKeys.All(a => sqlUpsertStatementNodes.Any(b => 
-                //     b.Key.Matches(a.To))))
-                )
+            if (sqlUpsertStatementNodes.Any() && sqlUpsertStatementNodes.Any(s => s.Value.IsGraph
+                || s.Value.LinkKeys
+                    .Any(a => a.To.Split('~')[0].Matches(processingTree.Name))))
             {
                 sql = GenerateUpsertGraph(processingTree, trees, sqlUpsertStatementNodes, 
                     sqlNodes, whereCurrentClause, entityNames, generatedQuery);
@@ -378,11 +376,14 @@ public static class SqlHelper
             return string.Empty;
         }
 
-        if (currentColumns.Any() && currentColumns.Any(a => a.Value.IsGraph) 
-            //                      && 
-            // upsertColumn.Value.JoinKeys.All(a => currentColumns.Any(b => 
-            //     b.Key.Matches(a.To))))
-            )
+        if (currentColumns.Any() && currentColumns.Any(s => s.Value.IsGraph
+                || s.Value.LinkKeys
+                    .Any(a => a.To.Split('~')[0].Matches(currentTree.Name))))
+        // if (currentColumns.Any() && currentColumns.Any(a => a.Value.IsGraph) 
+        //     //                      && 
+        //     // upsertColumn.Value.JoinKeys.All(a => currentColumns.Any(b => 
+        //     //     b.Key.Matches(a.To))))
+        //     )
         {
             foreach (var column in currentColumns.Last().Value.LinkKeys)
             {
@@ -518,11 +519,11 @@ public static class SqlHelper
             return sqlUpsertAux;
         }
         
-        if (currentColumns.Any() && currentColumns.Any(a => a.Value.IsGraph) 
-            //                      && 
+        if (currentColumns.Any() && currentColumns.Any(s => s.Value.IsGraph || s.Value.LinkKeys
+                                                                .Any(a => a.To.Split('~')[0].Matches(currentTree.Name))))
             // upsertColumn.Value.JoinKeys.All(a => currentColumns.Any(b => 
             //     b.Key.Matches(a.To)))
-            )
+            // )
         {
             foreach (var linkKey in columnValue.LinkKeys)
             {
