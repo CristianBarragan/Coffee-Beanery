@@ -166,9 +166,7 @@ public static class NodeTreeHelper
                             Entity = entity.ToString(),
                             Namespace = nodeFromClass.GetType().Namespace,
                             SqlNodeType = SqlNodeType.Node,
-                            // JoinKeys = columnMapped.Value.JoinKeys,
                             IsGraph = columnMapped.Value.IsGraph,
-                            // JoinOneKeys = columnMapped.Value.JoinOneKeys,
                             LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
                             LinkKeys = columnMapped.Value.LinkKeys
                         });
@@ -180,9 +178,7 @@ public static class NodeTreeHelper
                             Entity = entity.ToString(),
                             Namespace = nodeFromClass.GetType().Namespace,
                             SqlNodeType = SqlNodeType.Edge,
-                            // JoinKeys = columnMapped.Value.JoinKeys,
                             IsGraph = columnMapped.Value.IsGraph,
-                            // JoinOneKeys = columnMapped.Value.JoinOneKeys,
                             LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
                             LinkKeys = columnMapped.Value.LinkKeys
                         });
@@ -194,9 +190,7 @@ public static class NodeTreeHelper
                             Entity = entity.ToString(),
                             Namespace = nodeFromClass.GetType().Namespace,
                             SqlNodeType = SqlNodeType.Mutation,
-                            // JoinKeys = columnMapped.Value.JoinKeys,
                             IsGraph = columnMapped.Value.IsGraph,
-                            // JoinOneKeys = columnMapped.Value.JoinOneKeys,
                             LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
                             LinkKeys = columnMapped.Value.LinkKeys
                         });   
@@ -218,9 +212,7 @@ public static class NodeTreeHelper
                         Entity = nodeFromClass.GetType().Name,
                         Namespace = nodeFromClass.GetType().Namespace,
                         SqlNodeType = SqlNodeType.Node,
-                        // JoinKeys = columnMapped.Value.JoinKeys,
                         IsGraph = columnMapped.Value.IsGraph,
-                        // JoinOneKeys = columnMapped.Value.JoinOneKeys,
                         LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
                         LinkKeys = columnMapped.Value.LinkKeys
                 });
@@ -233,9 +225,7 @@ public static class NodeTreeHelper
                         Entity = nodeFromClass.GetType().Name,
                         Namespace = nodeFromClass.GetType().Namespace,
                         SqlNodeType = SqlNodeType.Edge,
-                        // JoinKeys = columnMapped.Value.JoinKeys,
                         IsGraph = columnMapped.Value.IsGraph,
-                        // JoinOneKeys = columnMapped.Value.JoinOneKeys,
                         LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
                         LinkKeys = columnMapped.Value.LinkKeys
                 });
@@ -248,9 +238,7 @@ public static class NodeTreeHelper
                         Entity = nodeFromClass.GetType().Name,
                         Namespace = nodeFromClass.GetType().Namespace,
                         SqlNodeType = SqlNodeType.Mutation,
-                        // JoinKeys = columnMapped.Value.JoinKeys,
                         IsGraph = columnMapped.Value.IsGraph,
-                        // JoinOneKeys = columnMapped.Value.JoinOneKeys,
                         LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
                         LinkKeys = columnMapped.Value.LinkKeys
                 });
@@ -386,9 +374,7 @@ public static class NodeTreeHelper
                             Column = $"{nodeToClass.GetType().Name}Id",
                             Namespace = nodeToClass.GetType().Namespace,
                             SqlNodeType = SqlNodeType.Node,
-                            // JoinKeys = columnMapped.Value.JoinKeys,
                             IsGraph = columnMapped.Value.IsGraph,
-                            // JoinOneKeys = columnMapped.Value.JoinOneKeys,
                             LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
                             LinkKeys = columnMapped.Value.LinkKeys
                     });
@@ -400,9 +386,7 @@ public static class NodeTreeHelper
                             Column = $"{nodeToClass.GetType().Name}Id",
                             Namespace = nodeToClass.GetType().Namespace,
                             SqlNodeType = SqlNodeType.Edge,
-                            // JoinKeys = columnMapped.Value.JoinKeys,
                             IsGraph = columnMapped.Value.IsGraph,
-                            // JoinOneKeys = columnMapped.Value.JoinOneKeys,
                             LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
                             LinkKeys = columnMapped.Value.LinkKeys
                     });
@@ -414,9 +398,7 @@ public static class NodeTreeHelper
                             Column = $"{nodeToClass.GetType().Name}Id",
                             Namespace = nodeToClass.GetType().Namespace,
                             SqlNodeType = SqlNodeType.Mutation,
-                            // JoinKeys = columnMapped.Value.JoinKeys,
                             IsGraph = columnMapped.Value.IsGraph,
-                            // JoinOneKeys = columnMapped.Value.JoinOneKeys,
                             LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
                             LinkKeys = columnMapped.Value.LinkKeys
                     });
@@ -477,9 +459,7 @@ public static class NodeTreeHelper
                             Column = column,
                             Namespace = nodeToClass.GetType().Namespace,
                             SqlNodeType = SqlNodeType.Node,
-                            // JoinKeys = columnMapped.Value.JoinKeys,
                             IsGraph = columnMapped.Value.IsGraph,
-                            // JoinOneKeys = columnMapped.Value.JoinOneKeys,
                             LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
                             LinkKeys = columnMapped.Value.LinkKeys
                         });
@@ -490,9 +470,7 @@ public static class NodeTreeHelper
                             Column = column,
                             Namespace = nodeToClass.GetType().Namespace,
                             SqlNodeType = SqlNodeType.Edge,
-                            // JoinKeys = columnMapped.Value.JoinKeys,
                             IsGraph = columnMapped.Value.IsGraph,
-                            // JoinOneKeys = columnMapped.Value.JoinOneKeys,
                             LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
                             LinkKeys = columnMapped.Value.LinkKeys
                         });
@@ -503,9 +481,7 @@ public static class NodeTreeHelper
                             Column = column,
                             Namespace = nodeToClass.GetType().Namespace,
                             SqlNodeType = SqlNodeType.Mutation,
-                            // JoinKeys = columnMapped.Value.JoinKeys,
                             IsGraph = columnMapped.Value.IsGraph,
-                            // JoinOneKeys = columnMapped.Value.JoinOneKeys,
                             LinkBusinessKeys = columnMapped.Value.LinkBusinessKeys,
                             LinkKeys = columnMapped.Value.LinkKeys
                         });

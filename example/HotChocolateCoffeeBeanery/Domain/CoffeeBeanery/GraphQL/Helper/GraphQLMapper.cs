@@ -152,35 +152,7 @@ public static class GraphQLMapper
                                     $"{linkAttribute.ConstructorArguments[0].Value}~{linkAttribute.ConstructorArguments[1].Value}"
                             };
                             linkKeys.Add(linkKey);
-                            
-                            // var joinKey = new JoinKey()
-                            // {
-                            //     From =
-                            //         $"{linkAttribute.ConstructorArguments[0].Value}~{linkAttribute.ConstructorArguments[1].Value}",
-                            //     To =
-                            //         $"{joinAttribute.ConstructorArguments[0].Value}~{joinAttribute.ConstructorArguments[1].Value}"
-                            // };
-                            // joinKeys.Add(joinKey);
                         }
-
-                        // var joinOneAttribute = propertyEntityAttributeType.CustomAttributes
-                        //     .FirstOrDefault(a => a.AttributeType == typeof(JoinOneKeyAttribute));
-                        //
-                        // if (joinOneKeys != null && joinOneAttribute != null)
-                        // {
-                        //     var joinOneKey = new JoinOneKey()
-                        //     {
-                        //         From =
-                        //             $"{propertyEntityAttributeType.CustomAttributes
-                        //                 .Last().ConstructorArguments[0].Value}~{
-                        //                 propertyEntityAttributeType.CustomAttributes
-                        //                     .Last().ConstructorArguments[1].Value}",
-                        //         To = $"{processingFieldMap.DestinationEntity}~{
-                        //             processingFieldMap.FieldDestinationName}"
-                        //
-                        //     };
-                        //     joinOneKeys.Add(joinOneKey);
-                        // }
                     }
 
                     if (propertyToAttributeType != null)

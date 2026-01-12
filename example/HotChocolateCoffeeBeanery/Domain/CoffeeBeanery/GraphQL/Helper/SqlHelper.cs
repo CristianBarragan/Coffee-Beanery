@@ -381,11 +381,6 @@ public static class SqlHelper
         if (currentColumns.Any() && currentColumns.Any(s => s.Value.IsGraph
                 || s.Value.LinkKeys
                     .Any(a => a.To.Split('~')[0].Matches(currentTree.Name))))
-        // if (currentColumns.Any() && currentColumns.Any(a => a.Value.IsGraph) 
-        //     //                      && 
-        //     // upsertColumn.Value.JoinKeys.All(a => currentColumns.Any(b => 
-        //     //     b.Key.Matches(a.To))))
-        //     )
         {
             foreach (var column in currentColumns.Last().Value.LinkKeys)
             {
@@ -528,13 +523,6 @@ public static class SqlHelper
             graphColumns.Count == sqlNodes.Count(a => a.Value.Graph
                 .Matches(graphColumns.First(a => a.Value.IsGraph).Value.Graph)))
         {
-        
-        // if (currentColumns.Any() && currentColumns.Any(s => s.Value.IsGraph || s.Value.LinkKeys
-        //                                                         .Any(a => a.To.Split('~')[0].Matches(currentTree.Name))))
-        //     // upsertColumn.Value.JoinKeys.All(a => currentColumns.Any(b => 
-        //     //     b.Key.Matches(a.To)))
-        //     // )
-        // {
             foreach (var linkKey in columnValue.LinkKeys)
             {
                 if (linkKey.From.Split('~')[0].Matches(currentTree.Name))
@@ -578,27 +566,6 @@ public static class SqlHelper
                     }
                 }
             }
-            
-            // foreach (var joinOneKey in columnValue.JoinOneKeys)
-            // {
-            //     if (joinOneKey.To.Split('~')[0].Matches(currentTree.Name))
-            //     {
-            //         var columns = currentColumns.ToList();
-            //         columns.Add(new KeyValuePair<string, SqlNode>(joinOneKey.To, currentColumns.Last().Value));
-            //     
-            //         var parentColumns = sqlNodes
-            //             .Where(k => trees[joinOneKey.From.Split('~')[0]].Mapping.Any(f => f
-            //                     .DestinationEntity.Matches(k.Value.Entity) &&
-            //                 entityNames.Any(e => e.Matches(k.Value.Entity)))).ToList();
-            //
-            //         sqlUpsertQuery = GenerateCommandOneJoin(columns, trees, currentTree, sqlWhereStatement, parentColumns, joinOneKey.From.Split('~')[0]);
-            //
-            //         if (AddGeneratedQuery(generatedQuery, true, currentTree.Id.ToString(), currentTree.Name, currentColumns.First().Value.UpsertKeys.First().Split('~')[1], sqlUpsertQuery))
-            //         {
-            //             sqlUpsertAux += sqlUpsertQuery;    
-            //         }
-            //     }
-            // }
         }
 
         return sqlUpsertAux;
